@@ -386,6 +386,30 @@
                     </table>
                 </div>
 
+                <!-- 按 OM 彙總表格 -->
+                <div class="results-container om-summary-container">
+                    <h3>👤 按營運經理 (OM) 彙總</h3>
+                    <p class="hint">顯示每位 OM 負責店舖的 Safety Stock 統計</p>
+                    <table class="results-table" id="omSummaryTable">
+                        <thead>
+                            <tr>
+                                <th style="width:15%">營運經理</th>
+                                <th style="width:12%">區域分佈</th>
+                                <th style="width:12%">店舖數量</th>
+                                <th style="width:15%">平均 SS</th>
+                                <th style="width:18%">SS 總計</th>
+                                <th style="width:18%">佔整體比例</th>
+                                <th style="width:10%">Carry</th>
+                            </tr>
+                        </thead>
+                        <tbody id="omSummaryTableBody">
+                            <tr>
+                                <td colspan="7" class="empty-message">請選擇店舖後點擊「計算」按鈕</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
                 <!-- 詳細清單表格 -->
                 <div class="detail-container">
                     <h3>📋 店舖詳細清單</h3>
@@ -399,12 +423,13 @@
                                 <th>舖類</th>
                                 <th>貨場面積</th>
                                 <th>Safety Stock</th>
+                                <th>OM</th>
                                 <th>Carry</th>
                             </tr>
                         </thead>
                         <tbody id="detailTableBody">
                             <tr>
-                                <td colspan="8" class="empty-message">計算後將顯示詳細清單</td>
+                                <td colspan="9" class="empty-message">計算後將顯示詳細清單</td>
                             </tr>
                         </tbody>
                     </table>

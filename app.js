@@ -952,6 +952,7 @@ class SafetyStockCalculator {
         });
         
         this.displayResults();
+        this.displayOmSummary(); // 新增 OM 彙總顯示
         this.saveToLocalStorage();
     }
 
@@ -1059,6 +1060,10 @@ class SafetyStockCalculator {
             const tr = document.createElement('tr');
             tr.className = 'detail-row';
             
+            // 從店鋪清單中找到 OM 資訊
+            const store = this.stores.find(s => s.Site === result.code);
+            const omName = store?.OM || '未分配';
+            
             const carryStatus = result.safetyStock > 0 ? 'Y' : 'FALSE';
             
             tr.innerHTML = `
@@ -1069,10 +1074,134 @@ class SafetyStockCalculator {
                 <td><span class="badge category-${result.category.toLowerCase()}">${result.category}</span></td>
                 <td>${result.size}</td>
                 <td style="text-align:center">${result.safetyStock}</td>
+                <td>${omName}</td>
                 <td class="carry-status ${carryStatus === 'Y' ? 'carry-yes' : 'carry-no'}">${carryStatus}</td>
             `;
             detailBody.appendChild(tr);
         });
+    }
+
+    // ==================== OM 彙總功能 ====================
+    
+    /**
+     * 計算按 OM 分組的彙總結果
+     */
+    calculateOmSummary() {
+        const omSummary = {};
+        
+        this.results.forEach(result => {
+            // 從 stores 中找到對應的店鋪獲取 OM 資訊
+            const store = this.stores.find(s => s.Site === result.code);
+            const omName = store?.OM || '未分配';
+            
+            if (!omSummary[omName]) {
+                omSummary[omName] = {
+                    omName: omName,
+                    storeCount: 0,
+                    totalSS: 0,
+                    hkCount: 0,
+                    moCount: 0,
+                    categoryCount: { A: 0, B: 0, C: 0, D: 0 },
+                    stores: []
+                };
+            }
+            
+            omSummary[omName].storeCount++;
+            omSummary[omName].totalSS += result.safetyStock;
+            
+            if (result.region === 'HK') {
+                omSummary[omName].hkCount++;
+            } else {
+                omSummary[omName].moCount++;
+            }
+            
+            omSummary[omName].categoryCount[result.category]++;
+            omSummary[omName].stores.push(result.name);
+        });
+        
+        // 計算平均值和比例
+        const grandTotalSS = Object.values(omSummary).reduce((sum, om) => sum + om.totalSS, 0);
+        
+        Object.values(omSummary).forEach(om => {
+            om.avgSS = om.storeCount > 0 ? Math.round(om.totalSS / om.storeCount) : 0;
+            om.percentage = grandTotalSS > 0 ? ((om.totalSS / grandTotalSS) * 100).toFixed(1) : 0;
+            om.carryCount = om.totalSS > 0 ? om.storeCount : 0;
+        });
+        
+        // 轉換為陣列並按店鋪數量排序
+        return Object.values(omSummary).sort((a, b) => b.storeCount - a.storeCount);
+    }
+
+    /**
+     * 顯示 OM 彙總表格
+     */
+    displayOmSummary() {
+        const tbody = document.getElementById('omSummaryTableBody');
+        if (!tbody) return;
+        
+        const omSummary = this.calculateOmSummary();
+        
+        if (omSummary.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="empty-message">沒有 OM 資料</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        let totalStores = 0;
+        let totalSS = 0;
+        
+        omSummary.forEach(om => {
+            const regionDisplay = om.moCount === 0 ? '🇭🇰 香港' : 
+                                  om.hkCount === 0 ? '🇲🇴 澳門' : '🇭🇰🇲🇴 港澳';
+            
+            // 類型分佈標籤
+            const categoryTags = [];
+            if (om.categoryCount.A > 0) categoryTags.push(`<span class="om-badge om-badge-a">A:${om.categoryCount.A}</span>`);
+            if (om.categoryCount.B > 0) categoryTags.push(`<span class="om-badge om-badge-b">B:${om.categoryCount.B}</span>`);
+            if (om.categoryCount.C > 0) categoryTags.push(`<span class="om-badge om-badge-c">C:${om.categoryCount.C}</span>`);
+            if (om.categoryCount.D > 0) categoryTags.push(`<span class="om-badge om-badge-d">D:${om.categoryCount.D}</span>`);
+            
+            html += `
+                <tr>
+                    <td><strong>${om.omName}</strong></td>
+                    <td>${regionDisplay}</td>
+                    <td style="text-align:center">${om.storeCount}</td>
+                    <td style="text-align:center">${om.avgSS}</td>
+                    <td style="text-align:center;font-weight:bold;color:var(--color-primary)">${om.totalSS}</td>
+                    <td>
+                        <div class="percentage-bar">
+                            <div class="percentage-fill" style="width:${om.percentage}%"></div>
+                            <span>${om.percentage}%</span>
+                        </div>
+                    </td>
+                    <td style="text-align:center">${om.carryCount}</td>
+                </tr>
+                <tr class="category-detail-row">
+                    <td colspan="7" class="category-tags">${categoryTags.join(' ')}</td>
+                </tr>
+            `;
+            
+            totalStores += om.storeCount;
+            totalSS += om.totalSS;
+        });
+        
+        // 總計行
+        html += `
+            <tr class="total-row">
+                <td colspan="2" style="text-align:right"><strong>總計:</strong></td>
+                <td style="text-align:center"><strong>${totalStores}</strong></td>
+                <td></td>
+                <td style="text-align:center;background:#ffeb3b"><strong>${totalSS}</strong></td>
+                <td style="text-align:center">100%</td>
+                <td></td>
+            </tr>
+        `;
+        
+        tbody.innerHTML = html;
     }
 
     updateStats(totalStores, totalSafetyStock, carryCount) {
@@ -1261,6 +1390,25 @@ class SafetyStockCalculator {
         
         csv += `\nTOTAL:,,,${totalStores},,${totalSS},,\n`;
         
+        // ========== 第四頁：按 OM 彙總 ==========
+        csv += '\n\n\n\n\n\n\n\n\n\n';
+        csv += '按營運經理 (OM) 彙總\n';
+        csv += `生成日期: ${new Date().toLocaleString('zh-TW')}\n\n`;
+        csv += '營運經理,區域分佈,店舖數量,平均SS,SS總計,佔比,Carry,A類店,B類店,C類店,D類店\n';
+        
+        const omSummary = this.calculateOmSummary();
+        let omTotalStores = 0;
+        let omTotalSS = 0;
+        
+        omSummary.forEach(om => {
+            const region = om.moCount === 0 ? 'HK' : om.hkCount === 0 ? 'MO' : 'HK+MO';
+            csv += `${om.omName},${region},${om.storeCount},${om.avgSS},${om.totalSS},${om.percentage}%,${om.carryCount},${om.categoryCount.A},${om.categoryCount.B},${om.categoryCount.C},${om.categoryCount.D}\n`;
+            omTotalStores += om.storeCount;
+            omTotalSS += om.totalSS;
+        });
+        
+        csv += `\nTOTAL:,,${omTotalStores},,${omTotalSS},100%,,,\n`;
+        
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         link.setAttribute('href', URL.createObjectURL(blob));
@@ -1381,6 +1529,60 @@ class SafetyStockCalculator {
 
         XLSX.utils.book_append_sheet(wb, wsSummary, '彙總表');
 
+        // ========== 第三個工作表：按 OM 彙總 ==========
+        const omSummaryData = [
+            ['按營運經理 (OM) 彙總'],
+            [`生成日期: ${dateTimeStr}`],
+            [],
+            ['營運經理', '區域分佈', '店舖數量', '平均SS', 'SS總計', '佔比', 'Carry', 'A類店', 'B類店', 'C類店', 'D類店']
+        ];
+
+        const omSummary = this.calculateOmSummary();
+        let omTotalStores = 0;
+        let omTotalSS = 0;
+
+        omSummary.forEach(om => {
+            const region = om.moCount === 0 ? 'HK' : om.hkCount === 0 ? 'MO' : 'HK+MO';
+            omSummaryData.push([
+                om.omName,
+                region,
+                om.storeCount,
+                om.avgSS,
+                om.totalSS,
+                `${om.percentage}%`,
+                om.carryCount,
+                om.categoryCount.A,
+                om.categoryCount.B,
+                om.categoryCount.C,
+                om.categoryCount.D
+            ]);
+            omTotalStores += om.storeCount;
+            omTotalSS += om.totalSS;
+        });
+
+        // 添加總計行
+        omSummaryData.push([]);
+        omSummaryData.push(['TOTAL:', '', omTotalStores, '', omTotalSS, '100%', '', '', '', '', '']);
+
+        const wsOmSummary = XLSX.utils.aoa_to_sheet(omSummaryData);
+        
+        // 設置欄寬
+        wsOmSummary['!cols'] = [
+            { wch: 15 },  // 營運經理
+            { wch: 12 },  // 區域分佈
+            { wch: 12 },  // 店舖數量
+            { wch: 12 },  // 平均SS
+            { wch: 12 },  // SS總計
+            { wch: 12 },  // 佔比
+            { wch: 10 },  // Carry
+            { wch: 10 },  // A類店
+            { wch: 10 },  // B類店
+            { wch: 10 },  // C類店
+            { wch: 10 }   // D類店
+        ];
+
+        XLSX.utils.book_append_sheet(wb, wsOmSummary, 'OM彙總');
+        
         // 匯出檔案
         const fileName = this.generateFileName('safetystock', 'xlsx');
         XLSX.writeFile(wb, fileName);

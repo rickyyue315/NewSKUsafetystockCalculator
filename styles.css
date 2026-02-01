@@ -1934,3 +1934,98 @@ footer {
     color: var(--color-primary);
     font-size: 1.1em;
 }
+
+/* ==================== OM 彙總表格樣式 ==================== */
+.om-summary-container {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid var(--color-border-medium);
+}
+
+.om-summary-container h3 {
+    color: var(--color-primary);
+    margin-bottom: 10px;
+}
+
+.percentage-bar {
+    position: relative;
+    height: 22px;
+    background: var(--color-border-light);
+    border-radius: 11px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.percentage-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+    border-radius: 11px;
+    transition: width 0.5s ease;
+    box-shadow: 0 0 8px rgba(102, 126, 234, 0.4);
+}
+
+.percentage-bar span {
+    position: relative;
+    z-index: 1;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--color-text-primary);
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+}
+
+.category-detail-row {
+    background: var(--color-section-bg) !important;
+}
+
+.category-detail-row:hover {
+    background: var(--color-section-bg) !important;
+}
+
+.category-tags {
+    padding: 10px 15px;
+    text-align: center;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.om-badge {
+    display: inline-block;
+    margin: 2px;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.om-badge-a {
+    background: rgba(76, 175, 80, 0.2);
+    color: var(--color-category-a);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.om-badge-b {
+    background: rgba(33, 150, 243, 0.2);
+    color: var(--color-category-b);
+    border: 1px solid rgba(33, 150, 243, 0.3);
+}
+
+.om-badge-c {
+    background: rgba(255, 152, 0, 0.2);
+    color: var(--color-category-c);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+}
+
+.om-badge-d {
+    background: rgba(244, 67, 54, 0.2);
+    color: var(--color-category-d);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
