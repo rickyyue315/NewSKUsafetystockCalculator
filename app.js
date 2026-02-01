@@ -1783,14 +1783,44 @@ class SafetyStockCalculator {
     }
 
     downloadStoresCsvTemplate() {
-        const header = 'Site,Shop,Regional,Class,Size,OM\n';
-        const sample = 'HA02,駱克,HK,A,L,Ivy\nMA01,澳門廣場,MO,B,M,\n';
-        const csv = '\uFEFF' + header + sample;
+        // 使用當前店鋪名單生成 CSV 範本
+        const header = 'Site,Shop,Regional,Class,Size,OM';
+        
+        // 按區域、代號排序店鋪
+        const sortedStores = [...this.stores].sort((a, b) => {
+            if (a.Regional !== b.Regional) return a.Regional.localeCompare(b.Regional);
+            return a.Site.localeCompare(b.Site);
+        });
+        
+        // 生成數據行
+        const rows = sortedStores.map(store => {
+            const site = store.Site || '';
+            const shop = store.Shop || '';
+            const regional = store.Regional || '';
+            const classVal = store.Class || '';
+            const size = store.Size || '';
+            const om = store.OM || '';
+            
+            // 處理可能包含逗號的店鋪名稱
+            const escapedShop = shop.includes(',') ? `"${shop}"` : shop;
+            
+            return `${site},${escapedShop},${regional},${classVal},${size},${om}`;
+        });
+        
+        // 組合 CSV 內容
+        const csv = '\uFEFF' + header + '\n' + rows.join('\n') + '\n';
+        
+        // 生成檔案名稱（包含日期時間）
+        const fileName = this.generateFileName('stores-template', 'csv');
+        
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         link.setAttribute('href', URL.createObjectURL(blob));
-        link.setAttribute('download', 'stores-template.csv');
+        link.setAttribute('download', fileName);
         link.click();
+        
+        // 顯示提示
+        this.showToast(`✅ 已下載店鋪範本（${sortedStores.length} 間店鋪）`);
     }
 
     importStoresFromCsv(e) {
