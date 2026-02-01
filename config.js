@@ -2,7 +2,7 @@
 // 此文件存儲所有的店鋪名單和Safety Stock參數配置
 // 根據 Safety Stocks Calculation 1.xlsx 重新設計
 
-// 店鋪配置 - 完整的 87 間店鋪清單
+// 店鋪配置 - 完整的 85 間店鋪清單
 const STORES_CONFIG = {
     stores: [
         // Ivy - 14間
@@ -21,8 +21,9 @@ const STORES_CONFIG = {
         { Site: "HB83", Shop: "新加拿芬道", Regional: "HK", Class: "B", Size: "L", OM: "Ivy" },
         { Site: "HB94", Shop: "康城", Regional: "HK", Class: "C", Size: "S", OM: "Ivy" },
 
-        // Queenie - 14間
+        // Queenie - 15間
         { Site: "HA20", Shop: "新香港仔", Regional: "HK", Class: "C", Size: "M", OM: "Queenie" },
+        { Site: "HA39", Shop: "金百利", Regional: "HK", Class: "A", Size: "M", OM: "Queenie" },
         { Site: "HZ81", Shop: "莊士敦道", Regional: "HK", Class: "B", Size: "M", OM: "Queenie" },
         { Site: "HA46", Shop: "莊士敦道2", Regional: "HK", Class: "B", Size: "S", OM: "Queenie" },
         { Site: "HA32", Shop: "皇室堡", Regional: "HK", Class: "B", Size: "L", OM: "Queenie" },
@@ -37,14 +38,15 @@ const STORES_CONFIG = {
         { Site: "HC60", Shop: "新大埔新達", Regional: "HK", Class: "C", Size: "M", OM: "Queenie" },
         { Site: "HC66", Shop: "新沙田", Regional: "HK", Class: "B", Size: "M", OM: "Queenie" },
 
-        // Candy - 11間
+        // Candy - 12間
         { Site: "HA21", Shop: "柴灣新翠", Regional: "HK", Class: "C", Size: "S", OM: "Candy" },
         { Site: "HA40", Shop: "新山頂", Regional: "HK", Class: "D", Size: "S", OM: "Candy" },
         { Site: "HB25", Shop: "奧海城", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
-        { Site: "HB49", Shop: "新蒲崗", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
+        { Site: "HB38", Shop: "新港", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
         { Site: "HB98", Shop: "星光行2", Regional: "HK", Class: "B", Size: "M", OM: "Candy" },
         { Site: "HC05", Shop: "上水", Regional: "HK", Class: "B", Size: "M", OM: "Candy" },
         { Site: "HC26", Shop: "沙田第一城", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
+        { Site: "HBA4", Shop: "中港城2", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
         { Site: "HC42", Shop: "上水新都2", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
         { Site: "HC45", Shop: "新馬鞍山", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
         { Site: "HC63", Shop: "新東涌", Regional: "HK", Class: "B", Size: "M", OM: "Candy" },
@@ -65,6 +67,7 @@ const STORES_CONFIG = {
         { Site: "HB12", Shop: "黃埔", Regional: "HK", Class: "B", Size: "M", OM: "Hippo" },
         { Site: "HB30", Shop: "淘大", Regional: "HK", Class: "C", Size: "S", OM: "Hippo" },
         { Site: "HB41", Shop: "九龍城", Regional: "HK", Class: "D", Size: "M", OM: "Hippo" },
+        { Site: "HB49", Shop: "新蒲崗", Regional: "HK", Class: "C", Size: "M", OM: "Hippo" },
         { Site: "HB56", Shop: "旺角160", Regional: "HK", Class: "B", Size: "M", OM: "Hippo" },
         { Site: "HB72", Shop: "黃大仙", Regional: "HK", Class: "C", Size: "M", OM: "Hippo" },
         { Site: "HB77", Shop: "新樂富", Regional: "HK", Class: "C", Size: "XS", OM: "Hippo" },
@@ -113,10 +116,10 @@ const SAFETY_STOCK_MATRIX = {
         "D": { "XL": 9, "L": 9, "M": 6, "S": 6, "XS": 6 }
     },
     "MO": {
-        "A": { "XL": 24, "L": 24, "M": 24, "S": 24, "XS": 24 },
-        "B": { "XL": 18, "L": 18, "M": 12, "S": 12, "XS": 12 },
-        "C": { "XL": 12, "L": 12, "M": 12, "S": 12, "XS": 0 },
-        "D": { "XL": 9, "L": 9, "M": 6, "S": 6, "XS": 6 }
+        "A": { "XL": 10, "L": 9, "M": 8, "S": 7, "XS": 6 },
+        "B": { "XL": 9, "L": 8, "M": 7, "S": 6, "XS": 5 },
+        "C": { "XL": 8, "L": 7, "M": 6, "S": 5, "XS": 4 },
+        "D": { "XL": 7, "L": 6, "M": 5, "S": 4, "XS": 3 }
     }
 };
 
@@ -190,38 +193,38 @@ const DEFAULT_CALCULATION_CONFIG = {
 // ==================== 權重設定配置 ====================
 // 用於快速計算 Safety Stock 對照表
 
-// 預設權重配置
+// 預設權重配置 - 調整後與對照表一致
 const WEIGHT_CONFIG = {
-    class: { A: 3, B: 2, C: 1, D: 1 },
-    size: { XL: 4, L: 3, M: 2, S: 1, XS: 1 },
-    baseValue: 6,
-    regionFactor: { HK: 1.0, MO: 1.3 }
+    class: { A: 3, B: 2, C: 1.5, D: 1.5 },
+    size: { XL: 4, L: 3, M: 2.5, S: 2, XS: 1.5 },
+    baseValue: 4,
+    regionFactor: { HK: 1.0, MO: 1.33 }
 };
 
-// 預設模板
+// 預設模板 - 與對照表數值一致
 const WEIGHT_TEMPLATES = {
-    // 系統預設（基於目前數據調整後的權重）
+    // 系統預設（與對照表數值一致）
     current: {
-        class: { A: 3, B: 2, C: 1, D: 1 },
-        size: { XL: 4, L: 3, M: 2, S: 1, XS: 1 },
-        baseValue: 6,
-        regionFactor: { HK: 1.0, MO: 1.3 }
+        class: { A: 3, B: 2, C: 1.5, D: 1.5 },
+        size: { XL: 4, L: 3, M: 2.5, S: 2, XS: 1.5 },
+        baseValue: 4,
+        regionFactor: { HK: 1.0, MO: 1.33 }
     },
-    
-    // 預設權重（純粹的權重乘積）
+
+    // 預設權重（與對照表數值一致）
     default: {
-        class: { A: 3, B: 2, C: 1, D: 1 },
-        size: { XL: 4, L: 3, M: 2, S: 1, XS: 1 },
-        baseValue: 3,
-        regionFactor: { HK: 1.0, MO: 1.3 }
+        class: { A: 3, B: 2, C: 1.5, D: 1.5 },
+        size: { XL: 4, L: 3, M: 2.5, S: 2, XS: 1.5 },
+        baseValue: 4,
+        regionFactor: { HK: 1.0, MO: 1.33 }
     },
-    
+
     // 平衡權重（Class 權重差異較小）
     balanced: {
-        class: { A: 1.5, B: 1.2, C: 1, D: 0.8 },
-        size: { XL: 1.5, L: 1.2, M: 1, S: 0.8, XS: 0.6 },
-        baseValue: 8,
-        regionFactor: { HK: 1.0, MO: 1.2 }
+        class: { A: 2.5, B: 2, C: 1.5, D: 1.5 },
+        size: { XL: 3.5, L: 3, M: 2.5, S: 2, XS: 1.5 },
+        baseValue: 4,
+        regionFactor: { HK: 1.0, MO: 1.3 }
     }
 };
 

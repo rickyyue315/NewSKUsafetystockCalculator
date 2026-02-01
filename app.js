@@ -372,9 +372,10 @@ class SafetyStockCalculator {
         const span = input.closest('.editable-store-stock');
         if (span) {
             const storeCode = span.dataset.storeCode;
+            const store = this.getStoreBySite(storeCode);
             const value = this.customStoreStock[storeCode] !== undefined
                 ? this.customStoreStock[storeCode]
-                : getSafetyStockValue(this.getStoreBySite(storeCode).Regional, this.getStoreBySite(storeCode).Class, this.getStoreBySite(storeCode).Size);
+                : this.getSafetyStock(store.Regional, store.Class, store.Size);
             span.textContent = value;
             span.classList.remove('editing');
         }
@@ -411,10 +412,10 @@ class SafetyStockCalculator {
             div.dataset.storeGroup = store.Site ? store.Site.substring(0, 2).toUpperCase() : '';
             div.dataset.manager = store.OM || '';
 
-            // 檢查是否有個別店鋪的自訂值
+            // 檢查是否有個別店鋪的自訂值，或全局對照表的自訂值
             let safetyStock = this.customStoreStock[store.Site] !== undefined
                 ? this.customStoreStock[store.Site]
-                : getSafetyStockValue(store.Regional, store.Class, store.Size);
+                : this.getSafetyStock(store.Regional, store.Class, store.Size);
             const typeCode = getStoreTypeCode(store.Regional, store.Class, store.Size);
 
             div.innerHTML = `
@@ -2075,27 +2076,51 @@ class SafetyStockCalculator {
     loadFromLocalStorage() {
         try {
             const data = JSON.parse(localStorage.getItem('safetyStockCalculatorV2'));
+            // 檢查是否需要更新店鋪資料（如果 localStorage 中的店鋪數量與 config.js 不同）
+            const configStoreCount = STORES_CONFIG.stores.length;
+            let storeCountMismatch = false;
+
+            if (data && data.stores) {
+                const savedStoreCount = data.stores.length;
+                if (savedStoreCount !== configStoreCount) {
+                    console.log(`店鋪數量已更新：${savedStoreCount} → ${configStoreCount}，使用新的店鋪資料`);
+                    storeCountMismatch = true;
+                }
+            }
+
             if (data) {
+                // 如果店鋪數量不匹配，清除舊的選擇並重新渲染
+                if (storeCountMismatch) {
+                    this.selectedStores = [];
+                    this.renderStores();
+                    this.saveToLocalStorage();
+                    this.showToast(`🔄 店鋪資料已更新（${configStoreCount} 間），請重新選擇店鋪`);
+                } else {
+                    // 正常載入選擇的店鋪
+                    if (data.selectedStores) {
+                        // 過濾掉無效的索引（防止店鋪列表更新後索引失效）
+                        const validStores = data.selectedStores.filter(idx => {
+                            return idx >= 0 && idx < this.stores.length && this.stores[idx] !== undefined;
+                        });
+                        this.selectedStores = validStores;
+                        this.updateCheckboxes();
+                        this.updateStoresPreview();
+                    }
+                    // 載入保存的店鋪資料（只有數量匹配時才載入）
+                    if (data.stores && data.stores.length > 0) {
+                        this.stores = data.stores;
+                        STORES_CONFIG.stores = data.stores;
+                        this.renderStores();
+                    }
+                }
+
+                // 載入其他設定（與店鋪數量無關）
                 if (data.customSafetyStock) {
                     this.customSafetyStock = data.customSafetyStock;
                     this.renderSafetyStockMatrix();
                 }
                 if (data.customStoreStock) {
                     this.customStoreStock = data.customStoreStock;
-                }
-                if (data.selectedStores) {
-                    // 過濾掉無效的索引（防止店鋪列表更新後索引失效）
-                    const validStores = data.selectedStores.filter(idx => {
-                        return idx >= 0 && idx < this.stores.length && this.stores[idx] !== undefined;
-                    });
-                    this.selectedStores = validStores;
-                    this.updateCheckboxes();
-                    this.updateStoresPreview();
-                }
-                if (data.stores && data.stores.length > 0) {
-                    this.stores = data.stores;
-                    STORES_CONFIG.stores = data.stores;
-                    this.renderStores();
                 }
                 // 加載保存的主題（如果有的話）
                 if (data.theme && AVAILABLE_THEMES[data.theme]) {
@@ -2163,7 +2188,7 @@ class SafetyStockCalculator {
         }
     }
 
-    // 從 UI 讀取權重設定
+    // 從 UI 讀取權重設定 - 與對照表數值一致
     readWeightsFromUI() {
         const getValue = (id, defaultValue) => {
             const el = document.getElementById(id);
@@ -2175,20 +2200,20 @@ class SafetyStockCalculator {
             class: {
                 A: getValue('weightClassA', 3),
                 B: getValue('weightClassB', 2),
-                C: getValue('weightClassC', 1),
-                D: getValue('weightClassD', 1)
+                C: getValue('weightClassC', 1.5),
+                D: getValue('weightClassD', 1.5)
             },
             size: {
                 XL: getValue('weightSizeXL', 4),
                 L: getValue('weightSizeL', 3),
-                M: getValue('weightSizeM', 2),
-                S: getValue('weightSizeS', 1),
-                XS: getValue('weightSizeXS', 1)
+                M: getValue('weightSizeM', 2.5),
+                S: getValue('weightSizeS', 2),
+                XS: getValue('weightSizeXS', 1.5)
             },
-            baseValue: getValue('baseValue', 6),
+            baseValue: getValue('baseValue', 4),
             regionFactor: {
                 HK: getValue('hkFactor', 1.0),
-                MO: getValue('moFactor', 1.3)
+                MO: getValue('moFactor', 1.33)
             },
             targetTotal: getValue('targetTotal', 0)
         };
