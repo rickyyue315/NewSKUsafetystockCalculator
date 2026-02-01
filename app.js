@@ -2013,8 +2013,16 @@ class SafetyStockCalculator {
     toggleStoresManagement() {
         const content = document.getElementById('storesManagementContent');
         const btn = document.getElementById('toggleStoresManagement');
+        
+        if (!content || !btn) {
+            console.error('無法找到必要的 DOM 元素');
+            return;
+        }
 
-        if (content.style.display === 'none') {
+        // 使用 getComputedStyle 來獲取實際的顯示狀態
+        const currentDisplay = window.getComputedStyle(content).display;
+        
+        if (currentDisplay === 'none') {
             content.style.display = 'block';
             btn.textContent = '▲';
         } else {
