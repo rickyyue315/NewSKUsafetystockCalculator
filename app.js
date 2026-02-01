@@ -13,7 +13,8 @@ class SafetyStockCalculator {
             category: [],
             size: [],
             storeGroup: [],
-            manager: []
+            manager: [],
+            specialStore: []
         };
         this.customSafetyStock = {}; // 使用者自訂的 Safety Stock 值
         this.customStoreStock = {}; // 個別店鋪的自訂 Safety Stock 值 (key: store.Site)
@@ -652,6 +653,12 @@ class SafetyStockCalculator {
             // 檢查營運經理篩選
             if (this.activeFilters.manager.length > 0) {
                 show = show && this.activeFilters.manager.some(m => item.dataset.manager.includes(m));
+            }
+            
+            // 檢查特別店鋪篩選 (HA40, HB87, HB91)
+            if (this.activeFilters.specialStore.length > 0) {
+                const storeCode = item.querySelector('.store-code')?.textContent?.trim();
+                show = show && this.activeFilters.specialStore.some(code => storeCode === code);
             }
             
             item.style.display = show ? 'flex' : 'none';

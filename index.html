@@ -219,12 +219,24 @@
                     <!-- 左側：篩選區域 -->
                     <div class="selector-left-panel">
                         <div class="category-filters">
-                            <!-- 區域 -->
-                            <div class="filter-group">
-                                <label class="filter-label">按區域</label>
-                                <div class="filter-buttons">
-                                    <button class="filter-btn" data-filter="region" data-value="HK">🇭🇰 HK</button>
-                                    <button class="filter-btn" data-filter="region" data-value="MO">🇲🇴 MO</button>
+                            <!-- 區域與特別店鋪（並排佈局）-->
+                            <div class="filter-row">
+                                <!-- 區域 -->
+                                <div class="filter-group region-filter">
+                                    <label class="filter-label">按區域</label>
+                                    <div class="filter-buttons">
+                                        <button class="filter-btn" data-filter="region" data-value="HK">🇭🇰 HK</button>
+                                        <button class="filter-btn" data-filter="region" data-value="MO">🇲🇴 MO</button>
+                                    </div>
+                                </div>
+                                <!-- 特別店鋪 -->
+                                <div class="filter-group special-stores-filter">
+                                    <label class="filter-label">特別店鋪</label>
+                                    <div class="filter-buttons special-store-buttons">
+                                        <button class="filter-btn special-store-btn" data-filter="specialStore" data-value="HA40" title="新山頂">HA40</button>
+                                        <button class="filter-btn special-store-btn" data-filter="specialStore" data-value="HB87" title="西九高鐵站">HB87</button>
+                                        <button class="filter-btn special-store-btn" data-filter="specialStore" data-value="HB91" title="南昌站V Walk">HB91</button>
+                                    </div>
                                 </div>
                             </div>
 
