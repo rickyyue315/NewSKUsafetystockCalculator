@@ -1,179 +1,61 @@
 # Quick Start 快速開始
 
-## 方法1：直接打開 (推薦 - 無需安裝)
+快速啟動與常見操作（已與 `README.md` 同步）。建議以靜態伺服器方式運行以完整支援匯出/匯入功能。
 
-### Windows
-```bash
-# 在檔案管理器中找到項目文件夾
-# 雙擊 index.html 用瀏覽器打開
-```
+## 方法1：直接打開（最簡單）
 
-### macOS / Linux
-```bash
-# 在終端中運行
-cd /path/to/safety-stock-calculator
-open index.html
-```
+在檔案總管或 Finder 中雙擊 `index.html` 即可，用本機瀏覽器開啟。這適合快速檢視 UI，但若要測試檔案匯入/下載，建議用靜態伺服器。
 
-## 方法2：使用 Python 伺服器
-
-### 前置條件
-- 已安裝 Python 3.x
-
-### 運行步驟
+## 方法2：使用 Python 靜態伺服器（推薦）
 
 ```bash
-# 進入項目目錄
-cd "c:\Users\BestO\Dropbox\SASA\AI\Sep2025_App\New SKU Safety Stock Calculator"
-
-# 啟動 Python 伺服器
+# 在專案根目錄啟動（合適於 Windows/macOS/Linux）
 python -m http.server 8000
 
-# 在瀏覽器中打開
-# http://localhost:8000
+# 開啟瀏覽器並訪問
+http://localhost:8000
 ```
 
-## 方法3：使用 Node.js HTTP Server
-
-### 前置條件
-- 已安裝 Node.js
-
-### 運行步驟
+## 方法3：使用 Node.js http-server
 
 ```bash
-# 進入項目目錄
-cd "c:\Users\BestO\Dropbox\SASA\AI\Sep2025_App\New SKU Safety Stock Calculator"
-
-# 安裝 http-server (如果未安裝)
+# 若尚未安裝 http-server
 npm install -g http-server
 
-# 啟動伺服器
+# 啟動伺服器（在專案根目錄）
 http-server
 
-# 在瀏覽器中打開
-# http://localhost:8080
+# 開啟瀏覽器（預設 http://localhost:8080）
 ```
 
-## 首次使用指南
+## 首次使用（快速流程）
 
-### 1️⃣ 選擇店鋪
-- 勾選你想計算的店鋪
-- 或使用篩選功能按大小/等級快速選擇
-- 使用「全選」、「反選」或「反向取消」快速管理
+1. 選擇或篩選店鋪（支援按 `Regional`, `Class`, `Size` 篩選）
+2. 若需，對個別店鋪做 inline 編輯（點選可編輯欄位）
+3. 點擊 `計算`（按鈕 id: `calculateBtn`）
+4. 檢視結果，並可使用 `匯出 CSV` / `匯出 Excel` / 匯出設定（JSON）功能
 
-### 2️⃣ 調整參數
-- 根據你的實際業務情況調整 Safety Stock 參數
-- 每個參數都有詳細的描述
-- 所有更改會自動保存
+## 常見任務
 
-### 3️⃣ 計算結果
-- 點擊「計算」按鈕
-- 系統會根據選定店鋪和參數計算結果
+- 匯入配置：使用 UI 的 `匯入`（file input id: `importFile`）上傳 JSON 配置
+- 店鋪批量匯入：使用 `stores-template.csv` 作為模板，再透過 UI 上載
+- 編輯對照表或權重：請先修改 `config.js` 中的 `SAFETY_STOCK_MATRIX` 或 `WEIGHT_TEMPLATES`
 
-### 4️⃣ 查看和導出結果
-- 在結果表格中查看每間店鋪的計算結果
-- 點擊「匯出 CSV」導出結果到 Excel
-- 點擊「匯入配置」載入之前保存的配置
+## 故障排查
 
-### 5️⃣ 管理店鋪名單
-- 點擊「編輯店鋪名單」編輯店鋪
-- 修改 JSON 格式的店鋪數據
-- 點擊「保存」確認修改
+- 空白頁或控制台錯誤：確認 `index.html`, `app.js`, `config.js`, `styles.css` 在同一目錄並重新整理
+- 計算結果為 0：確認已選店鋪、對照表 `SAFETY_STOCK_MATRIX` 中有對應值或是否有自訂 `customStoreStock`
+- 匯出/下載問題：在瀏覽器允許下載並關閉彈窗阻擋
 
-## 常用場景
+## 技術資訊
 
-### 場景1：計算特定等級店鋪的 Safety Stock
-1. 在「按等級分類」中點擊「A」
-2. 系統會自動顯示所有 A 級店鋪
-3. 勾選你需要的店鋪
-4. 點擊「計算」
-
-### 場景2：保存當前配置以供下次使用
-1. 調整好所有參數
-2. 選擇所需店鋪
-3. 按 Ctrl+S 或手動導出配置（點擊「匯入配置」旁的導出按鈕）
-4. 下次可以直接導入配置
-
-### 場景3：批量新增店鋪
-1. 點擊「編輯店鋪名單」
-2. 按照 JSON 格式新增店鋪：
-```json
-{ "name": "新店鋪名稱", "size": "M", "level": "A" }
-```
-3. 點擊「保存」
-
-## 數據格式參考
-
-### 店鋪格式
-```json
-{
-  "name": "店鋪名稱",
-  "size": "XS|S|M|L",
-  "level": "A|B|C|D"
-}
-```
-
-### 大小分類說明
-- **XS**: 超小型店鋪（面積 <100㎡）
-- **S**: 小型店鋪（面積 100-200㎡）
-- **M**: 中型店鋪（面積 200-500㎡）
-- **L**: 大型店鋪（面積 >500㎡）
-
-### 等級分類說明
-- **A**: 優先級最高（核心店鋪、高銷售量）
-- **B**: 優先級較高
-- **C**: 優先級中等
-- **D**: 優先級最低
-
-## 常見問題解決
-
-### Q: 打開空白頁面
-A: 
-- 確保三個文件都在同一目錄：index.html, app.js, styles.css, config.js
-- 刷新瀏覽器頁面（Ctrl+R）
-- 檢查瀏覽器控制台是否有錯誤（F12 > Console）
-
-### Q: 計算結果為 0 或不正確
-A:
-- 確保已選擇至少一間店鋪
-- 檢查參數值是否正確
-- 確保所有必填參數都有值
-
-### Q: 無法導出 CSV
-A:
-- 檢查瀏覽器是否允許下載
-- 關閉彈出窗口阻止程序
-- 試試換個瀏覽器
-
-### Q: 配置無法保存
-A:
-- 檢查瀏覽器是否允許本地存儲
-- 清除瀏覽器緩存
-- 試試無痕模式
-
-## 技術信息
-
-- **語言**: HTML5, CSS3, JavaScript (Vanilla)
-- **瀏覽器支持**: 所有現代瀏覽器
-- **無需連接**: 完全本地運行，無需網絡連接
-- **文件大小**: < 100KB（包括所有資源）
+- 主要檔案：`index.html`, `app.js`, `config.js`, `styles.css`
+- 主要變數/結構：`STORES_CONFIG`, `SAFETY_STOCK_MATRIX`, `WEIGHT_CONFIG`, `customStoreStock`
+- 完全前端：所有計算與檔案操作在瀏覽器內執行
 
 ## 下一步
 
-1. 閱讀完整的 README.md 了解更多功能
-2. 根據業務需求調整 config.js 中的參數
-3. 將項目上傳到 GitHub（可選）
-4. 與團隊分享 index.html 的網址
+- 詳細操作與範例請見 [README.md](README.md)
+- 如需我同步更新 `GUIDE.md` 或 `DEPLOYMENT.md`，請告訴我要加入的內容
 
-## 需要幫助？
-
-- 檢查 README.md 的詳細說明
-- 查看 config.js 中的註釋
-- 在瀏覽器開發者工具中檢查錯誤
-- 提交 GitHub Issue（如果上傳到 GitHub）
-
----
-
-祝你使用愉快！ 🎉
-
-有任何問題歡迎反饋！
+最後更新：2026年2月1日

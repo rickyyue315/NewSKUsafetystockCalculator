@@ -172,3 +172,26 @@ MIT License - 查看 LICENSE 文件了解詳情
 最後更新：2026年1月31日
 
 如有任何問題或建議，歡迎提交 Issue！
+
+## [1.0.1] - 2026-02-01
+
+### 變更
+
+- 文件同步與說明更新：更新 `README.md`、`README_CN.txt` 與 `QUICK_START.md`，內容已反映目前前端程式邏輯與變數命名（`STORES_CONFIG`, `SAFETY_STOCK_MATRIX`, `WEIGHT_CONFIG` 等）。
+- 新增變更摘要檔案：`CHANGE_SUMMARY.md`（含本次變更重點與建議下一步）。
+
+### 說明
+
+- 本次變更為文件與說明的修正與整理，目的是讓使用者與開發者能更快速對照 `config.js` 與 `app.js` 的實際實作。主要更新內容包括：
+	- README 中補充核心函式與資料結構說明：`getSafetyStockValue()`、`generateMatrixWithWeights()`、`calculateSafetyStockWithWeights()`、`customStoreStock` 等。
+	- QUICK_START 精簡並建議使用靜態伺服器以完整支援匯入/匯出功能，並標註關鍵 UI id（例如 `calculateBtn`, `importFile`）。
+	- README_CN.txt 已同步為簡要指引，並更新為與 `README.md` 一致的快速啟動指示。
+
+### 建議的後續步驟
+
+1. 若釋出新版本，請在 `CHANGELOG.md` 中包含本次摘要並升級版本號（例如 `1.0.1`）。
+2. 可選：將 `CHANGE_SUMMARY.md` 內容合併進 `CHANGELOG.md` 的更詳細紀錄，或用作 PR 描述。
+
+---
+
+最後更新：2026年2月1日

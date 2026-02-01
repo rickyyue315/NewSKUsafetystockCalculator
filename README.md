@@ -1,201 +1,84 @@
 # Safety Stock 計算器 🏪📊
 
-一個現代化的網頁版Safety Stock計算工具，幫助你輕鬆計算和管理所有店鋪的安全庫存。
+一個純前端（無後端）的 Safety Stock 計算工具。以 `config.js` 為單一真實來源（店鋪清單、對照表與權重），在瀏覽器中執行所有計算、匯入/匯出與設定存取（localStorage）。
 
-## 功能特色 ✨
+**重點更新**：本 README 已同步 `app.js` / `config.js` 的目前命名與邏輯（例如：`STORES_CONFIG`、`SAFETY_STOCK_MATRIX`、`WEIGHT_CONFIG`、`generateMatrixWithWeights()` 等）。
 
-### 🏪 店鋪管理
-- **靈活的店鋪選擇**：全選/反選/反向取消
-- **多層次篩選**：按大小（XS/S/M/L）和等級（A/B/C/D）篩選
-- **實時預覽**：顯示已選擇的店鋪及其屬性
-- **易於更新**：通過JSON編輯器快速更新店鋪名單
+## 主要功能
 
-### ⚙️ 參數調整
-- **靈活配置**：所有Safety Stock計算參數可自由調整
-- **實時驗證**：輸入值範圍檢查
-- **參數說明**：每個參數都有詳細的描述
+- 店鋪管理：多條件篩選、全選/反選、逐店編輯 Safety Stock 值（inline edit）
+- Safety Stock 對照表：由 `SAFETY_STOCK_MATRIX` 提供，並支援用權重產生（`generateMatrixWithWeights`）
+- 權重模板：`WEIGHT_TEMPLATES` 與 `WEIGHT_CONFIG` 支援快速重算矩陣
+- 主題系統：多種配色主題與主題面板（在 UI 中切換並保存至 localStorage）
+- 匯出/匯入：CSV、Excel（前端產生）與 JSON 設定匯入/匯出
+- 本地儲存：使用 localStorage 保存使用者自訂值與設定
 
-### 📊 計算結果
-- **準確計算**：基於標準Safety Stock公式
-- **詳細展示**：顯示原始庫存、參數、計算結果
-- **訂貨點計算**：自動計算訂貨點（Reorder Point）
+## 快速開始（開發 / 本地測試）
 
-### 💾 數據管理
-- **本地存儲**：自動保存你的配置和選擇
-- **匯出CSV**：將結果導出為CSV格式
-- **匯入配置**：導入之前保存的JSON配置文件
-- **版本控制**：配置文件帶時間戳
-
-## 安裝和使用 🚀
-
-### 直接使用
-1. 克隆或下載此倉庫
-2. 在瀏覽器中打開 `index.html`
-3. 開始使用！
+1. 下載或複製此專案到本地。
+2. 直接在瀏覽器中打開 [index.html](index.html)，或啟動靜態伺服器（推薦）：
 
 ```bash
-git clone https://github.com/yourusername/safety-stock-calculator.git
-cd safety-stock-calculator
-# 用任何瀏覽器打開 index.html
-```
-
-### 使用步驟
-1. **選擇店鋪**：勾選你要計算的店鋪，或使用篩選功能
-2. **調整參數**：根據你的實際情況調整Safety Stock參數
-3. **計算結果**：點擊"計算"按鈕
-4. **查看結果**：在結果表格中查看計算結果
-5. **匯出結果**：可選擇匯出為CSV或保存配置
-
-## 文件結構 📁
-
-```
-safety-stock-calculator/
-├── index.html           # 主HTML文件
-├── styles.css          # 樣式表
-├── app.js              # 主應用邏輯
-├── config.js           # 配置文件（店鋪和參數）
-├── README.md           # 本文件
-└── .gitignore          # Git忽略文件
-```
-
-## 配置說明 ⚙️
-
-### 更新店鋪名單
-1. 點擊"🔧 店鋪名單管理"部分的"編輯店鋪名單"按鈕
-2. 修改JSON格式的店鋪數據
-3. 點擊"保存"按鈕
-
-店鋪JSON格式：
-```json
-[
-    { "name": "旺角店", "size": "XS", "level": "A" },
-    { "name": "中環店", "size": "XS", "level": "A" },
-    { "name": "銅鑼灣店", "size": "XS", "level": "B" }
-]
-```
-
-**大小分類**：XS, S, M, L  
-**等級分類**：A, B, C, D
-
-### 調整Safety Stock參數
-編輯 `config.js` 中的 `SAFETY_STOCK_PARAMETERS` 對象：
-
-```javascript
-{
-    id: "lead_time",              // 參數ID（不可重複）
-    name: "前置時間",             // 參數顯示名稱
-    description: "供應商交貨前置時間", // 參數描述
-    unit: "天",                   // 單位
-    value: 14,                    // 預設值
-    min: 1,                       // 最小值
-    max: 60,                      // 最大值
-    step: 1                       // 調整步長
-}
-```
-
-## Safety Stock 計算公式 📐
-
-### 基本公式
-```
-Safety Stock = Z × σ × √L
-
-其中：
-Z = 服務水準系數（1.65 = 95%服務水準）
-σ = 需求標準差（= 平均日需求 × 需求變異係數）
-L = 前置時間（天數）
-```
-
-### 訂貨點（Reorder Point）
-```
-ROP = (平均日需求 × 前置時間) + Safety Stock
-```
-
-### 經濟訂單量（EOQ）
-```
-EOQ = √[(2 × 年需求量 × 訂單成本) / 持有成本]
-```
-
-## 參數說明 📋
-
-| 參數 | 單位 | 預設值 | 說明 |
-|------|------|--------|------|
-| 前置時間 | 天 | 14 | 供應商交貨需要的天數 |
-| 需求變異系數 | - | 1.5 | 需求的波動程度（0-2） |
-| 服務水準 | Z值 | 1.65 | 預期庫存充足率（通常1.65=95%） |
-| 平均日需求量 | 件 | 50 | 每天平均銷售量 |
-| 訂貨點 | 件 | 自動計算 | 觸發訂貨的庫存水位 |
-| 經濟訂單量 | 件 | 100 | 最經濟的訂單數量 |
-
-## 瀏覽器支持 🌐
-
-- Chrome 60+
-- Firefox 60+
-- Safari 12+
-- Edge 79+
-
-## 常見問題 ❓
-
-### Q: 如何新增更多店鋪？
-A: 在"店鋪名單管理"部分點擊"編輯店鋪名單"，按照JSON格式新增即可。
-
-### Q: 計算結果能否保存？
-A: 可以。配置會自動保存到瀏覽器本地存儲。你也可以匯出JSON配置文件進行備份。
-
-### Q: 如何修改計算公式？
-A: 編輯 `config.js` 中的 `CALCULATION_FORMULAS` 對象，修改計算邏輯即可。
-
-### Q: 支持批量導入店鋪嗎？
-A: 支持。通過JSON編輯器一次性導入多間店鋪。
-
-## 開發和貢獻 🤝
-
-歡迎提交Issue和Pull Request！
-
-### 本地開發
-```bash
-# 克隆倉庫
-git clone https://github.com/yourusername/safety-stock-calculator.git
-
-# 用本地伺服器打開（推薦用Python）
+# 在專案根目錄啟動（Python)
 python -m http.server 8000
 
-# 或用Node.js
+# 或用 Node 開啟（若已安裝 http-server）
 npx http-server
 ```
 
-然後訪問 `http://localhost:8000`
+開啟後訪問 `http://localhost:8000`。
 
-## 版本歷史 📜
+## 關鍵檔案與說明
 
-### v1.0 (2026-01-31)
-- ✨ 初始版本發佈
-- 🏪 完整的店鋪管理功能
-- ⚙️ 靈活的參數調整
-- 📊 準確的Safety Stock計算
-- 💾 本地存儲和數據導出
+- `index.html` — 主頁面與 UI 骨架
+- `styles.css` — 樣式
+- `app.js` — 應用程式邏輯（`SafetyStockCalculator` 類別、事件綁定、DOM 操作、匯出/匯入處理）
+- `config.js` — 主要業務資料與參數（`STORES_CONFIG`, `SAFETY_STOCK_MATRIX`, `WEIGHT_CONFIG`, `WEIGHT_TEMPLATES`, 主題定義）
+- `stores-template.csv` — 店鋪 CSV 模板（供批量匯入）
 
-## 許可證 📄
+如需擴充或修改業務資料，請優先編輯 `config.js`。
 
-MIT License - 詳見 LICENSE 文件
+## 核心資料結構
 
-## 聯繫方式 📧
+- 店鋪物件：`{ Site, Shop, Regional, Class, Size, OM }`（來源：`STORES_CONFIG.stores`）
+- Safety Stock 查表：`SAFETY_STOCK_MATRIX[region][class][size]`
+- 個別店鋪覆寫：`customStoreStock`（key = `Site`）
 
-如有問題或建議，歡迎通過以下方式聯繫：
-- 提交GitHub Issue
-- 發送Email
+## 常用函式（程式內）
 
-## 更新日誌 📝
+- `getSafetyStockValue(region, category, size)` — 從 `SAFETY_STOCK_MATRIX` 讀值
+- `calculateSafetyStockWithWeights(region, category, size, weights)` — 根據權重計算單一值
+- `generateMatrixWithWeights(weights)` — 使用權重產生整張對照表
 
-### 計劃中的功能
-- [ ] 圖表可視化
-- [ ] 多語言支持
-- [ ] 更多計算公式
-- [ ] 數據導入功能
-- [ ] 打印功能
-- [ ] 深色主題
+## 使用流程（UI）
+
+1. 選擇店鋪或使用篩選條件
+2. 若需，對單店進行 inline 編輯（點店鋪的可編輯欄位）
+3. 點擊 `計算`（`#calculateBtn`）生成結果
+4. 匯出：`CSV`、`Excel` 或匯出設定（JSON）
+
+## 匯入 / 匯出
+
+- 匯入配置：使用 UI 的匯入按鈕（`#importFile`）上傳 JSON 設定
+- 店鋪批量匯入：使用 `stores-template.csv` 作為模板
+- 匯出：按 `匯出` 按鈕導出目前結果為 CSV 或 Excel
+
+## 開發注意事項
+
+- 業務資料（店鋪、對照表、權重）集中在 `config.js`。優先修改此檔以避免 UI 與邏輯不同步。
+- 所有狀態存於前端（記憶體或 localStorage），此專案不含後端。
+- 若要修改計算邏輯，請搜尋 `calculateSafetyStockWithWeights` 或在 `app.js` 中擴充計算流程。
+
+## 版本與變更
+
+- v1.0 (2026-01-31) — 初始上線
+
+最後更新：2026年2月1日
+
+## 授權
+
+MIT License — 見 LICENSE
 
 ---
 
-**祝你使用愉快！** 🎉
-
-最後更新：2026年1月31日
+若要我同時建立一段更完整的「變更紀錄摘要」或更新 `QUICK_START.md`，告訴我要包含的細節。謝謝！
