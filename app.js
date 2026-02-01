@@ -54,52 +54,52 @@ class SafetyStockCalculator {
     applyTheme(themeKey) {
         const theme = AVAILABLE_THEMES[themeKey];
         if (!theme) return;
-        
+
         const root = document.documentElement;
         const colors = theme.colors;
-        
+
         // 應用所有顏色變數
         root.style.setProperty('--color-primary', colors.primary);
         root.style.setProperty('--color-primary-light', colors.primaryLight);
         root.style.setProperty('--color-primary-dark', colors.primaryDark);
         root.style.setProperty('--color-secondary', colors.secondary);
         root.style.setProperty('--color-accent', colors.accent);
-        
+
         root.style.setProperty('--color-body-bg', colors.bodyBg);
         root.style.setProperty('--color-container-bg', colors.containerBg);
         root.style.setProperty('--color-section-bg', colors.sectionBg);
         root.style.setProperty('--color-header-bg', colors.headerBg);
         root.style.setProperty('--color-footer-bg', colors.footerBg);
-        
+
         root.style.setProperty('--color-text-primary', colors.textPrimary);
         root.style.setProperty('--color-text-secondary', colors.textSecondary);
         root.style.setProperty('--color-text-muted', colors.textMuted);
         root.style.setProperty('--color-text-light', colors.textLight);
-        
+
         root.style.setProperty('--color-border-light', colors.borderLight);
         root.style.setProperty('--color-border-medium', colors.borderMedium);
-        
+
         root.style.setProperty('--color-region-hk', colors.regionHk);
         root.style.setProperty('--color-region-mo', colors.regionMo);
-        
+
         root.style.setProperty('--color-category-a', colors.categoryA);
         root.style.setProperty('--color-category-b', colors.categoryB);
         root.style.setProperty('--color-category-c', colors.categoryC);
         root.style.setProperty('--color-category-d', colors.categoryD);
-        
+
         root.style.setProperty('--color-success', colors.success);
         root.style.setProperty('--color-warning', colors.warning);
         root.style.setProperty('--color-danger', colors.danger);
         root.style.setProperty('--color-info', colors.info);
         root.style.setProperty('--color-highlight', colors.highlight);
-        
+
         root.style.setProperty('--color-table-header-bg', colors.tableHeaderBg);
         root.style.setProperty('--color-table-header-text', colors.tableHeaderText);
         root.style.setProperty('--color-table-row-even', colors.tableRowEven);
         root.style.setProperty('--color-table-row-hover', colors.tableRowHover);
         root.style.setProperty('--color-table-total-bg', colors.tableTotalBg);
         root.style.setProperty('--color-table-carry-bg', colors.tableCarryBg);
-        
+
         root.style.setProperty('--color-btn-primary-bg', colors.btnPrimaryBg);
         root.style.setProperty('--color-btn-primary-hover', colors.btnPrimaryHover);
         root.style.setProperty('--color-btn-secondary-bg', colors.btnSecondaryBg);
@@ -107,19 +107,19 @@ class SafetyStockCalculator {
         root.style.setProperty('--color-btn-warning-bg', colors.btnWarningBg);
         root.style.setProperty('--color-btn-danger-bg', colors.btnDangerBg);
         root.style.setProperty('--color-btn-info-bg', colors.btnInfoBg);
-        
+
         root.style.setProperty('--color-scrollbar-track', colors.scrollbarTrack);
         root.style.setProperty('--color-scrollbar-thumb', colors.scrollbarThumb);
         root.style.setProperty('--color-scrollbar-thumb-hover', colors.scrollbarThumbHover);
-        
+
         this.currentTheme = themeKey;
         this.updateThemeSelectorUI();
     }
-    
+
     renderThemeSelector() {
         const themeList = document.getElementById('themeList');
         if (!themeList) return;
-        
+
         const themeIcons = {
             sasa: '💄',
             corporate: '🏢',
@@ -129,7 +129,7 @@ class SafetyStockCalculator {
             elegant: '💜',
             minimal: '◻️'
         };
-        
+
         let html = '';
         Object.keys(AVAILABLE_THEMES).forEach(key => {
             const theme = AVAILABLE_THEMES[key];
@@ -145,9 +145,9 @@ class SafetyStockCalculator {
                 </div>
             `;
         });
-        
+
         themeList.innerHTML = html;
-        
+
         // 添加點擊事件
         themeList.querySelectorAll('.theme-option').forEach(option => {
             option.addEventListener('click', () => {
@@ -156,43 +156,43 @@ class SafetyStockCalculator {
             });
         });
     }
-    
+
     setupThemeEvents() {
         const toggleBtn = document.getElementById('themeToggleBtn');
         const themePanel = document.getElementById('themePanel');
-        
+
         if (!toggleBtn || !themePanel) return;
-        
+
         // 切換面板顯示
         toggleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             themePanel.classList.toggle('active');
         });
-        
+
         // 點擊外部關閉面板
         document.addEventListener('click', (e) => {
             if (!themePanel.contains(e.target) && !toggleBtn.contains(e.target)) {
                 themePanel.classList.remove('active');
             }
         });
-        
+
         // 阻止面板內部點擊冒泡
         themePanel.addEventListener('click', (e) => {
             e.stopPropagation();
         });
     }
-    
+
     switchTheme(themeKey) {
         if (!AVAILABLE_THEMES[themeKey]) return;
-        
+
         this.applyTheme(themeKey);
         localStorage.setItem('safetyStockTheme', themeKey);
-        
+
         // 顯示提示
         const themeName = AVAILABLE_THEMES[themeKey].name;
         this.showToast(`已切換到「${themeName}」配色方案`);
     }
-    
+
     updateThemeSelectorUI() {
         // 更新主題選項的高亮狀態
         const themeOptions = document.querySelectorAll('.theme-option');
@@ -200,7 +200,7 @@ class SafetyStockCalculator {
             option.classList.toggle('active', option.dataset.theme === this.currentTheme);
         });
     }
-    
+
     showToast(message) {
         // 創建提示元素
         const toast = document.createElement('div');
@@ -220,7 +220,7 @@ class SafetyStockCalculator {
         `;
         toast.textContent = message;
         document.body.appendChild(toast);
-        
+
         // 3秒後移除
         setTimeout(() => {
             toast.style.animation = 'slideDown 0.3s ease';
@@ -229,7 +229,7 @@ class SafetyStockCalculator {
     }
 
     // ==================== 數據加載 ====================
-    
+
     loadStoresFromConfig() {
         if (STORES_CONFIG && STORES_CONFIG.stores) {
             this.stores = STORES_CONFIG.stores;
@@ -243,21 +243,21 @@ class SafetyStockCalculator {
     }
 
     // ==================== 事件監聽設置 ====================
-    
+
     setupEventListeners() {
         // 店鋪選擇按鈕
         document.getElementById('selectAllBtn')?.addEventListener('click', () => this.selectAllStores());
         document.getElementById('deselectAllBtn')?.addEventListener('click', () => this.deselectAllStores());
         document.getElementById('invertSelectionBtn')?.addEventListener('click', () => this.invertSelection());
-        
+
         // OM 店鋪清單面板關閉按鈕
         document.getElementById('closeOmPanel')?.addEventListener('click', () => this.closeOmStoresPanel());
-        
+
         // 分類篩選按鈕
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => this.handleFilterClick(e));
         });
-        
+
         // 計算和導出
         document.getElementById('calculateBtn')?.addEventListener('click', () => this.calculate());
         document.getElementById('exportBtn')?.addEventListener('click', () => this.exportToCSV());
@@ -266,21 +266,21 @@ class SafetyStockCalculator {
         document.getElementById('importBtn')?.addEventListener('click', () => document.getElementById('importFile').click());
         document.getElementById('importFile')?.addEventListener('change', (e) => this.importConfiguration(e));
         document.getElementById('printBtn')?.addEventListener('click', () => this.printResults());
-        
+
         // 店鋪管理（CSV 上載）
         document.getElementById('uploadStoresBtn')?.addEventListener('click', () => this.triggerStoresCsvUpload());
         document.getElementById('downloadStoresTemplateBtn')?.addEventListener('click', () => this.downloadStoresCsvTemplate());
         document.getElementById('storesCsvFile')?.addEventListener('change', (e) => this.importStoresFromCsv(e));
-        
+
         // Safety Stock Matrix 編輯
         document.getElementById('editMatrixBtn')?.addEventListener('click', () => this.enableMatrixEdit());
         document.getElementById('saveMatrixBtn')?.addEventListener('click', () => this.saveMatrixEdit());
         document.getElementById('cancelMatrixBtn')?.addEventListener('click', () => this.cancelMatrixEdit());
         document.getElementById('resetMatrixBtn')?.addEventListener('click', () => this.resetMatrix());
-        
+
         // 權重設定面板事件
         this.setupWeightPanelListeners();
-        
+
         // 店鋪 Safety Stock 編輯監聽
         this.setupStoreStockEditListeners();
     }
@@ -1771,7 +1771,8 @@ class SafetyStockCalculator {
             customStoreStock: this.customStoreStock, // 個別店鋪的自訂值
             selectedStores: this.selectedStores,
             stores: this.stores,
-            theme: this.currentTheme // 保存當前主題
+            theme: this.currentTheme, // 保存當前主題
+            weightConfig: this.weightConfig
         };
         localStorage.setItem('safetyStockCalculatorV2', JSON.stringify(data));
     }
@@ -1818,7 +1819,7 @@ class SafetyStockCalculator {
     }
 
     // ==================== 權重快速設定功能 ====================
-    
+
     // 設置權重面板事件監聽
     setupWeightPanelListeners() {
         // 切換面板顯示/隱藏
@@ -1857,7 +1858,7 @@ class SafetyStockCalculator {
     toggleWeightPanel() {
         const panel = document.getElementById('weightContent');
         const btn = document.getElementById('toggleWeightPanel');
-        
+
         if (panel.style.display === 'none') {
             panel.style.display = 'block';
             btn.classList.add('active');
@@ -1893,7 +1894,8 @@ class SafetyStockCalculator {
             regionFactor: {
                 HK: getValue('hkFactor', 1.0),
                 MO: getValue('moFactor', 1.3)
-            }
+            },
+            targetTotal: getValue('targetTotal', 0)
         };
     }
 
@@ -1918,6 +1920,9 @@ class SafetyStockCalculator {
         setValue('baseValue', this.weightConfig.baseValue);
         setValue('hkFactor', this.weightConfig.regionFactor.HK);
         setValue('moFactor', this.weightConfig.regionFactor.MO);
+        if (this.weightConfig.targetTotal !== undefined) {
+            setValue('targetTotal', this.weightConfig.targetTotal);
+        }
     }
 
     // 套用權重模板
@@ -1946,7 +1951,7 @@ class SafetyStockCalculator {
         setValue('moFactor', template.regionFactor.MO);
 
         this.showToast(`已套用「${templateName}」模板`);
-        
+
         // 自動預覽
         this.previewWeights();
     }
@@ -1954,7 +1959,14 @@ class SafetyStockCalculator {
     // 預覽權重計算結果
     previewWeights() {
         const weights = this.readWeightsFromUI();
-        const previewMatrix = generateMatrixWithWeights(weights);
+        let previewMatrix = generateMatrixWithWeights(weights);
+        const targetTotal = Math.round(weights.targetTotal || 0);
+        let targetInfo = null;
+
+        if (targetTotal > 0) {
+            targetInfo = this.scaleMatrixToTarget(previewMatrix, targetTotal);
+            previewMatrix = targetInfo.matrix;
+        }
 
         let html = '';
         const regions = ['HK', 'MO'];
@@ -2001,7 +2013,7 @@ class SafetyStockCalculator {
         document.getElementById('weightPreview').style.display = 'block';
 
         // 計算並顯示摘要
-        const summary = this.calculateWeightSummary(previewMatrix);
+        const summary = this.calculateWeightSummary(previewMatrix, targetTotal, targetInfo);
         document.getElementById('weightPreviewSummary').innerHTML = summary;
 
         // 保存權重配置
@@ -2010,7 +2022,7 @@ class SafetyStockCalculator {
     }
 
     // 計算權重預覽摘要
-    calculateWeightSummary(matrix) {
+    calculateWeightSummary(matrix, targetTotal = 0, targetInfo = null) {
         let totalHK = 0;
         let totalMO = 0;
         let countHK = 0;
@@ -2035,20 +2047,154 @@ class SafetyStockCalculator {
             });
         });
 
+        const storeTotals = this.calculateStoreTotals(matrix);
+        const totalLine = `🧮 依現有店舖數量估算總量: ${storeTotals.totalAll} (HK ${storeTotals.totalHK} / MO ${storeTotals.totalMO})`;
+
+        let targetLine = '';
+        if (targetTotal > 0) {
+            const diff = targetTotal - storeTotals.totalAll;
+            const diffText = diff === 0 ? '✅ 已對齊' : `（差 ${diff}）`;
+            targetLine = `<br>🎯 目標總量: ${targetTotal} / 實際分配總量: ${storeTotals.totalAll} ${diffText}`;
+            if (targetInfo && targetInfo.remaining > 0) {
+                targetLine += `<br>⚠️ 因整數分配尚有 ${targetInfo.remaining} 未分配`;
+            }
+        }
+
         return `
             <strong>📊 統計摘要:</strong><br>
             🇭🇰 香港 (HK): 平均 ${(totalHK / countHK).toFixed(1)} (總計 ${totalHK})<br>
             🇲🇴 澳門 (MO): 平均 ${(totalMO / countMO).toFixed(1)} (總計 ${totalMO})<br>
-            📈 整體平均: ${((totalHK + totalMO) / (countHK + countMO)).toFixed(1)}
+            📈 整體平均: ${((totalHK + totalMO) / (countHK + countMO)).toFixed(1)}<br>
+            ${totalLine}${targetLine}
         `;
+    }
+
+    // 依店舖數量計算矩陣總量
+    calculateStoreTotals(matrix) {
+        let totalHK = 0;
+        let totalMO = 0;
+        let totalAll = 0;
+
+        this.stores.forEach(store => {
+            const value = matrix?.[store.Regional]?.[store.Class]?.[store.Size] ?? 0;
+            totalAll += value;
+            if (store.Regional === 'HK') {
+                totalHK += value;
+            } else {
+                totalMO += value;
+            }
+        });
+
+        return { totalHK, totalMO, totalAll };
+    }
+
+    // 統計各店舖類型數量
+    getStoreTypeCounts() {
+        const counts = {};
+        this.stores.forEach(store => {
+            const key = `${store.Regional}-${store.Class}-${store.Size}`;
+            counts[key] = (counts[key] || 0) + 1;
+        });
+        return counts;
+    }
+
+    // 依目標總量縮放矩陣
+    scaleMatrixToTarget(matrix, targetTotal) {
+        const regions = ['HK', 'MO'];
+        const categories = ['A', 'B', 'C', 'D'];
+        const sizes = ['XL', 'L', 'M', 'S', 'XS'];
+        const counts = this.getStoreTypeCounts();
+
+        let currentTotal = 0;
+        const cells = [];
+
+        regions.forEach(region => {
+            categories.forEach(category => {
+                sizes.forEach(size => {
+                    const value = matrix[region][category][size];
+                    const count = counts[`${region}-${category}-${size}`] || 0;
+                    currentTotal += count * value;
+                    cells.push({ region, category, size, count, value });
+                });
+            });
+        });
+
+        if (currentTotal === 0) {
+            return {
+                matrix,
+                currentTotal,
+                appliedTotal: 0,
+                remaining: targetTotal,
+                scale: 0
+            };
+        }
+
+        const scale = targetTotal / currentTotal;
+        let appliedTotal = 0;
+
+        cells.forEach(cell => {
+            const scaled = cell.value * scale;
+            const base = Math.max(0, Math.floor(scaled));
+            cell.base = base;
+            cell.frac = scaled - base;
+            appliedTotal += cell.count * cell.base;
+        });
+
+        let remaining = targetTotal - appliedTotal;
+        if (remaining > 0) {
+            const sorted = [...cells].sort((a, b) => {
+                if (b.frac !== a.frac) return b.frac - a.frac;
+                return b.count - a.count;
+            });
+
+            let safety = 0;
+            while (remaining > 0 && safety < 10000) {
+                const candidate = sorted.find(cell => cell.count > 0 && cell.count <= remaining);
+                if (!candidate) break;
+                candidate.base += 1;
+                remaining -= candidate.count;
+                safety += 1;
+            }
+        }
+
+        const scaledMatrix = {};
+        regions.forEach(region => {
+            scaledMatrix[region] = {};
+            categories.forEach(category => {
+                scaledMatrix[region][category] = {};
+                sizes.forEach(size => {
+                    const cell = cells.find(item => item.region === region && item.category === category && item.size === size);
+                    scaledMatrix[region][category][size] = cell ? cell.base : 0;
+                });
+            });
+        });
+
+        return {
+            matrix: scaledMatrix,
+            currentTotal,
+            appliedTotal: targetTotal - remaining,
+            remaining,
+            scale
+        };
     }
 
     // 套用權重到對照表
     applyWeights() {
         const weights = this.readWeightsFromUI();
-        const newMatrix = generateMatrixWithWeights(weights);
+        let newMatrix = generateMatrixWithWeights(weights);
+        const targetTotal = Math.round(weights.targetTotal || 0);
+        let targetInfo = null;
 
-        if (confirm('確定要套用權重計算結果嗎？這將覆蓋目前的 Safety Stock 對照表。\n\n提示：套用後您仍可手動調整個別數值。')) {
+        if (targetTotal > 0) {
+            targetInfo = this.scaleMatrixToTarget(newMatrix, targetTotal);
+            newMatrix = targetInfo.matrix;
+        }
+
+        const confirmMessage = targetTotal > 0
+            ? `確定要依目標總量 ${targetTotal} 套用權重計算結果嗎？這將覆蓋目前的 Safety Stock 對照表。\n\n提示：套用後您仍可手動調整個別數值。`
+            : '確定要套用權重計算結果嗎？這將覆蓋目前的 Safety Stock 對照表。\n\n提示：套用後您仍可手動調整個別數值。';
+
+        if (confirm(confirmMessage)) {
             // 更新 customSafetyStock
             Object.keys(newMatrix).forEach(region => {
                 Object.keys(newMatrix[region]).forEach(category => {
@@ -2067,8 +2213,13 @@ class SafetyStockCalculator {
             this.renderStores();
             this.saveToLocalStorage();
 
-            this.showToast('✅ 權重設定已套用！');
-            
+            const totals = this.calculateStoreTotals(newMatrix);
+            if (targetTotal > 0 && targetInfo && targetInfo.remaining > 0) {
+                this.showToast(`✅ 已套用權重！實際總量 ${totals.totalAll}（尚有 ${targetInfo.remaining} 未分配）`);
+            } else {
+                this.showToast(`✅ 權重設定已套用！總量 ${totals.totalAll}`);
+            }
+
             // 關閉預覽面板
             document.getElementById('weightPreview').style.display = 'none';
         }

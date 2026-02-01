@@ -321,6 +321,13 @@ footer {
     gap: 6px;
 }
 
+.weight-hint {
+    margin-top: 10px;
+    margin-bottom: 0;
+    font-size: 0.85em;
+    color: var(--color-text-muted);
+}
+
 .weight-inputs {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
