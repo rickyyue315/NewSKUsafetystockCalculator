@@ -1331,6 +1331,99 @@ footer {
     border-left-color: var(--color-warning);
 }
 
+.stores-management-section h2 {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* 摺疊按鈕 */
+.toggle-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: var(--color-text-secondary);
+    transition: transform 0.3s ease, color 0.3s ease;
+    margin-left: auto;
+}
+
+.toggle-btn:hover {
+    color: var(--color-primary);
+}
+
+/* 管理內容區域 */
+.management-content {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 密碼保護區域 */
+.password-protected {
+    margin-top: 1rem;
+}
+
+.password-lock {
+    text-align: center;
+    padding: 2rem;
+    background: var(--color-section-bg);
+    border-radius: 8px;
+    border: 2px dashed var(--color-border-medium);
+    animation: fadeIn 0.3s ease;
+}
+
+.lock-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.password-lock p {
+    font-size: 1.1em;
+    color: var(--color-text-secondary);
+    margin-bottom: 1rem;
+}
+
+.password-input-group {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+.password-input-group input {
+    padding: 0.5rem;
+    border: 1px solid var(--color-border-medium);
+    border-radius: 4px;
+    font-size: 1rem;
+    text-align: center;
+    letter-spacing: 0.5rem;
+    width: 120px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.password-input-group input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.password-hint {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+/* 解鎖後的內容 */
+.unlocked-content {
+    animation: fadeIn 0.3s ease;
+}
+
 .management-controls {
     margin-bottom: 15px;
     display: flex;

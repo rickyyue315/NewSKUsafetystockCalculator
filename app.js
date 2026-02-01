@@ -272,6 +272,18 @@ class SafetyStockCalculator {
         document.getElementById('downloadStoresTemplateBtn')?.addEventListener('click', () => this.downloadStoresCsvTemplate());
         document.getElementById('storesCsvFile')?.addEventListener('change', (e) => this.importStoresFromCsv(e));
 
+        // 店鋪管理區域摺疊
+        document.getElementById('toggleStoresManagement')?.addEventListener('click', () => this.toggleStoresManagement());
+
+        // 密碼驗證
+        document.getElementById('verifyPasswordBtn')?.addEventListener('click', () => this.verifyAdminPassword());
+        document.getElementById('adminPassword')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.verifyAdminPassword();
+        });
+
+        // 鎖定管理區域
+        document.getElementById('lockManagementBtn')?.addEventListener('click', () => this.lockManagement());
+
         // Safety Stock Matrix 編輯
         document.getElementById('editMatrixBtn')?.addEventListener('click', () => this.enableMatrixEdit());
         document.getElementById('saveMatrixBtn')?.addEventListener('click', () => this.saveMatrixEdit());
@@ -1993,6 +2005,49 @@ class SafetyStockCalculator {
         }
 
         return rows.filter(r => r.some(cell => cell.trim() !== ''));
+    }
+
+    // ==================== 店鋪管理區域摺疊與密碼保護 ====================
+
+    // 切換店鋪管理區域顯示/隱藏
+    toggleStoresManagement() {
+        const content = document.getElementById('storesManagementContent');
+        const btn = document.getElementById('toggleStoresManagement');
+
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            btn.textContent = '▲';
+        } else {
+            content.style.display = 'none';
+            btn.textContent = '▼';
+        }
+    }
+
+    // 驗證管理員密碼
+    verifyAdminPassword() {
+        const passwordInput = document.getElementById('adminPassword');
+        const password = passwordInput.value.trim();
+        const ADMIN_PASSWORD = '0000'; // 預設密碼
+
+        if (password === ADMIN_PASSWORD) {
+            // 密碼正確，解鎖
+            document.getElementById('passwordLock').style.display = 'none';
+            document.getElementById('unlockedContent').style.display = 'block';
+            passwordInput.value = ''; // 清空密碼欄位
+            this.showToast('✅ 管理員權限已確認');
+        } else {
+            // 密碼錯誤
+            this.showToast('❌ 密碼錯誤，請重試');
+            passwordInput.value = '';
+            passwordInput.focus();
+        }
+    }
+
+    // 鎖定管理區域
+    lockManagement() {
+        document.getElementById('passwordLock').style.display = 'block';
+        document.getElementById('unlockedContent').style.display = 'none';
+        this.showToast('🔒 管理區域已鎖定');
     }
 
     // ==================== 本地存儲函數 ====================

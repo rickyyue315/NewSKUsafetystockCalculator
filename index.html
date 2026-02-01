@@ -438,23 +438,46 @@
 
             <!-- 店鋪管理區域 -->
             <section class="section stores-management-section">
-                <h2>🔧 店鋪名單管理</h2>
-                <p class="hint">以 CSV 上載更新店鋪名單。上載成功後會自動保存。</p>
+                <h2>
+                    🔧 店鋪名單管理
+                    <button type="button" class="toggle-btn" id="toggleStoresManagement" title="展開/摺疊">▼</button>
+                </h2>
                 
-                <div class="management-controls">
-                    <button id="uploadStoresBtn" class="btn btn-warning">📤 上載 CSV</button>
-                    <button id="downloadStoresTemplateBtn" class="btn btn-info">⬇️ 下載 CSV 範本</button>
-                </div>
-                <input id="storesCsvFile" type="file" accept=".csv,text/csv" style="display: none;" />
-                
-                <div class="stores-format-hint">
-                    <h4>CSV 欄位說明（第一列為標題）：</h4>
-                    <pre>
+                <!-- 摺疊內容 -->
+                <div class="management-content" id="storesManagementContent" style="display: none;">
+                    <p class="hint">以 CSV 上載更新店鋪名單。上載成功後會自動保存。</p>
+                    
+                    <!-- 密碼保護區域 -->
+                    <div class="password-protected" id="passwordProtectedArea">
+                        <div class="password-lock" id="passwordLock">
+                            <div class="lock-icon">🔒</div>
+                            <p>此功能需要管理員權限</p>
+                            <div class="password-input-group">
+                                <input type="password" id="adminPassword" placeholder="請輸入密碼" maxlength="4">
+                                <button type="button" class="btn btn-primary" id="verifyPasswordBtn">確認</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 解鎖後的內容 -->
+                        <div class="unlocked-content" id="unlockedContent" style="display: none;">
+                            <div class="management-controls">
+                                <button id="uploadStoresBtn" class="btn btn-warning">📤 上載 CSV</button>
+                                <button id="downloadStoresTemplateBtn" class="btn btn-info">⬇️ 下載 CSV 範本</button>
+                                <button id="lockManagementBtn" class="btn btn-secondary">🔒 鎖定</button>
+                            </div>
+                            <input id="storesCsvFile" type="file" accept=".csv,text/csv" style="display: none;" />
+                            
+                            <div class="stores-format-hint">
+                                <h4>CSV 欄位說明（第一列為標題）：</h4>
+                                <pre>
 code,name,region,category,size,manager
 HA02,駱克,HK,A,L,Ivy
 MA01,澳門廣場,MO,B,M,
-                    </pre>
-                    <p class="hint">必填欄位：code、name、region、category、size。manager 可留空。</p>
+                                </pre>
+                                <p class="hint">必填欄位：code、name、region、category、size。manager 可留空。</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
