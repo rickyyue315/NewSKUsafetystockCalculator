@@ -1823,13 +1823,16 @@ class SafetyStockCalculator {
     setupWeightPanelListeners() {
         // 切換面板顯示/隱藏
         document.getElementById('toggleWeightPanel')?.addEventListener('click', () => this.toggleWeightPanel());
-        
+
+        // 算式簡介摺疊/展開
+        document.getElementById('formulaToggleBtn')?.addEventListener('click', () => this.toggleFormulaIntro());
+
         // 套用權重
         document.getElementById('applyWeightsBtn')?.addEventListener('click', () => this.applyWeights());
-        
+
         // 預覽權重
         document.getElementById('previewWeightsBtn')?.addEventListener('click', () => this.previewWeights());
-        
+
         // 模板按鈕
         document.querySelectorAll('.template-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -1837,6 +1840,17 @@ class SafetyStockCalculator {
                 this.applyWeightTemplate(templateName);
             });
         });
+    }
+
+    // 切換算式簡介摺疊/展開
+    toggleFormulaIntro() {
+        const btn = document.getElementById('formulaToggleBtn');
+        const content = document.getElementById('formulaContent');
+
+        if (btn && content) {
+            btn.classList.toggle('collapsed');
+            content.classList.toggle('collapsed');
+        }
     }
 
     // 切換權重面板顯示/隱藏

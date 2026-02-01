@@ -37,6 +37,48 @@
                     </button>
                     
                     <div class="weight-content" id="weightContent" style="display:none">
+                        <!-- 算式簡介說明 (摺疊式) -->
+                        <div class="weight-formula-intro">
+                            <button type="button" class="formula-toggle-btn" id="formulaToggleBtn">
+                                <span>📐 算式簡介</span>
+                                <span class="toggle-icon">▼</span>
+                            </button>
+                            <div class="formula-content" id="formulaContent">
+                                <div class="formula-box">
+                                    <div class="formula-title">計算公式：</div>
+                                    <code class="formula-code">Safety Stock = 基礎值 + (Class權重 × Size權重 × 區域係數)</code>
+                                </div>
+
+                                <div class="formula-params">
+                                    <div class="param-item">
+                                        <span class="param-name">🔢 基礎值：</span>
+                                        <span class="param-desc">所有店舖的 Safety Stock 基礎數值（預設 6）</span>
+                                    </div>
+                                    <div class="param-item">
+                                        <span class="param-name">📊 Class權重：</span>
+                                        <span class="param-desc">根據舖類級別 (A/B/C/D) 設定的權重係數</span>
+                                    </div>
+                                    <div class="param-item">
+                                        <span class="param-name">📏 Size權重：</span>
+                                        <span class="param-desc">根據貨場面積 (XL/L/M/S/XS) 設定的權重係數</span>
+                                    </div>
+                                    <div class="param-item">
+                                        <span class="param-name">🌍 區域係數：</span>
+                                        <span class="param-desc">香港(HK)通常為 1.0，澳門(MO)通常較高（如 1.3）以反映不同市場需求</span>
+                                    </div>
+                                </div>
+
+                                <div class="formula-example">
+                                    <div class="example-title">📝 計算範例：</div>
+                                    <div class="example-content">
+                                        <p><strong>條件：</strong>A級店舖 (Class權重=3) + 大型貨場 (Size權重=3) + 澳門 (區域係數=1.3)</p>
+                                        <p><strong>計算：</strong>6 + (3 × 3 × 1.3) = 6 + 11.7 ≈ <strong>18</strong></p>
+                                        <p class="example-note">💡 結果會四捨五入為整數</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Class 權重設定 -->
                         <div class="weight-group">
                             <h4>📊 Class 權重 (A:B:C:D)</h4>
@@ -381,7 +423,8 @@ MA01,澳門廣場,MO,B,M,
         </main>
 
         <footer>
-            <p>New SKU Safety (Buffer) Stock Calculator (2026) - For RP team (Build up by RP-Ricky Yue, Support by CMPD-Natalie Wong )</p>
+            <p>New SKU Safety (Buffer) Stock Calculator (2026) – RP Team Tool</p>
+            <p>(Developed by RP-Ricky Yue | Concept provided by CMPD-Natalie Wong)</p>
         </footer>
     </div>
 
