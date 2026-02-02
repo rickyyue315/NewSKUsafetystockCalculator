@@ -20,6 +20,7 @@ class SafetyStockCalculator {
         this.customStoreStock = {}; // 個別店鋪的自訂 Safety Stock 值 (key: store.Site)
         this.currentTheme = DEFAULT_THEME; // 當前主題
         this.weightConfig = JSON.parse(JSON.stringify(WEIGHT_CONFIG)); // 權重配置
+        this.matrixDraft = {}; // 對照表草稿（未套用到選擇店鋪）
         
         this.init();
     }
@@ -28,6 +29,7 @@ class SafetyStockCalculator {
     init() {
         this.loadStoresFromConfig();
         this.loadSafetyStockMatrix();
+        this.matrixDraft = this.buildMatrixDraftFromApplied();
         this.initTheme(); // 初始化主題
         this.setupEventListeners();
         this.setupInlineEditListeners();
@@ -250,6 +252,7 @@ class SafetyStockCalculator {
         document.getElementById('selectAllBtn')?.addEventListener('click', () => this.selectAllStores());
         document.getElementById('deselectAllBtn')?.addEventListener('click', () => this.deselectAllStores());
         document.getElementById('invertSelectionBtn')?.addEventListener('click', () => this.invertSelection());
+        document.getElementById('clearFiltersBtn')?.addEventListener('click', () => this.clearFilters());
 
         // OM 店鋪清單面板關閉按鈕
         document.getElementById('closeOmPanel')?.addEventListener('click', () => this.closeOmStoresPanel());
@@ -290,6 +293,7 @@ class SafetyStockCalculator {
         document.getElementById('saveMatrixBtn')?.addEventListener('click', () => this.saveMatrixEdit());
         document.getElementById('cancelMatrixBtn')?.addEventListener('click', () => this.cancelMatrixEdit());
         document.getElementById('resetMatrixBtn')?.addEventListener('click', () => this.resetMatrix());
+        document.getElementById('applyMatrixBtn')?.addEventListener('click', () => this.applyMatrixToStores());
 
         // 權重設定面板事件
         this.setupWeightPanelListeners();
@@ -459,9 +463,12 @@ class SafetyStockCalculator {
         this.updateStoreCount();
     }
 
-    selectAllStores() {
-        // 只選擇目前顯示的店鋪
-        const visibleItems = document.querySelectorAll('#storesContainer .store-item:not([style*="display: none"])');
+    selectAllStores(includeHidden = false) {
+        // 只選擇目前顯示的店鋪（或全部）
+        const selector = includeHidden
+            ? '#storesContainer .store-item'
+            : '#storesContainer .store-item:not([style*="display: none"])';
+        const visibleItems = document.querySelectorAll(selector);
         visibleItems.forEach(item => {
             const checkbox = item.querySelector('input[type="checkbox"]');
             if (checkbox && !checkbox.checked) {
@@ -512,6 +519,21 @@ class SafetyStockCalculator {
         this.saveToLocalStorage();
         this.updateStoresPreview();
         this.updateStoreCount();
+    }
+
+    clearFilters() {
+        this.activeFilters = {
+            region: [],
+            category: [],
+            size: [],
+            storeGroup: [],
+            manager: [],
+            specialStore: []
+        };
+        document.querySelectorAll('.filter-btn.active').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        this.applyFilters();
     }
 
     handleFilterClick(e) {
@@ -806,6 +828,38 @@ class SafetyStockCalculator {
         return getSafetyStockValue(region, category, size);
     }
 
+    getMatrixDraftValue(region, category, size) {
+        if (this.matrixDraft?.[region]?.[category]?.[size] !== undefined) {
+            return this.matrixDraft[region][category][size];
+        }
+        return this.getSafetyStock(region, category, size);
+    }
+
+    buildMatrixDraftFromApplied() {
+        const sizes = ['XL', 'L', 'M', 'S', 'XS'];
+        const categories = ['A', 'B', 'C', 'D'];
+        const regions = ['HK', 'MO'];
+        const matrix = {};
+
+        regions.forEach(region => {
+            matrix[region] = {};
+            categories.forEach(category => {
+                matrix[region][category] = {};
+                sizes.forEach(size => {
+                    matrix[region][category][size] = this.getSafetyStock(region, category, size);
+                });
+            });
+        });
+
+        return matrix;
+    }
+
+    buildDefaultMatrix() {
+        return SAFETY_STOCK_MATRIX
+            ? JSON.parse(JSON.stringify(SAFETY_STOCK_MATRIX))
+            : this.buildMatrixDraftFromApplied();
+    }
+
     renderSafetyStockMatrix() {
         const container = document.getElementById('matrixContainer');
         if (!container) return;
@@ -833,7 +887,7 @@ class SafetyStockCalculator {
             categories.forEach(cat => {
                 html += `<tr><td class="category-cell category-${cat.toLowerCase()}">${cat}級</td>`;
                 sizes.forEach(size => {
-                    const value = this.getSafetyStock(region, cat, size);
+                    const value = this.getMatrixDraftValue(region, cat, size);
                     const key = `${region}-${cat}-${size}`;
                     html += `
                         <td class="matrix-cell" data-key="${key}">
@@ -874,8 +928,11 @@ class SafetyStockCalculator {
             const input = cell.querySelector('.edit-value');
             const display = cell.querySelector('.display-value');
             const value = parseInt(input.value) || 0;
-            
-            this.customSafetyStock[key] = value;
+            const [region, category, size] = key.split('-');
+
+            if (!this.matrixDraft[region]) this.matrixDraft[region] = {};
+            if (!this.matrixDraft[region][category]) this.matrixDraft[region][category] = {};
+            this.matrixDraft[region][category][size] = value;
             display.textContent = value;
             
             cell.classList.remove('editing');
@@ -889,8 +946,7 @@ class SafetyStockCalculator {
         document.getElementById('resetMatrixBtn').style.display = 'none';
         
         this.saveToLocalStorage();
-        this.renderStores(); // 更新店鋪顯示的 Safety Stock
-        alert('Safety Stock 對照表已更新！');
+        this.showToast('✅ 對照表已保存，請按「套用到選擇店鋪」更新店鋪 Safety');
     }
 
     cancelMatrixEdit() {
@@ -904,11 +960,31 @@ class SafetyStockCalculator {
 
     resetMatrix() {
         if (confirm('確定要重置 Safety Stock 對照表為預設值嗎？')) {
-            this.customSafetyStock = {};
+            this.matrixDraft = this.buildDefaultMatrix();
             this.renderSafetyStockMatrix();
             this.enableMatrixEdit(); // 保持編輯模式
             this.saveToLocalStorage();
         }
+    }
+
+    applyMatrixToStores() {
+        const confirmed = confirm('確定要套用目前對照表到「選擇店鋪」嗎？此操作會即時影響店鋪 Safety。');
+        if (!confirmed) return;
+
+        this.customSafetyStock = {};
+        Object.keys(this.matrixDraft || {}).forEach(region => {
+            Object.keys(this.matrixDraft[region] || {}).forEach(category => {
+                Object.keys(this.matrixDraft[region][category] || {}).forEach(size => {
+                    const key = `${region}-${category}-${size}`;
+                    this.customSafetyStock[key] = this.matrixDraft[region][category][size];
+                });
+            });
+        });
+
+        this.saveToLocalStorage();
+        this.renderStores();
+        this.updateStoresPreview();
+        this.showToast('✅ 對照表已套用到選擇店鋪');
     }
 
     // ==================== 計算函數 ====================
@@ -1315,6 +1391,11 @@ class SafetyStockCalculator {
             // 更新 customSafetyStock
             const key = `${result.region}-${result.category}-${result.size}`;
             this.customSafetyStock[key] = newValue;
+
+                // 同步對照表草稿
+                if (!this.matrixDraft[result.region]) this.matrixDraft[result.region] = {};
+                if (!this.matrixDraft[result.region][result.category]) this.matrixDraft[result.region][result.category] = {};
+                this.matrixDraft[result.region][result.category][result.size] = newValue;
         }
         
         displayValue.textContent = newValue;
@@ -1634,6 +1715,7 @@ class SafetyStockCalculator {
                 
                 if (config.customSafetyStock) {
                     this.customSafetyStock = config.customSafetyStock;
+                    this.matrixDraft = this.buildMatrixDraftFromApplied();
                     this.renderSafetyStockMatrix();
                 }
                 
@@ -2075,7 +2157,8 @@ class SafetyStockCalculator {
             selectedStores: this.selectedStores,
             stores: this.stores,
             theme: this.currentTheme, // 保存當前主題
-            weightConfig: this.weightConfig
+            weightConfig: this.weightConfig,
+            matrixDraft: this.matrixDraft
         };
         localStorage.setItem('safetyStockCalculatorV2', JSON.stringify(data));
     }
@@ -2098,10 +2181,13 @@ class SafetyStockCalculator {
             if (data) {
                 // 如果店鋪數量不匹配，清除舊的選擇並重新渲染
                 if (storeCountMismatch) {
-                    this.selectedStores = [];
                     this.renderStores();
+                    this.selectedStores = this.stores.map((_, index) => index);
+                    this.updateCheckboxes();
+                    this.updateStoresPreview();
+                    this.updateStoreCount();
                     this.saveToLocalStorage();
-                    this.showToast(`🔄 店鋪資料已更新（${configStoreCount} 間），請重新選擇店鋪`);
+                    this.showToast(`🔄 店鋪資料已更新（${configStoreCount} 間），已預設全選`);
                 } else {
                     // 正常載入選擇的店鋪
                     if (data.selectedStores) {
@@ -2124,7 +2210,6 @@ class SafetyStockCalculator {
                 // 載入其他設定（與店鋪數量無關）
                 if (data.customSafetyStock) {
                     this.customSafetyStock = data.customSafetyStock;
-                    this.renderSafetyStockMatrix();
                 }
                 if (data.customStoreStock) {
                     this.customStoreStock = data.customStoreStock;
@@ -2139,9 +2224,23 @@ class SafetyStockCalculator {
                     this.weightConfig = data.weightConfig;
                     this.loadWeightConfigToUI();
                 }
+                if (data.matrixDraft) {
+                    this.matrixDraft = data.matrixDraft;
+                } else {
+                    this.matrixDraft = this.buildMatrixDraftFromApplied();
+                }
+                this.renderSafetyStockMatrix();
             }
         } catch (err) {
             console.log('無法從本地存儲加載數據');
+        }
+
+        if (!this.selectedStores || this.selectedStores.length === 0) {
+            this.selectedStores = this.stores.map((_, index) => index);
+            this.updateCheckboxes();
+            this.updateStoresPreview();
+            this.updateStoreCount();
+            this.saveToLocalStorage();
         }
     }
 
@@ -2522,29 +2621,21 @@ class SafetyStockCalculator {
             : '確定要套用權重計算結果嗎？這將覆蓋目前的 Safety Stock 對照表。\n\n提示：套用後您仍可手動調整個別數值。';
 
         if (confirm(confirmMessage)) {
-            // 更新 customSafetyStock
-            Object.keys(newMatrix).forEach(region => {
-                Object.keys(newMatrix[region]).forEach(category => {
-                    Object.keys(newMatrix[region][category]).forEach(size => {
-                        const key = `${region}-${category}-${size}`;
-                        this.customSafetyStock[key] = newMatrix[region][category][size];
-                    });
-                });
-            });
+            // 更新對照表草稿（不直接影響店鋪）
+            this.matrixDraft = JSON.parse(JSON.stringify(newMatrix));
 
             // 保存權重配置
             this.weightConfig = weights;
 
-            // 重新渲染
+            // 重新渲染對照表
             this.renderSafetyStockMatrix();
-            this.renderStores();
             this.saveToLocalStorage();
 
             const totals = this.calculateStoreTotals(newMatrix);
             if (targetTotal > 0 && targetInfo && targetInfo.remaining > 0) {
-                this.showToast(`✅ 已套用權重！實際總量 ${totals.totalAll}（尚有 ${targetInfo.remaining} 未分配）`);
+                this.showToast(`✅ 權重已套用到對照表！實際總量 ${totals.totalAll}（尚有 ${targetInfo.remaining} 未分配）`);
             } else {
-                this.showToast(`✅ 權重設定已套用！總量 ${totals.totalAll}`);
+                this.showToast(`✅ 權重已套用到對照表！總量 ${totals.totalAll}`);
             }
 
             // 關閉預覽面板

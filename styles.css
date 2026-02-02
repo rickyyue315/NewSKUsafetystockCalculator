@@ -604,6 +604,7 @@ footer {
     margin-bottom: 15px;
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .matrix-container {

@@ -82,3 +82,14 @@ MIT License — 見 LICENSE
 ---
 
 若要我同時建立一段更完整的「變更紀錄摘要」或更新 `QUICK_START.md`，告訴我要包含的細節。謝謝！
+
+## 貢獻與 GitHub 指導
+
+歡迎貢獻此專案！請先閱讀專案根目錄的 `CONTRIBUTING.md`，其中包含：
+
+- 分支策略與命名規則（feature/*, fix/*, hotfix/*）
+- Pull Request（PR）準備清單與範例描述
+- Issue 分類與標籤建議
+- 代碼風格與提交訊息建議（簡短前綴 + 描述）
+
+本專案也包含 GitHub 模板：`.github/PULL_REQUEST_TEMPLATE.md`、`.github/ISSUE_TEMPLATE/`，請在建立 PR / Issue 時使用以加速審閱。

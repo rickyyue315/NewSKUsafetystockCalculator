@@ -56,6 +56,16 @@ git push -u origin main
 部署後可通過以下URL訪問：
 - `https://USERNAME.github.io/safety-stock-calculator/`
 
+### 備註：Zeabur/其他雲端部署
+
+本專案也提供 `zeabur.json`（如存在）以方便在 Zeabur 平台部署。如要使用 Zeabur：
+
+1. 在 Zeabur 儀表板建立新應用，選擇從 GitHub 部署
+2. 將 `zeabur.json` 上傳或在建立流程中使用倉庫中配置
+3. 設定環境變數（如有）並選擇分支
+
+Zeabur、Netlify 及 GitHub Pages 等服務均可用於靜態前端部署，選擇最符合你團隊 CI 流程的方案。
+
 ### 第三步：版本控制最佳實踐
 
 #### 日常工作流程
@@ -187,6 +197,8 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: .
+
+   （提示）你可以把 `publish_dir` 設為 `./` 或指定輸出資料夾；若使用 Zeabur 或 Netlify，可改用它們的 Action/CLI。也建議在 CI 中加入檢查步驟（lint、簡單測試），以提高 PR 審核品質。
 ```
 
 ### 使用 Netlify（持續部署）

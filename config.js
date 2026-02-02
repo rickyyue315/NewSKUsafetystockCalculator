@@ -193,38 +193,54 @@ const DEFAULT_CALCULATION_CONFIG = {
 // ==================== 權重設定配置 ====================
 // 用於快速計算 Safety Stock 對照表
 
-// 預設權重配置 - 調整後與對照表一致
+// 預設權重配置 - 根據用戶提供的數值設定
 const WEIGHT_CONFIG = {
-    class: { A: 3, B: 2, C: 1.5, D: 1.5 },
-    size: { XL: 4, L: 3, M: 2.5, S: 2, XS: 1.5 },
+    class: { A: 2, B: 1.5, C: 1, D: 1 },
+    size: { XL: 2.5, L: 2, M: 1.5, S: 1, XS: 1 },
     baseValue: 4,
     regionFactor: { HK: 1.0, MO: 1.33 }
 };
 
-// 預設模板 - 與對照表數值一致
+// 預設模板 - 提供多種權重設定選項
 const WEIGHT_TEMPLATES = {
-    // 系統預設（與對照表數值一致）
+    // 目前設定（根據用戶提供的數值）
     current: {
-        class: { A: 3, B: 2, C: 1.5, D: 1.5 },
-        size: { XL: 4, L: 3, M: 2.5, S: 2, XS: 1.5 },
+        class: { A: 2, B: 1.5, C: 1, D: 1 },
+        size: { XL: 2.5, L: 2, M: 1.5, S: 1, XS: 1 },
         baseValue: 4,
         regionFactor: { HK: 1.0, MO: 1.33 }
     },
 
-    // 預設權重（與對照表數值一致）
+    // 預設權重（與目前設定相同）
     default: {
-        class: { A: 3, B: 2, C: 1.5, D: 1.5 },
-        size: { XL: 4, L: 3, M: 2.5, S: 2, XS: 1.5 },
+        class: { A: 2, B: 1.5, C: 1, D: 1 },
+        size: { XL: 2.5, L: 2, M: 1.5, S: 1, XS: 1 },
         baseValue: 4,
         regionFactor: { HK: 1.0, MO: 1.33 }
     },
 
-    // 平衡權重（Class 權重差異較小）
+    // 平衡權重（較平均分配）
     balanced: {
-        class: { A: 2.5, B: 2, C: 1.5, D: 1.5 },
-        size: { XL: 3.5, L: 3, M: 2.5, S: 2, XS: 1.5 },
+        class: { A: 1.8, B: 1.5, C: 1.2, D: 1 },
+        size: { XL: 2.2, L: 1.8, M: 1.5, S: 1.2, XS: 1 },
         baseValue: 4,
         regionFactor: { HK: 1.0, MO: 1.3 }
+    },
+
+    // 保守型（較低的庫存配置）
+    conservative: {
+        class: { A: 1.5, B: 1.2, C: 0.8, D: 0.8 },
+        size: { XL: 2, L: 1.5, M: 1.2, S: 0.8, XS: 0.8 },
+        baseValue: 3,
+        regionFactor: { HK: 1.0, MO: 1.2 }
+    },
+
+    // 積極型（較高的庫存配置）
+    aggressive: {
+        class: { A: 2.5, B: 2, C: 1.5, D: 1.2 },
+        size: { XL: 3, L: 2.5, M: 2, S: 1.5, XS: 1.2 },
+        baseValue: 5,
+        regionFactor: { HK: 1.0, MO: 1.4 }
     }
 };
 
@@ -232,8 +248,13 @@ const WEIGHT_TEMPLATES = {
 function calculateSafetyStockWithWeights(region, category, size, weights) {
     const classWeight = weights.class[category] || 1;
     const sizeWeight = weights.size[size] || 1;
-    const regionFactor = weights.regionFactor[region] || 1.0;
+    const regionFactor = weights.regionFactor[region];
     const baseValue = weights.baseValue || 6;
+    
+    // 如果區域係數為 0 或未定義，直接返回 0（該區域不需要庫存）
+    if (regionFactor === 0 || regionFactor === undefined) {
+        return 0;
+    }
     
     // 計算公式：基礎值 + (Class權重 × Size權重 × 區域係數)
     let result = baseValue + (classWeight * sizeWeight * regionFactor);
