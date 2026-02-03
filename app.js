@@ -1552,11 +1552,13 @@ class SafetyStockCalculator {
             ['店舖詳細清單'],
             [`生成日期: ${dateTimeStr}`],
             [],
-            ['HK/MO', '代號', '店舖', '類型代碼', '舖類', '貨場面積', 'Safety Stock', 'Carry']
+            ['HK/MO', '代號', '店舖', '類型代碼', '舖類', '貨場面積', 'Safety Stock', 'Carry', 'OM']
         ];
 
         this.results.forEach(result => {
             const carry = result.safetyStock > 0 ? 'Y' : 'FALSE';
+            const store = this.stores.find(s => s.Site === result.code);
+            const om = store ? store.OM : '';
             detailData.push([
                 result.region,
                 result.code,
@@ -1565,7 +1567,8 @@ class SafetyStockCalculator {
                 result.category,
                 result.size,
                 result.safetyStock,
-                carry
+                carry,
+                om
             ]);
         });
 
@@ -1580,7 +1583,8 @@ class SafetyStockCalculator {
             { wch: 8 },   // 舖類
             { wch: 12 },  // 貨場面積
             { wch: 14 },  // Safety Stock
-            { wch: 10 }   // Carry
+            { wch: 10 },  // Carry
+            { wch: 12 }   // OM
         ];
 
         XLSX.utils.book_append_sheet(wb, wsDetail, '店舖詳細清單');
