@@ -12,6 +12,9 @@
 - 主題系統：多種配色主題與主題面板（在 UI 中切換並保存至 localStorage）
 - 匯出/匯入：CSV、Excel（前端產生）與 JSON 設定匯入/匯出
 - 本地儲存：使用 localStorage 保存使用者自訂值與設定
+- 個別店鋪編輯：支援對單一店鋪的 Safety Stock 值進行獨立編輯
+- OM 管理：支援按營運經理（OM）分組查看和管理店鋪
+- 權重計算：支援基於多維度權重的 Safety Stock 計算
 
 ## 快速開始（開發 / 本地測試）
 
@@ -49,6 +52,8 @@ npx http-server
 - `getSafetyStockValue(region, category, size)` — 從 `SAFETY_STOCK_MATRIX` 讀值
 - `calculateSafetyStockWithWeights(region, category, size, weights)` — 根據權重計算單一值
 - `generateMatrixWithWeights(weights)` — 使用權重產生整張對照表
+- `getStoreTypeCode(region, category, size)` — 產生店鋪類型代碼
+- `getStoreTypeSummary()` — 獲取店鋪類型摘要
 
 ## 使用流程（UI）
 
@@ -63,6 +68,46 @@ npx http-server
 - 店鋪批量匯入：使用 `stores-template.csv` 作為模板
 - 匯出：按 `匯出` 按鈕導出目前結果為 CSV 或 Excel
 
+## 權重計算功能
+
+本工具支援基於多維度權重的 Safety Stock 計算：
+
+- **分類權重**：A/B/C/D 級別店鋪的不同權重
+- **面積權重**：XS/S/M/L/XL 面積的不同權重
+- **區域權重**：香港/澳門區域的不同權重
+- **基礎值**：權重計算的基準值
+- **模板系統**：預設、平衡、保守、積極等多種權重模板
+
+權重計算公式：`Safety Stock = baseValue + (classWeight × sizeWeight × regionFactor)`
+
+## 主題系統
+
+提供多種配色主題供選擇：
+
+- **莎莎粉**：品牌主題（預設）
+- **企業標準**：專業藍綠色系
+- **深色模式**：護眼深色主題
+- **暖色調**：溫暖橙紅配色
+- **高對比度**：無障礙設計
+- **優雅紫**：紫色系主題
+- **極簡白**：純淨簡約配色
+
+## 個別店鋪編輯
+
+支援對單一店鋪的 Safety Stock 值進行獨立編輯：
+
+- 點擊店鋪列表中的 Safety Stock 值即可直接編輯
+- 編輯後的值會覆蓋對照表的預設值
+- 值會保存到 localStorage 以供下次使用
+
+## OM 管理
+
+支援按營運經理（OM）分組管理店鋪：
+
+- 可查看特定 OM 負責的所有店鋪
+- 提供 OM 層級的統計和分析
+- 支援按 OM 分組的彙總報表
+
 ## 開發注意事項
 
 - 業務資料（店鋪、對照表、權重）集中在 `config.js`。優先修改此檔以避免 UI 與邏輯不同步。
@@ -72,8 +117,9 @@ npx http-server
 ## 版本與變更
 
 - v1.0 (2026-01-31) — 初始上線
+- v1.1 (2026-02-02) — 新增權重計算、主題系統、個別店鋪編輯、OM管理等功能
 
-最後更新：2026年2月1日
+最後更新：2026年2月2日
 
 ## 授權
 

@@ -4,14 +4,14 @@
     --color-primary: #667eea;
     --color-primary-light: #5dade2;
     --color-primary-dark: #5568d3;
-    --color-secondary: #76d7c4;
+    --color-secondary: #25D366; /* WhatsApp綠色 */
     --color-accent: #ff9800;
     
     /* 背景色 */
     --color-body-bg: linear-gradient(135deg, #a8d8ea 0%, #d4f1f4 100%);
     --color-container-bg: #ffffff;
     --color-section-bg: #f9f9f9;
-    --color-header-bg: linear-gradient(135deg, #5dade2 0%, #76d7c4 100%);
+    --color-header-bg: linear-gradient(135deg, #5dade2 0%, #25D366 100%);
     --color-footer-bg: #f5f5f5;
     
     /* 文字顏色 */
@@ -57,6 +57,8 @@
     --color-btn-warning-bg: #ff9800;
     --color-btn-danger-bg: #f44336;
     --color-btn-info-bg: #2196f3;
+    --color-btn-apply-bg: #25D366; /* WhatsApp綠色套用按鈕 */
+    --color-btn-apply-hover: #1da851; /* WhatsApp綠色套用按鈕懸停效果 */
     
     /* 滾動條 */
     --color-scrollbar-track: #f1f1f1;
@@ -223,6 +225,18 @@ footer {
     filter: brightness(0.9);
 }
 
+.btn-apply {
+    background: var(--color-btn-apply-bg);
+    color: var(--color-text-light);
+}
+
+.btn-apply:hover {
+    background: var(--color-btn-apply-hover);
+    filter: brightness(0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(118, 215, 196, 0.4);
+}
+
 .btn-warning {
     background: var(--color-btn-warning-bg);
     color: var(--color-text-light);
@@ -249,6 +263,21 @@ footer {
     flex-wrap: wrap;
     align-items: center;
     margin-bottom: 15px;
+}
+
+/* 下一步提示樣式 */
+.next-step-hint {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(37, 211, 102, 0.15);
+    border-left: 4px solid var(--color-secondary);
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--color-text-secondary);
+}
+
+.next-step-hint small {
+    color: var(--color-text-muted);
 }
 
 /* ==================== Safety Stock Matrix 樣式 ==================== */
@@ -383,8 +412,15 @@ footer {
 
 .weight-actions {
     display: flex;
+    flex-direction: column;
     gap: 10px;
     margin-top: 20px;
+    align-items: flex-end;
+}
+
+.apply-buttons {
+    display: flex;
+    gap: 10px;
     justify-content: flex-end;
 }
 
@@ -1212,7 +1248,7 @@ footer {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .stats-container {
@@ -1669,7 +1705,7 @@ footer {
 }
 
 .theme-sasa { background: linear-gradient(135deg, #E6007E 0%, #FF1493 100%); color: #fff; }
-.theme-corporate { background: linear-gradient(135deg, #5dade2 0%, #76d7c4 100%); }
+.theme-corporate { background: linear-gradient(135deg, #5dade2 0%, #25D366 100%); }
 .theme-dark { background: linear-gradient(135deg, #1a1b26 0%, #2a2e3f 100%); color: #fff; }
 .theme-warm { background: linear-gradient(135deg, #f4a261 0%, #e9c46a 100%); }
 .theme-highcontrast { background: #000080; color: #fff; }
@@ -1803,6 +1839,11 @@ footer {
     .btn {
         width: 100%;
         text-align: center;
+    }
+    
+    .next-step-hint {
+        width: 100%;
+        margin-top: 10px;
     }
     
     .theme-selector {
