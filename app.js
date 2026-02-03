@@ -268,6 +268,7 @@ class SafetyStockCalculator {
         document.getElementById('calculateBtn')?.addEventListener('click', () => this.calculate());
         document.getElementById('exportBtn')?.addEventListener('click', () => this.exportToCSV());
         document.getElementById('exportExcelBtn')?.addEventListener('click', () => this.exportToExcel());
+        document.getElementById('exportExcelWithFormulasBtn')?.addEventListener('click', () => this.exportToExcelWithFormulas());
         document.getElementById('exportConfigBtn')?.addEventListener('click', () => this.exportConfiguration());
         document.getElementById('importBtn')?.addEventListener('click', () => document.getElementById('importFile').click());
         document.getElementById('importFile')?.addEventListener('change', (e) => this.importConfiguration(e));
@@ -1693,6 +1694,410 @@ class SafetyStockCalculator {
         // 匯出檔案
         const fileName = this.generateFileName('safetystock', 'xlsx');
         XLSX.writeFile(wb, fileName);
+    }
+
+    // ==================== 匯出含公式的 Excel ====================
+    exportToExcelWithFormulas() {
+        if (this.summaryResults.length === 0) {
+            alert('請先計算結果');
+            return;
+        }
+
+        // 檢查是否載入 SheetJS 庫
+        if (typeof XLSX === 'undefined') {
+            alert('Excel 匯出功能載入失敗，請檢查網路連線後重試');
+            return;
+        }
+
+        // 創建工作簿
+        const wb = XLSX.utils.book_new();
+        
+        // 獲取香港時區的日期時間
+        const now = new Date();
+        const hkFormatter = new Intl.DateTimeFormat('zh-TW', {
+            timeZone: 'Asia/Hong_Kong',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        const dateTimeStr = hkFormatter.format(now);
+
+        // ========== 第一個工作表：Safety Stock 對照表（可編輯，含公式）==========
+        const matrixData = this.buildEditableMatrixForExcel();
+        const wsMatrix = XLSX.utils.aoa_to_sheet(matrixData);
+        
+        // 設置欄寬
+        wsMatrix['!cols'] = [
+            { wch: 12 },  // 區域/舖類/尺寸
+            { wch: 12 },  // XL
+            { wch: 12 },  // L
+            { wch: 12 },  // M
+            { wch: 12 },  // S
+            { wch: 12 }   // XS
+        ];
+
+        XLSX.utils.book_append_sheet(wb, wsMatrix, '對照表');
+
+        // ========== 第二個工作表：店舖詳細清單（含公式） ==========
+        const detailData = [
+            ['店舖詳細清單'],
+            [`生成日期: ${dateTimeStr}`],
+            [],
+            ['HK/MO', '代號', '店舖', '類型代碼', '舖類', '貨場面積', 'Safety Stock', 'Carry', 'OM']
+        ];
+
+        // 對照表數據位置（會在對照表工作表中）
+        const matrixSheetRef = '對照表';
+        
+        this.results.forEach((result, index) => {
+            const carry = result.safetyStock > 0 ? 'Y' : 'FALSE';
+            const store = this.stores.find(s => s.Site === result.code);
+            const om = store ? store.OM : '';
+            
+            // 建構公式：查詢對照表
+            const rowNum = 5 + index; // Excel列號（1-based，加上標題和空行）
+            const safetyStockFormula = this.buildSafetyStockFormula(result.region, result.category, result.size, matrixSheetRef);
+            
+            detailData.push([
+                result.region,
+                result.code,
+                result.name,
+                result.typeCode,
+                result.category,
+                result.size,
+                safetyStockFormula, // 使用公式而非值
+                carry,
+                om
+            ]);
+        });
+
+        const wsDetail = XLSX.utils.aoa_to_sheet(detailData);
+        
+        // 設置欄寬
+        wsDetail['!cols'] = [
+            { wch: 10 },  // HK/MO
+            { wch: 10 },  // 代號
+            { wch: 20 },  // 店舖
+            { wch: 12 },  // 類型代碼
+            { wch: 8 },   // 舖類
+            { wch: 12 },  // 貨場面積
+            { wch: 14 },  // Safety Stock
+            { wch: 10 },  // Carry
+            { wch: 12 }   // OM
+        ];
+
+        // 設置公式屬性，使其被識別為公式
+        detailData.forEach((row, idx) => {
+            if (idx >= 4 && row[6]) { // 跳過標題行，檢查Safety Stock列
+                const cellRef = XLSX.utils.encode_cell({ r: idx, c: 6 });
+                if (wsDetail[cellRef]) {
+                    wsDetail[cellRef].f = row[6]; // 設置為公式
+                    wsDetail[cellRef].v = 0; // 暫時設置值為0（打開時會計算）
+                }
+            }
+        });
+
+        XLSX.utils.book_append_sheet(wb, wsDetail, '店舖詳細清單');
+
+        // ========== 第三個工作表：彙總表（含公式） ==========
+        const summaryDataFormulas = [
+            ['Safety Stock 計算結果 - 彙總表'],
+            [`生成日期: ${dateTimeStr}`],
+            [],
+            ['HK/MO', '舖類', '貨場面積', '類型代碼', '店舖數量', 'Safety Stock', 'ALL SHOP QTY', 'Carry']
+        ];
+
+        this.summaryResults.forEach((result, idx) => {
+            const regionCatSizeKey = `${result.region}-${result.category}-${result.size}`;
+            
+            // 使用公式計算店舖數量和Safety Stock總和
+            const storeCountFormula = `COUNTIFS('店舖詳細清單'!A:A,"${result.region}",'店舖詳細清單'!E:E,"${result.category}",'店舖詳細清單'!F:F,"${result.size}")`;
+            const safetyStockSumFormula = `SUMIFS('店舖詳細清單'!G:G,'店舖詳細清單'!A:A,"${result.region}",'店舖詳細清單'!E:E,"${result.category}",'店舖詳細清單'!F:F,"${result.size}")`;
+            const carryFormula = `IF(${safetyStockSumFormula}>0,"Y","FALSE")`;
+            
+            summaryDataFormulas.push([
+                result.region,
+                result.category,
+                result.size,
+                result.typeCode,
+                storeCountFormula,
+                safetyStockSumFormula,
+                safetyStockSumFormula, // ALL SHOP QTY 和 Safety Stock 相同
+                carryFormula
+            ]);
+        });
+
+        // 添加總計行（含公式）
+        summaryDataFormulas.push([]);
+        const totalRow = [
+            'TOTAL:',
+            '',
+            '',
+            '',
+            `COUNTA('店舖詳細清單'!B:B)-4`, // 計算店舖總數（排除標題）
+            '',
+            `SUM('彙總表'!G5:G${4 + this.summaryResults.length})`, // 彙總所有Safety Stock
+            ''
+        ];
+        summaryDataFormulas.push(totalRow);
+
+        const wsSummary = XLSX.utils.aoa_to_sheet(summaryDataFormulas);
+        
+        // 設置欄寬
+        wsSummary['!cols'] = [
+            { wch: 10 },  // HK/MO
+            { wch: 8 },   // 舖類
+            { wch: 12 },  // 貨場面積
+            { wch: 12 },  // 類型代碼
+            { wch: 12 },  // 店舖數量
+            { wch: 14 },  // Safety Stock
+            { wch: 14 },  // ALL SHOP QTY
+            { wch: 10 }   // Carry
+        ];
+
+        // 設置公式屬性
+        summaryDataFormulas.forEach((row, idx) => {
+            if (idx >= 4 && idx < 4 + this.summaryResults.length) {
+                // 店舖數量列
+                const countCellRef = XLSX.utils.encode_cell({ r: idx, c: 4 });
+                if (wsSummary[countCellRef]) {
+                    wsSummary[countCellRef].f = row[4];
+                    wsSummary[countCellRef].v = 0;
+                }
+                // Safety Stock列
+                const ssCellRef = XLSX.utils.encode_cell({ r: idx, c: 5 });
+                if (wsSummary[ssCellRef]) {
+                    wsSummary[ssCellRef].f = row[5];
+                    wsSummary[ssCellRef].v = 0;
+                }
+                // ALL SHOP QTY列
+                const qtyRefCell = XLSX.utils.encode_cell({ r: idx, c: 6 });
+                if (wsSummary[qtyRefCell]) {
+                    wsSummary[qtyRefCell].f = row[6];
+                    wsSummary[qtyRefCell].v = 0;
+                }
+                // Carry列
+                const carryCellRef = XLSX.utils.encode_cell({ r: idx, c: 7 });
+                if (wsSummary[carryCellRef]) {
+                    wsSummary[carryCellRef].f = row[7];
+                    wsSummary[carryCellRef].v = false;
+                }
+            } else if (idx === 4 + this.summaryResults.length + 1) {
+                // 總計行
+                const totalCountRef = XLSX.utils.encode_cell({ r: idx, c: 4 });
+                if (wsSummary[totalCountRef]) {
+                    wsSummary[totalCountRef].f = row[4];
+                    wsSummary[totalCountRef].v = 0;
+                }
+                const totalSsRef = XLSX.utils.encode_cell({ r: idx, c: 6 });
+                if (wsSummary[totalSsRef]) {
+                    wsSummary[totalSsRef].f = row[6];
+                    wsSummary[totalSsRef].v = 0;
+                }
+            }
+        });
+
+        XLSX.utils.book_append_sheet(wb, wsSummary, '彙總表');
+
+        // ========== 第四個工作表：按 OM 彙總（含公式） ==========
+        const omSummaryDataFormulas = [
+            ['按營運經理 (OM) 彙總'],
+            [`生成日期: ${dateTimeStr}`],
+            [],
+            ['營運經理', '區域分佈', '店舖數量', '平均SS', 'SS總計', '佔比', 'Carry', 'A類店', 'B類店', 'C類店', 'D類店']
+        ];
+
+        const omSummary = this.calculateOmSummary();
+
+        omSummary.forEach((om, idx) => {
+            const region = om.moCount === 0 ? 'HK' : om.hkCount === 0 ? 'MO' : 'HK+MO';
+            
+            // 使用公式計算OM下的店舖數量
+            const omStoreCountFormula = `COUNTIF('店舖詳細清單'!I:I,"${om.omName}")`;
+            
+            // 使用公式計算OM下的SS總計
+            const omTotalSSFormula = `SUMIF('店舖詳細清單'!I:I,"${om.omName}",'店舖詳細清單'!G:G)`;
+            
+            // 平均SS = SS總計 / 店舖數量
+            const omAvgSSFormula = `IF(${omStoreCountFormula}=0,0,${omTotalSSFormula}/${omStoreCountFormula})`;
+            
+            // 佔比 = SS總計 / 全部SS總計 * 100
+            const omPercentageFormula = `IF(SUM('OM彙總'!E:E)=0,0,ROUND(${omTotalSSFormula}/SUM('OM彙總'!E5:E${4 + omSummary.length})*100,1))`;
+            
+            // Carry標誌
+            const omCarryFormula = `IF(${omTotalSSFormula}>0,"Y","FALSE")`;
+            
+            // 各類店舖數
+            const categoryAFormula = `COUNTIFS('店舖詳細清單'!I:I,"${om.omName}",'店舖詳細清單'!E:E,"A")`;
+            const categoryBFormula = `COUNTIFS('店舖詳細清單'!I:I,"${om.omName}",'店舖詳細清單'!E:E,"B")`;
+            const categoryCFormula = `COUNTIFS('店舖詳細清單'!I:I,"${om.omName}",'店舖詳細清單'!E:E,"C")`;
+            const categoryDFormula = `COUNTIFS('店舖詳細清單'!I:I,"${om.omName}",'店舖詳細清單'!E:E,"D")`;
+            
+            omSummaryDataFormulas.push([
+                om.omName,
+                region,
+                omStoreCountFormula,
+                omAvgSSFormula,
+                omTotalSSFormula,
+                omPercentageFormula,
+                omCarryFormula,
+                categoryAFormula,
+                categoryBFormula,
+                categoryCFormula,
+                categoryDFormula
+            ]);
+        });
+
+        // 添加總計行（含公式）
+        omSummaryDataFormulas.push([]);
+        omSummaryDataFormulas.push([
+            'TOTAL:',
+            '',
+            `SUM('OM彙總'!C5:C${4 + omSummary.length})`,
+            '',
+            `SUM('OM彙總'!E5:E${4 + omSummary.length})`,
+            '100%',
+            '',
+            '',
+            '',
+            '',
+            ''
+        ]);
+
+        const wsOmSummary = XLSX.utils.aoa_to_sheet(omSummaryDataFormulas);
+        
+        // 設置欄寬
+        wsOmSummary['!cols'] = [
+            { wch: 15 },  // 營運經理
+            { wch: 12 },  // 區域分佈
+            { wch: 12 },  // 店舖數量
+            { wch: 12 },  // 平均SS
+            { wch: 12 },  // SS總計
+            { wch: 12 },  // 佔比
+            { wch: 10 },  // Carry
+            { wch: 10 },  // A類店
+            { wch: 10 },  // B類店
+            { wch: 10 },  // C類店
+            { wch: 10 }   // D類店
+        ];
+
+        // 設置公式屬性
+        omSummaryDataFormulas.forEach((row, idx) => {
+            if (idx >= 4 && idx < 4 + omSummary.length) {
+                // 各種需要公式的列
+                [2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(col => {
+                    const cellRef = XLSX.utils.encode_cell({ r: idx, c: col });
+                    if (wsOmSummary[cellRef] && row[col]) {
+                        wsOmSummary[cellRef].f = row[col];
+                        wsOmSummary[cellRef].v = (col === 5 || col === 6) ? '0%' : 0;
+                    }
+                });
+            } else if (idx === 4 + omSummary.length + 1) {
+                // 總計行
+                [2, 4].forEach(col => {
+                    const cellRef = XLSX.utils.encode_cell({ r: idx, c: col });
+                    if (wsOmSummary[cellRef] && row[col]) {
+                        wsOmSummary[cellRef].f = row[col];
+                        wsOmSummary[cellRef].v = 0;
+                    }
+                });
+            }
+        });
+
+        XLSX.utils.book_append_sheet(wb, wsOmSummary, 'OM彙總');
+        
+        // 匯出檔案
+        const fileName = this.generateFileName('safetystock_formulas', 'xlsx');
+        XLSX.writeFile(wb, fileName);
+    }
+
+    // 建構 Safety Stock 的 VLOOKUP 公式
+    buildSafetyStockFormula(region, category, size, sheetName) {
+        // 建構公式：使用 VLOOKUP 或 INDEX/MATCH 從對照表查詢
+        // 對照表格式: 第一列是 Row Header (HK-A, HK-B 等)，列是 Size (XL, L, M, S, XS)
+        
+        // 簡化方法：使用 HLOOKUP 查詢 Size，再用 VLOOKUP 查詢 Region-Category
+        const regionCatKey = `${region}-${category}`;
+        
+        // VLOOKUP 公式格式：VLOOKUP(lookup_value, table_array, col_index_num, [range_lookup])
+        // 在對照表中查詢區域-舖類的行，然後根據Size列索引
+        
+        // 使用動態參考：INDIRECT 來建構單元格引用
+        const sizeColumn = this.getSizeColumnNumber(size); // 取得Size對應的列號
+        
+        // 簡單公式：直接從對照表中的命名範圍或特定位置查詢
+        // 假設對照表格式如下：
+        // 第1列: Size標題 (XL, L, M, S, XS)
+        // 第2-N列: Region-Category
+        
+        return `VLOOKUP("${regionCatKey}",'${sheetName}'!A:F,${sizeColumn},FALSE)`;
+    }
+
+    // 取得 Size 對應的列號
+    getSizeColumnNumber(size) {
+        const sizeMap = {
+            'XL': 2,
+            'L': 3,
+            'M': 4,
+            'S': 5,
+            'XS': 6
+        };
+        return sizeMap[size] || 2;
+    }
+
+    // 為 Excel 構建可編輯的對照表數據
+    buildEditableMatrixForExcel() {
+        const matrixData = [];
+        
+        // 標題行
+        matrixData.push(['Safety Stock 對照表（可在此編輯）', 'XL', 'L', 'M', 'S', 'XS']);
+        matrixData.push([]);
+        
+        const regions = ['HK', 'MO'];
+        const categories = ['A', 'B', 'C', 'D'];
+        const sizes = ['XL', 'L', 'M', 'S', 'XS'];
+        
+        regions.forEach(region => {
+            matrixData.push([`${region} 區域`, '', '', '', '', '']);
+            
+            categories.forEach(category => {
+                const rowLabel = `${region}-${category}`;
+                const rowData = [rowLabel];
+                
+                sizes.forEach(size => {
+                    const key = `${region}-${category}-${size}`;
+                    const value = this.getSafetyStockValue(region, category, size);
+                    rowData.push(value);
+                });
+                
+                matrixData.push(rowData);
+            });
+            
+            matrixData.push([]); // 區域之間的空行
+        });
+        
+        return matrixData;
+    }
+
+    // 取得 Safety Stock 值（從當前對照表）
+    getSafetyStockValue(region, category, size) {
+        // 先查詢 customSafetyStock（使用者自訂）
+        const key = `${region}-${category}-${size}`;
+        if (this.customSafetyStock[key] !== undefined) {
+            return this.customSafetyStock[key];
+        }
+        
+        // 再查詢預設對照表
+        if (this.safetyStockMatrix[region] && 
+            this.safetyStockMatrix[region][category] && 
+            this.safetyStockMatrix[region][category][size] !== undefined) {
+            return this.safetyStockMatrix[region][category][size];
+        }
+        
+        return 0;
     }
 
     exportConfiguration() {
