@@ -71,9 +71,21 @@
                                 <div class="formula-example">
                                     <div class="example-title">📝 計算範例：</div>
                                     <div class="example-content">
-                                        <p><strong>條件：</strong>A級店舖 (Class權重=3) + 大型貨場 (Size權重=3) + 澳門 (區域係數=1.3)</p>
-                                        <p><strong>計算：</strong>6 + (3 × 3 × 1.3) = 6 + 11.7 ≈ <strong>18</strong></p>
-                                        <p class="example-note">💡 結果會四捨五入為整數</p>
+                                        <!-- 範例1：正常情況 -->
+                                        <div class="formula-example-item">
+                                            <strong>✅ 範例1 - 正常計算：</strong>
+                                            <p><strong>條件：</strong>A級店舖 (Class權重=3) + 大型貨場 (Size權重=3) + 澳門 (區域係數=1.3)</p>
+                                            <p><strong>計算：</strong>6 + (3 × 3 × 1.3) = 6 + 11.7 ≈ <strong>18</strong> ✓</p>
+                                            <p class="example-note">💡 所有權重都有值，正常計算結果</p>
+                                        </div>
+
+                                        <!-- 範例2：區域係數為0的情況 -->
+                                        <div class="formula-example-item">
+                                            <strong>⚠️ 範例2 - 區域係數為0（不需要庫存）：</strong>
+                                            <p><strong>條件：</strong>B級店舖 (Class權重=2) + 中型貨場 (Size權重=1.5) + 某區域 (區域係數=0)</p>
+                                            <p><strong>計算：</strong>只要區域係數為0，Safety Stock直接為 <strong>0</strong> ✓</p>
+                                            <p class="example-note">⚠️ 當任何權重參數為0時，整個計算結果為0，表示該區域不需要庫存</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

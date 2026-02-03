@@ -245,6 +245,13 @@ const WEIGHT_TEMPLATES = {
 };
 
 // 根據權重計算 Safety Stock
+//
+// 計算邏輯：Safety Stock = 基礎值 + (Class權重 × Size權重 × 區域係數)
+//
+// 重要特性：
+// - 如果任何權重參數為 0，整個乘法結果為 0，最終 Safety Stock = 基礎值 + 0
+// - 如果區域係數為 0，表示該區域不需要庫存，結果直接為 0
+// - 常用場景：設定某個區域的係數為 0 可禁用該區域的庫存需求
 function calculateSafetyStockWithWeights(region, category, size, weights) {
     const classWeight = weights.class[category] || 1;
     const sizeWeight = weights.size[size] || 1;
@@ -257,6 +264,7 @@ function calculateSafetyStockWithWeights(region, category, size, weights) {
     }
     
     // 計算公式：基礎值 + (Class權重 × Size權重 × 區域係數)
+    // 注意：如果乘法中任何項為 0，整個乘積為 0
     let result = baseValue + (classWeight * sizeWeight * regionFactor);
     
     // 確保最小值為 0
