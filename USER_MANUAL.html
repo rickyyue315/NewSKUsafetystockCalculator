@@ -647,7 +647,7 @@
 
         <!-- 版本資訊 -->
         <p style="text-align: center; color: #888; margin-bottom: 30px;">
-            版本 v1.1 | 更新日期：2026年2月
+            版本 v1.2 | 更新日期：2026年2月
         </p>
 
         <!-- 目錄 -->
@@ -1438,6 +1438,271 @@ php -S localhost:8000</pre>
                 <li>系統會自動根據店鋪數量和權重比例分配</li>
                 <li>點擊 <span class="mock-btn mock-btn-primary">預覽結果</span> 查看分配結果</li>
             </ol>
+
+            <h3>6.8 銷售目標計算功能</h3>
+            <p>
+                銷售目標計算功能讓您可以根據預期的銷售數量，自動計算所需的 Safety Stock 總量。
+                這對於新產品上市或規劃促銷活動時特別有用。
+            </p>
+
+            <h4>6.8.1 功能概述</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">元素</th>
+                        <th style="width: 75%;">說明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>📊 <strong>銷售目標數量</strong></td>
+                        <td>輸入預期的月銷售數量（例如：36,000 件）</td>
+                    </tr>
+                    <tr>
+                        <td>📅 <strong>Safety Stock Days</strong></td>
+                        <td>調整保障的庫存天數（1-30 天）</td>
+                    </tr>
+                    <tr>
+                        <td>🎯 <strong>目標總 Safety Stock</strong></td>
+                        <td>自動計算的 Safety Stock 目標值（只讀）</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>6.8.2 計算公式</h4>
+            
+            <div class="formula">
+                <div class="formula-title">銷售目標驅動的 Safety Stock 計算公式</div>
+                <div class="formula-content">
+                    目標總 Safety Stock = 銷售目標數量 ÷ 30 × Safety Stock Days
+                </div>
+            </div>
+
+            <h4>6.8.3 使用步驟</h4>
+            <ol>
+                <li>展開 <span class="mock-btn mock-btn-secondary">⚙️ 權重快速設定</span> 面板</li>
+                <li>在 <strong>銷售目標數量</strong> 輸入框中輸入月銷售目標（例如：36000）</li>
+                <li>拖動 <strong>Safety Stock Days</strong> 滑塊調整庫存天數（預設 7 天）</li>
+                <li>系統會自動計算目標總 Safety Stock</li>
+                <li>點擊 <span class="mock-btn mock-btn-primary">👁️ 預覽結果</span> 查看計算結果</li>
+                <li>確認後點擊 <span class="mock-btn mock-btn-success">🚀 套用權重計算</span></li>
+            </ol>
+
+            <h4>6.8.4 介面示意圖</h4>
+            
+            <div class="interface-screenshot">
+                <div class="interface-title">📸 銷售目標計算區域示意圖</div>
+                
+                <div class="mock-ui">
+                    <div class="mock-content">
+                        <div class="mock-section" style="border: 2px solid #28a745; border-radius: 8px;">
+                            <div class="mock-section-title" style="background: #28a745; color: white;">
+                                📈 目標總量設定（銷售目標模式）
+                            </div>
+                            <div class="mock-section-content">
+                                <table style="font-size: 10pt;">
+                                    <tr>
+                                        <td style="width: 140px; padding: 8px;">
+                                            <label style="font-weight: bold; color: #28a745;">
+                                                📊 銷售目標數量：
+                                            </label>
+                                        </td>
+                                        <td style="padding: 8px;">
+                                            <input type="number" value="36000" style="
+                                                width: 150px;
+                                                padding: 8px 12px;
+                                                border: 2px solid #28a745;
+                                                border-radius: 6px;
+                                                font-size: 14pt;
+                                                font-weight: bold;
+                                                color: #28a745;
+                                            " />
+                                            <span style="color: #666; margin-left: 10px;">件 / 月</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px;">
+                                            <label style="font-weight: bold;">
+                                                📅 Safety Stock Days：
+                                            </label>
+                                        </td>
+                                        <td style="padding: 8px;">
+                                            <div style="display: flex; align-items: center; gap: 15px;">
+                                                <input type="range" min="1" max="30" value="7" style="
+                                                    width: 200px;
+                                                    height: 8px;
+                                                    -webkit-appearance: none;
+                                                    background: linear-gradient(to right, #ff6b6b, #ffa94d, #69db7c);
+                                                    border-radius: 4px;
+                                                " />
+                                                <span style="
+                                                    background: #28a745;
+                                                    color: white;
+                                                    padding: 4px 12px;
+                                                    border-radius: 15px;
+                                                    font-weight: bold;
+                                                    font-size: 14pt;
+                                                ">7 天</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr style="background: #f8f9fa;">
+                                        <td style="padding: 12px;">
+                                            <label style="font-weight: bold; color: #667eea;">
+                                                🎯 目標總 Safety：
+                                            </label>
+                                        </td>
+                                        <td style="padding: 12px;">
+                                            <input type="number" value="8400" readonly style="
+                                                width: 120px;
+                                                padding: 10px;
+                                                background: #f5f5f5;
+                                                border: 2px solid #667eea;
+                                                border-radius: 6px;
+                                                font-size: 16pt;
+                                                font-weight: bold;
+                                                color: #667eea;
+                                            " />
+                                            <span style="
+                                                background: #667eea;
+                                                color: white;
+                                                padding: 6px 12px;
+                                                border-radius: 4px;
+                                                margin-left: 10px;
+                                            ">
+                                                ⚡ 自動計算
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
+                                
+                                <div style="background: #d4edda; padding: 12px; border-radius: 6px; margin-top: 15px;">
+                                    <strong style="color: #28a745;">📝 計算說明：</strong>
+                                    <span style="color: #333;">36,000 ÷ 30 × 7 = <strong>8,400</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h4>6.8.5 計算範例</h4>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>範例</th>
+                        <th>銷售目標</th>
+                        <th>Safety Stock Days</th>
+                        <th>計算過程</th>
+                        <th>目標總 Safety Stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>標準情況</strong></td>
+                        <td>36,000 件</td>
+                        <td>7 天</td>
+                        <td>36,000 ÷ 30 × 7</td>
+                        <td style="color: #28a745; font-weight: bold;">8,400</td>
+                    </tr>
+                    <tr>
+                        <td><strong>增加保護期間</strong></td>
+                        <td>36,000 件</td>
+                        <td>14 天</td>
+                        <td>36,000 ÷ 30 × 14</td>
+                        <td style="color: #28a745; font-weight: bold;">16,800</td>
+                    </tr>
+                    <tr>
+                        <td><strong>減少保護期間</strong></td>
+                        <td>36,000 件</td>
+                        <td>3 天</td>
+                        <td>36,000 ÷ 30 × 3</td>
+                        <td style="color: #28a745; font-weight: bold;">3,600</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td><strong>手動模式</strong></td>
+                        <td>（未填）</td>
+                        <td>（不影響）</td>
+                        <td>使用者手動輸入</td>
+                        <td style="color: #667eea; font-weight: bold;">1,200（手動）</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="info-box">
+                <strong>💡 模式切換說明：</strong>
+                <ul style="margin-top: 10px;">
+                    <li><strong>銷售目標模式</strong>：輸入銷售目標後，目標總 Safety 輸入框變為只讀（灰色背景），值自動計算</li>
+                    <li><strong>手動模式</strong>：不輸入銷售目標時，目標總 Safety 輸入框可手動編輯</li>
+                    <li><strong>混合模式</strong>：可先使用自動計算，再手動調整最終值</li>
+                </ul>
+            </div>
+
+            <h4>6.8.6 與權重計算的整合</h4>
+            <p>當您點擊 <span class="mock-btn mock-btn-success">🚀 套用權重計算</span> 時，系統會：</p>
+            <ol>
+                <li>讀取已計算或手動輸入的「目標總 Safety Stock」</li>
+                <li>根據各類型店鋪的權重比例，自動分配庫存到對照表</li>
+                <li>使用 <code>scaleMatrixToTarget()</code> 函數將對照表縮放至目標值</li>
+            </ol>
+
+            <div class="calculation-example">
+                <div class="calculation-title">📝 整合計算範例</div>
+                <div style="background: white; padding: 15px; border-radius: 6px;">
+                    <p><strong>情境：</strong>月銷售目標 36,000 件，需要保護 7 天</p>
+                    <p>→ <strong>目標總 Safety Stock</strong> = 36,000 ÷ 30 × 7 = <strong>8,400</strong></p>
+                    <p>→ 系統根據店鋪權重分配：</p>
+                    <table style="font-size: 10pt; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>店鋪類型</th>
+                                <th>權重比例</th>
+                                <th>分配庫存</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>HK A級 XL</td><td>25%</td><td>2,100</td></tr>
+                            <tr><td>HK A級 L</td><td>20%</td><td>1,680</td></tr>
+                            <tr><td>HK A級 M</td><td>15%</td><td>1,260</td></tr>
+                            <tr><td>其他類型</td><td>40%</td><td>3,360</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h4>6.8.7 資料持久化</h4>
+            <p>銷售目標計算的參數會自動保存在瀏覽器中：</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>儲存項目</th>
+                        <th>localStorage 鍵值</th>
+                        <th>說明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>銷售目標數量</td>
+                        <td><code>salesTarget</code></td>
+                        <td>月銷售目標數量</td>
+                    </tr>
+                    <tr>
+                        <td>Safety Stock 天數</td>
+                        <td><code>safetyStockDays</code></td>
+                        <td>庫存保護天數（1-30）</td>
+                    </tr>
+                    <tr>
+                        <td>目標總 Safety</td>
+                        <td><code>targetTotal</code></td>
+                        <td>計算或手動輸入的目標值</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="success-box">
+                <strong>💡 小提示：</strong>刷新頁面後，您的設定會自動恢復，無需重新輸入。
+            </div>
         </section>
 
         <div class="page-break"></div>
@@ -1777,7 +2042,7 @@ MO,MA01,澳門廣場,MOBM,B,M,7,Y</pre>
 
         <!-- 頁腳 -->
         <div class="footer">
-            <p><strong>New SKU Safety Stock Calculator v1.1</strong></p>
+            <p><strong>New SKU Safety Stock Calculator v1.2</strong></p>
             <p>© 2026 RP Team | 開發團隊：RP-Ricky Yue | 概念提供：CMPD-Natalie Wong</p>
             <p style="margin-top: 15px; font-size: 9pt; color: #999;">
                 本說明文件支援 PDF 列印，請使用瀏覽器的「列印」功能將其儲存為 PDF 檔案。
