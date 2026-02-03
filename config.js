@@ -106,20 +106,21 @@ const STORES_CONFIG = {
     ]
 };
 
-// Safety Stock 對照表 - 根據 Excel 設定
-// 格式：{ [區域]: { [舖類]: { [貨場面積]: Safety Stock 值 } } }
+// Safety Stock 對照表 - 根據權重邏輯生成
+// 公式：Safety Stock = baseValue + (classWeight × sizeWeight × regionFactor)
+// 基礎值=4, HK係數=1.0, MO係數=1.33
 const SAFETY_STOCK_MATRIX = {
     "HK": {
-        "A": { "XL": 18, "L": 18, "M": 18, "S": 18, "XS": 18 },
-        "B": { "XL": 18, "L": 18, "M": 12, "S": 12, "XS": 12 },
-        "C": { "XL": 12, "L": 12, "M": 12, "S": 12, "XS": 0 },
-        "D": { "XL": 9, "L": 9, "M": 6, "S": 6, "XS": 6 }
+        "A": { "XL": 9, "L": 8, "M": 7, "S": 6, "XS": 6 },
+        "B": { "XL": 8, "L": 7, "M": 6, "S": 6, "XS": 6 },
+        "C": { "XL": 7, "L": 6, "M": 6, "S": 5, "XS": 5 },
+        "D": { "XL": 7, "L": 6, "M": 6, "S": 5, "XS": 5 }
     },
     "MO": {
-        "A": { "XL": 10, "L": 9, "M": 8, "S": 7, "XS": 6 },
-        "B": { "XL": 9, "L": 8, "M": 7, "S": 6, "XS": 5 },
-        "C": { "XL": 8, "L": 7, "M": 6, "S": 5, "XS": 4 },
-        "D": { "XL": 7, "L": 6, "M": 5, "S": 4, "XS": 3 }
+        "A": { "XL": 11, "L": 9, "M": 8, "S": 7, "XS": 7 },
+        "B": { "XL": 9, "L": 8, "M": 7, "S": 6, "XS": 6 },
+        "C": { "XL": 7, "L": 7, "M": 6, "S": 5, "XS": 5 },
+        "D": { "XL": 7, "L": 7, "M": 6, "S": 5, "XS": 5 }
     }
 };
 
@@ -198,7 +199,10 @@ const WEIGHT_CONFIG = {
     class: { A: 2, B: 1.5, C: 1, D: 1 },
     size: { XL: 2.5, L: 2, M: 1.5, S: 1, XS: 1 },
     baseValue: 4,
-    regionFactor: { HK: 1.0, MO: 1.33 }
+    regionFactor: { HK: 1.0, MO: 1.33 },
+    salesTarget: 0,
+    safetyStockDays: 7,
+    targetTotal: 0
 };
 
 // 預設模板 - 提供多種權重設定選項

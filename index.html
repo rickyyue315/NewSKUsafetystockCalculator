@@ -8,12 +8,15 @@
 </head>
 <body>
     <!-- 主題選擇器 -->
-    <div class="theme-selector">
-        <button class="theme-selector-btn" id="themeToggleBtn" title="切換主題">🎨</button>
-        <div class="theme-panel" id="themePanel">
-            <h3>🎨 選擇配色方案</h3>
-            <div class="theme-list" id="themeList">
-                <!-- 主題選項將由 JavaScript 生成 -->
+    <div class="top-right-controls">
+        <a href="USER_MANUAL.html" target="_blank" class="help-btn" title="開啟使用說明書">📖</a>
+        <div class="theme-selector">
+            <button class="theme-selector-btn" id="themeToggleBtn" title="切換主題">🎨</button>
+            <div class="theme-panel" id="themePanel">
+                <h3>🎨 選擇配色方案</h3>
+                <div class="theme-list" id="themeList">
+                    <!-- 主題選項將由 JavaScript 生成 -->
+                </div>
             </div>
         </div>
     </div>
@@ -165,11 +168,19 @@
                             <h4>🎯 目標總量</h4>
                             <div class="weight-inputs">
                                 <label>
+                                    <span class="weight-label-text">銷售目標數量</span>
+                                    <input type="number" id="salesTarget" value="" min="0" step="1" class="weight-input" placeholder="例如 36000">
+                                </label>
+                                <label class="slider-label">
+                                    <span class="weight-label-text">Safety Stock Days<br><span class="days-display">7</span> 天</span>
+                                    <input type="range" id="safetyStockDays" value="7" min="1" max="30" class="weight-slider" title="調整天數(1-30)">
+                                </label>
+                                <label>
                                     <span class="weight-label-text">目標總 Safety</span>
-                                    <input type="number" id="targetTotal" value="" min="0" step="1" class="weight-input" placeholder="例如 1200">
+                                    <input type="number" id="targetTotal" value="" min="0" step="1" class="weight-input" placeholder="自動計算" readonly>
                                 </label>
                             </div>
-                            <p class="weight-hint">💡 依現有店舖數量與權重比例自動分配，會以整數套用。</p>
+                            <p class="weight-hint">💡 目標總 Safety = 銷售目標數量 ÷ 30 × Safety Stock Days (若未填寫銷售目標數量則維持手動輸入)</p>
                         </div>
 
                         <!-- 快速模板 -->

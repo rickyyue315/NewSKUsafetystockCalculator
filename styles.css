@@ -372,6 +372,10 @@ footer {
     text-align: center;
 }
 
+.weight-inputs label.slider-label {
+    gap: 8px;
+}
+
 .weight-label-text {
     font-weight: 600;
 }
@@ -397,6 +401,60 @@ footer {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Safety Stock Days 滑塊樣式 */
+.weight-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, var(--color-danger), var(--color-warning), var(--color-success));
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 8px 0;
+}
+
+.weight-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border: 2px solid white;
+    transition: all 0.2s ease;
+}
+
+.weight-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 3px 8px rgba(102, 126, 234, 0.4);
+}
+
+.weight-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border: 2px solid white;
+    transition: all 0.2s ease;
+}
+
+.weight-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 3px 8px rgba(102, 126, 234, 0.4);
+}
+
+.days-display {
+    font-weight: 700;
+    color: var(--color-primary);
+    font-size: 1.1em;
 }
 
 .template-buttons {
@@ -1605,11 +1663,41 @@ footer {
 }
 
 /* ==================== 主題選擇器樣式 ==================== */
+.top-right-controls {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 9999 !important;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.help-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: var(--color-container-bg);
+    border: 2px solid var(--color-primary);
+    border-radius: 50%;
+    font-size: 1.3em;
+    text-decoration: none;
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease;
+}
+
+.help-btn:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-container);
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
 .theme-selector {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
+    display: flex;
+    align-items: center;
 }
 
 .theme-selector-btn {
@@ -1885,9 +1973,21 @@ footer {
         margin-top: 10px;
     }
     
-    .theme-selector {
+    .theme-selector,
+    .top-right-controls {
         top: 10px;
         right: 10px;
+    }
+    
+    .top-right-controls {
+        gap: 8px;
+    }
+    
+    .help-btn,
+    .theme-selector-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1em;
     }
     
     .theme-panel {
@@ -1942,7 +2042,8 @@ footer {
     .matrix-controls,
     .management-controls,
     .stores-management-section,
-    .theme-selector {
+    .theme-selector,
+    .top-right-controls {
         display: none !important;
     }
     

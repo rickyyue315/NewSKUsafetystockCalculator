@@ -36,6 +36,8 @@ class SafetyStockCalculator {
         this.renderStores();
         this.renderSafetyStockMatrix();
         this.loadFromLocalStorage();
+        // 初始化目標安全庫存顯示
+        setTimeout(() => this.updateTargetSafetyStock(), 100);
     }
 
     // ==================== 主題管理功能 ====================
@@ -2260,6 +2262,19 @@ class SafetyStockCalculator {
         // 預覽權重
         document.getElementById('previewWeightsBtn')?.addEventListener('click', () => this.previewWeights());
 
+        // 銷售目標數量變化事件
+        document.getElementById('salesTarget')?.addEventListener('change', () => this.updateTargetSafetyStock());
+        document.getElementById('salesTarget')?.addEventListener('input', () => this.updateTargetSafetyStock());
+
+        // Safety Stock Days 滑塊變化事件
+        document.getElementById('safetyStockDays')?.addEventListener('input', (e) => {
+            const display = document.querySelector('.days-display');
+            if (display) {
+                display.textContent = e.target.value;
+            }
+            this.updateTargetSafetyStock();
+        });
+
         // 模板按鈕
         document.querySelectorAll('.template-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -2267,6 +2282,32 @@ class SafetyStockCalculator {
                 this.applyWeightTemplate(templateName);
             });
         });
+    }
+
+    // 更新目標安全庫存數量
+    updateTargetSafetyStock() {
+        const salesTargetEl = document.getElementById('salesTarget');
+        const safetyStockDaysEl = document.getElementById('safetyStockDays');
+        const targetTotalEl = document.getElementById('targetTotal');
+        
+        const salesTarget = parseFloat(salesTargetEl?.value || 0);
+        const safetyStockDays = parseFloat(safetyStockDaysEl?.value || 7);
+        
+        if (salesTarget > 0) {
+            const calculatedTarget = Math.round((salesTarget / 30) * safetyStockDays);
+            if (targetTotalEl) {
+                targetTotalEl.value = calculatedTarget;
+                // 當有銷售目標時，鎖定 targetTotal 為 readonly
+                targetTotalEl.readOnly = true;
+                targetTotalEl.style.backgroundColor = '#f5f5f5';
+            }
+        } else {
+            // 當沒有銷售目標時，允許手動編輯 targetTotal
+            if (targetTotalEl) {
+                targetTotalEl.readOnly = false;
+                targetTotalEl.style.backgroundColor = 'white';
+            }
+        }
     }
 
     // 切換算式簡介摺疊/展開
@@ -2302,6 +2343,20 @@ class SafetyStockCalculator {
             return isNaN(val) ? defaultValue : val;
         };
 
+        const salesTarget = getValue('salesTarget', 0);
+        const safetyStockDays = getValue('safetyStockDays', 7);
+        
+        // 計算目標總量: salesTarget / 30 * safetyStockDays
+        let targetTotal = getValue('targetTotal', 0);
+        if (salesTarget > 0) {
+            targetTotal = Math.round((salesTarget / 30) * safetyStockDays);
+            // 實時更新 UI 中的目標總量顯示
+            const targetTotalEl = document.getElementById('targetTotal');
+            if (targetTotalEl) {
+                targetTotalEl.value = targetTotal;
+            }
+        }
+
         return {
             class: {
                 A: getValue('weightClassA', 3),
@@ -2321,7 +2376,9 @@ class SafetyStockCalculator {
                 HK: getValue('hkFactor', 1.0),
                 MO: getValue('moFactor', 1.33)
             },
-            targetTotal: getValue('targetTotal', 0)
+            salesTarget: salesTarget,
+            safetyStockDays: safetyStockDays,
+            targetTotal: targetTotal
         };
     }
 
@@ -2346,6 +2403,18 @@ class SafetyStockCalculator {
         setValue('baseValue', this.weightConfig.baseValue);
         setValue('hkFactor', this.weightConfig.regionFactor.HK);
         setValue('moFactor', this.weightConfig.regionFactor.MO);
+        
+        // 載入銷售目標和安全庫存天數
+        if (this.weightConfig.salesTarget !== undefined) {
+            setValue('salesTarget', this.weightConfig.salesTarget);
+        }
+        if (this.weightConfig.safetyStockDays !== undefined) {
+            setValue('safetyStockDays', this.weightConfig.safetyStockDays);
+            // 更新對應的天數顯示
+            const display = document.querySelector('.days-display');
+            if (display) display.textContent = this.weightConfig.safetyStockDays;
+        }
+        
         if (this.weightConfig.targetTotal !== undefined) {
             setValue('targetTotal', this.weightConfig.targetTotal);
         }
