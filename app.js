@@ -1224,7 +1224,11 @@ class SafetyStockCalculator {
         Object.values(omSummary).forEach(om => {
             om.avgSS = om.storeCount > 0 ? Math.round(om.totalSS / om.storeCount) : 0;
             om.percentage = grandTotalSS > 0 ? ((om.totalSS / grandTotalSS) * 100).toFixed(1) : 0;
-            om.carryCount = om.totalSS > 0 ? om.storeCount : 0;
+            // 計算個別店舖中 SS > 0 的數量
+            om.carryCount = om.stores.filter(storeName => {
+                const storeObj = this.results.find(r => r.name === storeName);
+                return storeObj && storeObj.safetyStock > 0;
+            }).length;
         });
         
         // 轉換為陣列並按店鋪數量排序
@@ -1515,9 +1519,11 @@ class SafetyStockCalculator {
         
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
-        link.setAttribute('href', URL.createObjectURL(blob));
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
         link.setAttribute('download', this.generateFileName('safetystock', 'csv'));
         link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     exportToExcel() {
@@ -2103,16 +2109,21 @@ class SafetyStockCalculator {
     exportConfiguration() {
         const config = {
             customSafetyStock: this.customSafetyStock,
+            customStoreStock: this.customStoreStock,
             selectedStores: this.selectedStores,
             stores: this.stores,
+            weightConfig: this.weightConfig,
+            matrixDraft: this.matrixDraft,
             exportDate: new Date().toISOString()
         };
         
         const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
         const link = document.createElement('a');
-        link.setAttribute('href', URL.createObjectURL(blob));
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
         link.setAttribute('download', this.generateFileName('safetystock_config', 'json'));
         link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     importConfiguration(e) {
@@ -2124,22 +2135,38 @@ class SafetyStockCalculator {
             try {
                 const config = JSON.parse(event.target.result);
                 
+                // 先載入店鋪資料
+                if (config.stores) {
+                    this.stores = config.stores;
+                    STORES_CONFIG.stores = config.stores;
+                    this.renderStores();
+                }
+                
                 if (config.customSafetyStock) {
                     this.customSafetyStock = config.customSafetyStock;
                     this.matrixDraft = this.buildMatrixDraftFromApplied();
                     this.renderSafetyStockMatrix();
                 }
                 
+                if (config.customStoreStock) {
+                    this.customStoreStock = config.customStoreStock;
+                }
+                
+                if (config.weightConfig) {
+                    this.weightConfig = config.weightConfig;
+                    this.loadWeightConfigToUI();
+                }
+                
+                if (config.matrixDraft) {
+                    this.matrixDraft = config.matrixDraft;
+                    this.renderSafetyStockMatrix();
+                }
+                
+                // 最後載入選擇的店鋪（必須在 renderStores 之後）
                 if (config.selectedStores) {
                     this.selectedStores = config.selectedStores;
                     this.updateCheckboxes();
                     this.updateStoresPreview();
-                }
-                
-                if (config.stores) {
-                    this.stores = config.stores;
-                    STORES_CONFIG.stores = config.stores;
-                    this.renderStores();
                 }
                 
                 this.saveToLocalStorage();
@@ -2328,9 +2355,11 @@ class SafetyStockCalculator {
         
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
-        link.setAttribute('href', URL.createObjectURL(blob));
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
         link.setAttribute('download', fileName);
         link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
         
         // 顯示提示
         this.showToast(`✅ 已下載店鋪範本（${sortedStores.length} 間店鋪）`);
@@ -2600,7 +2629,13 @@ class SafetyStockCalculator {
                     this.saveToLocalStorage();
                     this.showToast(`🔄 店鋪資料已更新（${configStoreCount} 間），已預設全選`);
                 } else {
-                    // 正常載入選擇的店鋪
+                    // 載入保存的店鋪資料（只有數量匹配時才載入）
+                    if (data.stores && data.stores.length > 0) {
+                        this.stores = data.stores;
+                        STORES_CONFIG.stores = data.stores;
+                        this.renderStores();
+                    }
+                    // 正常載入選擇的店鋪（必須在 renderStores 之後）
                     if (data.selectedStores) {
                         // 過濾掉無效的索引（防止店鋪列表更新後索引失效）
                         const validStores = data.selectedStores.filter(idx => {
@@ -2609,12 +2644,6 @@ class SafetyStockCalculator {
                         this.selectedStores = validStores;
                         this.updateCheckboxes();
                         this.updateStoresPreview();
-                    }
-                    // 載入保存的店鋪資料（只有數量匹配時才載入）
-                    if (data.stores && data.stores.length > 0) {
-                        this.stores = data.stores;
-                        STORES_CONFIG.stores = data.stores;
-                        this.renderStores();
                     }
                 }
 

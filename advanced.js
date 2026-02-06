@@ -98,7 +98,8 @@ class AdvancedCalculator {
             'XS': 0.6,   // 超小型
             'S': 0.8,    // 小型
             'M': 1.0,    // 中型（基準）
-            'L': 1.3     // 大型
+            'L': 1.3,    // 大型
+            'XL': 1.6    // 超大型
         };
         
         const factor = sizeFactors[storeSize] || 1.0;
