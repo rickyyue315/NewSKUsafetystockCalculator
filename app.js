@@ -127,12 +127,8 @@ class SafetyStockCalculator {
 
         const themeIcons = {
             sasa: '💄',
-            corporate: '🏢',
-            dark: '🌙',
-            warm: '🌅',
-            highContrast: '👁️',
-            elegant: '💜',
-            minimal: '◻️'
+            minimal: '◻️',
+            dark: '🌙'
         };
 
         let html = '';
@@ -910,6 +906,100 @@ class SafetyStockCalculator {
         });
         
         container.innerHTML = html;
+        
+        // 渲染矩陣摘要
+        this.renderMatrixSummary();
+    }
+
+    // 計算並渲染對照表統計摘要
+    calculateMatrixSummary() {
+        const regions = ['HK', 'MO'];
+        const categories = ['A', 'B', 'C', 'D'];
+        const sizes = ['XL', 'L', 'M', 'S', 'XS'];
+        
+        const summary = {
+            HK: { values: [], storeCounts: 0 },
+            MO: { values: [], storeCounts: 0 }
+        };
+        
+        // 計算各區域的平均值和店舖數
+        regions.forEach(region => {
+            categories.forEach(category => {
+                sizes.forEach(size => {
+                    const value = this.getMatrixDraftValue(region, category, size);
+                    summary[region].values.push(value);
+                    
+                    // 計算該區域的店舖數
+                    const storeCount = this.stores.filter(s => s.Regional === region && s.Class === category && s.Size === size).length;
+                    summary[region].storeCounts += storeCount;
+                });
+            });
+        });
+        
+        // 計算各區域的統計數據
+        const getRegionStats = (region) => {
+            const values = summary[region].values;
+            const avg = values.length > 0 ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1) : '0';
+            return { avg, values };
+        };
+        
+        // 計算整體平均值
+        const allValues = [...summary.HK.values, ...summary.MO.values];
+        const overallAvg = allValues.length > 0 ? (allValues.reduce((a, b) => a + b, 0) / allValues.length).toFixed(1) : '0';
+        
+        // 計算依現有店舖數量估算總量
+        let totalHK = 0, totalMO = 0;
+        this.stores.forEach(store => {
+            const value = this.getMatrixDraftValue(store.Regional, store.Class, store.Size);
+            if (store.Regional === 'HK') {
+                totalHK += value;
+            } else {
+                totalMO += value;
+            }
+        });
+        const totalAll = totalHK + totalMO;
+        
+        return {
+            hk: getRegionStats('HK'),
+            mo: getRegionStats('MO'),
+            overallAvg,
+            totalHK,
+            totalMO,
+            totalAll
+        };
+    }
+
+    renderMatrixSummary() {
+        const summaryContainer = document.getElementById('matrixSummaryContainer');
+        if (!summaryContainer) return;
+        
+        const summary = this.calculateMatrixSummary();
+        
+        const html = `
+            <div class="matrix-summary-box">
+                <h4>📊 統計摘要</h4>
+                <div class="summary-content">
+                    <div class="summary-item">
+                        <span class="summary-label">🇭🇰 香港 (HK):</span>
+                        <span class="summary-value">平均 ${summary.hk.avg}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">🇲🇴 澳門 (MO):</span>
+                        <span class="summary-value">平均 ${summary.mo.avg}</span>
+                    </div>
+                    <div class="summary-item highlight">
+                        <span class="summary-label">📈 整體平均:</span>
+                        <span class="summary-value">${summary.overallAvg}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">🧮 依現有店舖數量估算總量:</span>
+                        <span class="summary-value">${summary.totalAll} (HK ${summary.totalHK} / MO ${summary.totalMO})</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        summaryContainer.innerHTML = html;
     }
 
     enableMatrixEdit() {
@@ -923,6 +1013,9 @@ class SafetyStockCalculator {
         document.getElementById('saveMatrixBtn').style.display = 'inline-block';
         document.getElementById('cancelMatrixBtn').style.display = 'inline-block';
         document.getElementById('resetMatrixBtn').style.display = 'inline-block';
+        
+        // 設置即時摘要更新
+        this.setupMatrixEditListeners();
     }
 
     saveMatrixEdit() {
@@ -949,6 +1042,7 @@ class SafetyStockCalculator {
         document.getElementById('resetMatrixBtn').style.display = 'none';
         
         this.saveToLocalStorage();
+        this.renderMatrixSummary(); // 更新統計摘要
         this.showToast('✅ 對照表已保存，請按「套用到選擇店鋪」更新店鋪 Safety');
     }
 
@@ -967,6 +1061,7 @@ class SafetyStockCalculator {
             this.renderSafetyStockMatrix();
             this.enableMatrixEdit(); // 保持編輯模式
             this.saveToLocalStorage();
+            this.renderMatrixSummary(); // 更新統計摘要
         }
     }
 
@@ -3190,6 +3285,20 @@ class SafetyStockCalculator {
             // 關閉預覽面板
             document.getElementById('weightPreview').style.display = 'none';
         }
+    }
+
+    // 設置即時摘要更新（在編輯對照表時）
+    setupMatrixEditListeners() {
+        const container = document.getElementById('matrixContainer');
+        if (!container) return;
+        
+        container.addEventListener('input', (e) => {
+            const input = e.target.closest('.matrix-cell .edit-value');
+            if (input) {
+                // 實時更新摘要
+                this.renderMatrixSummary();
+            }
+        });
     }
 }
 
