@@ -1224,11 +1224,7 @@ class SafetyStockCalculator {
         Object.values(omSummary).forEach(om => {
             om.avgSS = om.storeCount > 0 ? Math.round(om.totalSS / om.storeCount) : 0;
             om.percentage = grandTotalSS > 0 ? ((om.totalSS / grandTotalSS) * 100).toFixed(1) : 0;
-            // 計算個別店舖中 SS > 0 的數量
-            om.carryCount = om.stores.filter(storeName => {
-                const storeObj = this.results.find(r => r.name === storeName);
-                return storeObj && storeObj.safetyStock > 0;
-            }).length;
+            om.carryCount = om.totalSS > 0 ? om.storeCount : 0;
         });
         
         // 轉換為陣列並按店鋪數量排序
@@ -1519,11 +1515,9 @@ class SafetyStockCalculator {
         
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
+        link.setAttribute('href', URL.createObjectURL(blob));
         link.setAttribute('download', this.generateFileName('safetystock', 'csv'));
         link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     exportToExcel() {
@@ -2109,21 +2103,16 @@ class SafetyStockCalculator {
     exportConfiguration() {
         const config = {
             customSafetyStock: this.customSafetyStock,
-            customStoreStock: this.customStoreStock,
             selectedStores: this.selectedStores,
             stores: this.stores,
-            weightConfig: this.weightConfig,
-            matrixDraft: this.matrixDraft,
             exportDate: new Date().toISOString()
         };
         
         const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
         const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
+        link.setAttribute('href', URL.createObjectURL(blob));
         link.setAttribute('download', this.generateFileName('safetystock_config', 'json'));
         link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     importConfiguration(e) {
@@ -2135,38 +2124,22 @@ class SafetyStockCalculator {
             try {
                 const config = JSON.parse(event.target.result);
                 
-                // 先載入店鋪資料
-                if (config.stores) {
-                    this.stores = config.stores;
-                    STORES_CONFIG.stores = config.stores;
-                    this.renderStores();
-                }
-                
                 if (config.customSafetyStock) {
                     this.customSafetyStock = config.customSafetyStock;
                     this.matrixDraft = this.buildMatrixDraftFromApplied();
                     this.renderSafetyStockMatrix();
                 }
                 
-                if (config.customStoreStock) {
-                    this.customStoreStock = config.customStoreStock;
-                }
-                
-                if (config.weightConfig) {
-                    this.weightConfig = config.weightConfig;
-                    this.loadWeightConfigToUI();
-                }
-                
-                if (config.matrixDraft) {
-                    this.matrixDraft = config.matrixDraft;
-                    this.renderSafetyStockMatrix();
-                }
-                
-                // 最後載入選擇的店鋪（必須在 renderStores 之後）
                 if (config.selectedStores) {
                     this.selectedStores = config.selectedStores;
                     this.updateCheckboxes();
                     this.updateStoresPreview();
+                }
+                
+                if (config.stores) {
+                    this.stores = config.stores;
+                    STORES_CONFIG.stores = config.stores;
+                    this.renderStores();
                 }
                 
                 this.saveToLocalStorage();
@@ -2355,11 +2328,9 @@ class SafetyStockCalculator {
         
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
+        link.setAttribute('href', URL.createObjectURL(blob));
         link.setAttribute('download', fileName);
         link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
         
         // 顯示提示
         this.showToast(`✅ 已下載店鋪範本（${sortedStores.length} 間店鋪）`);
@@ -2629,13 +2600,7 @@ class SafetyStockCalculator {
                     this.saveToLocalStorage();
                     this.showToast(`🔄 店鋪資料已更新（${configStoreCount} 間），已預設全選`);
                 } else {
-                    // 載入保存的店鋪資料（只有數量匹配時才載入）
-                    if (data.stores && data.stores.length > 0) {
-                        this.stores = data.stores;
-                        STORES_CONFIG.stores = data.stores;
-                        this.renderStores();
-                    }
-                    // 正常載入選擇的店鋪（必須在 renderStores 之後）
+                    // 正常載入選擇的店鋪
                     if (data.selectedStores) {
                         // 過濾掉無效的索引（防止店鋪列表更新後索引失效）
                         const validStores = data.selectedStores.filter(idx => {
@@ -2644,6 +2609,12 @@ class SafetyStockCalculator {
                         this.selectedStores = validStores;
                         this.updateCheckboxes();
                         this.updateStoresPreview();
+                    }
+                    // 載入保存的店鋪資料（只有數量匹配時才載入）
+                    if (data.stores && data.stores.length > 0) {
+                        this.stores = data.stores;
+                        STORES_CONFIG.stores = data.stores;
+                        this.renderStores();
                     }
                 }
 
@@ -3102,6 +3073,9 @@ class SafetyStockCalculator {
             });
         });
 
+        // 強制單調性：確保每個 (region, class) 中 XL >= L >= M >= S >= XS
+        this.enforceMonotonicity(scaledMatrix, counts);
+
         return {
             matrix: scaledMatrix,
             currentTotal,
@@ -3109,6 +3083,74 @@ class SafetyStockCalculator {
             remaining,
             scale
         };
+    }
+
+    /**
+     * 強制尺寸單調性約束：確保 XL >= L >= M >= S >= XS
+     * 修正 scaleMatrixToTarget 中餘量分配造成的違規情況。
+     *
+     * 策略：
+     * 1. 對每個 (region, class) 組合，將較小尺寸的值 cap 到不超過較大尺寸
+     * 2. 將釋放的配額以「從大到小每輪各 +1」的方式平均回填，
+     *    保證不違反順序且盡量貼近目標總量
+     */
+    enforceMonotonicity(scaledMatrix, counts) {
+        const regions = ['HK', 'MO'];
+        const categories = ['A', 'B', 'C', 'D'];
+        const sizes = ['XL', 'L', 'M', 'S', 'XS'];
+        let totalFreed = 0;
+
+        regions.forEach(region => {
+            categories.forEach(category => {
+                let groupFreed = 0;
+
+                // Step 1: 將較小尺寸 cap 到不超過較大尺寸
+                for (let i = 1; i < sizes.length; i++) {
+                    const curVal = scaledMatrix[region][category][sizes[i]];
+                    const prevVal = scaledMatrix[region][category][sizes[i - 1]];
+                    if (curVal > prevVal) {
+                        const excess = curVal - prevVal;
+                        const count = counts[`${region}-${category}-${sizes[i]}`] || 0;
+                        groupFreed += excess * count;
+                        scaledMatrix[region][category][sizes[i]] = prevVal;
+                    }
+                }
+
+                totalFreed += groupFreed;
+
+                // Step 2: 將釋放的配額回填到本組，
+                // 每一輪從 XL → L → M → S → XS 各嘗試 +1，保持單調遞減
+                if (groupFreed > 0) {
+                    let remaining = groupFreed;
+                    let safety = 0;
+
+                    while (remaining > 0 && safety < 10000) {
+                        safety++;
+                        let addedAny = false;
+
+                        for (let i = 0; i < sizes.length; i++) {
+                            const size = sizes[i];
+                            const count = counts[`${region}-${category}-${size}`] || 0;
+                            if (count === 0 || count > remaining) continue;
+
+                            // 檢查單調性：新值不能超過更大尺寸的值
+                            const newVal = scaledMatrix[region][category][size] + 1;
+                            if (i > 0 && newVal > scaledMatrix[region][category][sizes[i - 1]]) {
+                                continue;
+                            }
+
+                            scaledMatrix[region][category][size] = newVal;
+                            remaining -= count;
+                            addedAny = true;
+                        }
+
+                        if (!addedAny) break;
+                    }
+                }
+            });
+        });
+
+        return totalFreed;
     }
 
     // 套用權重到對照表
