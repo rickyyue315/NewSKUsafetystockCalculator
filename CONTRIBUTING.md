@@ -47,3 +47,22 @@ PR 審核清單（維護者/審查者）：
 - PR 合併後由發佈維護者或自動化 CI 發佈
 
 若有任何疑問，歡迎在 Issue 中討論或直接開 PR。謝謝你的貢獻！
+
+## GitHub 模板與流程提示
+
+本專案包含 GitHub 模板：`.github/PULL_REQUEST_TEMPLATE.md`、`.github/ISSUE_TEMPLATE/`。在建立 PR 或 Issue 時，GitHub 會自動套用對應模板，請依模板填寫測試步驟、相關 Issue 與變更描述，會加速審查流程。
+
+最後更新：2026年2月8日
+
+## 安全與密碼管理（重要）
+
+請勿在任何公開檔案或提交（commit）中硬編碼密碼、API 金鑰或其他敏感憑證。以下為安全管理建議：
+
+- 永遠不要將密碼放入 `config.js`、`app.js` 或任何會被版本控制的檔案中。
+- 本地開發：可使用 `.env` 檔案來存放開發環境變數，並在 `.gitignore` 中排除該檔案；設定檔案權限（例如 `chmod 600 .env`）。
+- CI/CD：在 GitHub Actions 等 CI 中使用 Repository Secrets（Settings → Secrets）來存放敏感資料，工作流程中透過 `${{ secrets.NAME }}` 讀取；不要在日誌中列印 secrets。
+- 生產環境：使用專業的秘密管理解決方案（例如 GitHub Secrets、Azure Key Vault、AWS Secrets Manager、HashiCorp Vault、Zeabur secrets），並限制存取權限與啟用輪替（rotation）。
+- 純前端應用限制：前端程式碼可被用戶端檢視，請避免在前端暴露任何管理密碼。若需要保護管理操作，應透過後端服務或受保護的 API 層來驗證並產生短期令牌（token）。
+- 審計與輪替：定期輪替憑證、啟用最小權限原則（least privilege）並啟用多因素驗證（MFA）於管理帳號。
+
+若需要協助將硬編碼密碼改為安全的讀取方式（例如改為從 CI secrets / 環境變數讀取或改用後端 auth），我可以幫你進行程式範例更改與 workflow 範例。

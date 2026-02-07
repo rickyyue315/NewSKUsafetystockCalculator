@@ -432,6 +432,20 @@ advanced.js     可選的高級功能
 
 ---
 
+## 開發者快速參考
+
+此段為開發者快速檢視專案關鍵資料結構與 UI 元素，便於修改 `app.js` / `config.js`：
+
+- 主要資料來源：`config.js`（`STORES_CONFIG`, `SAFETY_STOCK_MATRIX`, `WEIGHT_CONFIG`, `WEIGHT_TEMPLATES`）
+- 常用函式：`getSafetyStockValue(region, category, size)`、`calculateSafetyStockWithWeights(region, category, size, weights)`、`generateMatrixWithWeights(weights)`、`getStoreTypeSummary()`
+- 個別店鋪覆寫：`customStoreStock`（key = `Site`） — 編輯後會保存到 localStorage
+- UI 元素 id：`calculateBtn`, `exportBtn`, `exportExcelBtn`, `exportConfigBtn`, `importFile`, `storesCsvFile`, `editMatrixBtn`, `saveMatrixBtn`, `themeToggleBtn`, `themePanel`, `themeList`, `storesContainer`
+- Inline 編輯：在店鋪清單點擊具有 `editable-store-stock` 的欄位可啟用數值編輯，編輯完成後會保存到 `customStoreStock` 並更新預覽
+
+建議修改位置：
+- 若需改動預設對照表或權重，先更新 `config.js`；若需改動計算流程，請在 `app.js` 中搜尋 `calculate()`、`calculateSafetyStockWithWeights` 的調用與 `SafetyStockCalculator` 類別方法。
+
+
 ## 進階用例
 
 ### 用例1：批量更新所有店鋪的 Safety Stock
@@ -468,6 +482,6 @@ advanced.js     可選的高級功能
 
 ---
 
-**最後更新：2026年1月31日**
+**最後更新：2026年2月8日**
 
 祝你使用愉快！🎉

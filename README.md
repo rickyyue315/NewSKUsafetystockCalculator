@@ -55,6 +55,15 @@ npx http-server
 - `getStoreTypeCode(region, category, size)` — 產生店鋪類型代碼
 - `getStoreTypeSummary()` — 獲取店鋪類型摘要
 
+## UI 與開發者快速參考
+
+- 常用按鈕/輸入 id：`calculateBtn`（計算）、`exportBtn`、`exportExcelBtn`、`exportConfigBtn`、`importFile`（匯入）、`storesCsvFile`（店鋪 CSV 上傳）、`editMatrixBtn`、`saveMatrixBtn`。
+- inline store edit：點擊店鋪列表中的可編輯欄位直接編輯並保存到 `customStoreStock`。
+- 主題切換：`#themeToggleBtn`, `#themePanel`, `#themeList`。
+- 權重與矩陣：調整 `WEIGHT_CONFIG` 或使用 `generateMatrixWithWeights(weights)` 生成新的 `SAFETY_STOCK_MATRIX`。
+
+快速搜尋提示：在專案中搜尋 `getSafetyStockValue`、`calculateSafetyStockWithWeights`、`generateMatrixWithWeights` 可找到核心計算邏輯與權重模板。
+
 ## 使用流程（UI）
 
 1. 選擇店鋪或使用篩選條件
@@ -119,7 +128,7 @@ npx http-server
 - v1.0 (2026-01-31) — 初始上線
 - v1.1 (2026-02-02) — 新增權重計算、主題系統、個別店鋪編輯、OM管理等功能
 
-最後更新：2026年2月2日
+最後更新：2026年2月8日
 
 ## 授權
 

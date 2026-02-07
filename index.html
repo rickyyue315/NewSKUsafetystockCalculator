@@ -37,7 +37,15 @@
             <p class="subtitle">新產品安全(緩衝)庫存計算器</p>
         </header>
 
+        <!-- 分頁切換導航 -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-tab="calculator">🧮 計算器</button>
+            <button class="tab-btn" data-tab="quickReport">📊 快速報表</button>
+        </nav>
+
         <main>
+        <!-- ===== 分頁：計算器（原有內容）===== -->
+        <div class="tab-panel active" id="tab-calculator">
             <!-- Safety Stock 對照表 -->
             <section class="section matrix-section">
                 <h2>📋 Safety Stock 對照表</h2>
@@ -260,6 +268,7 @@
                         <button id="deselectAllBtn" class="btn btn-secondary">取消全選</button>
                         <button id="invertSelectionBtn" class="btn btn-secondary">反向選擇</button>
                         <button id="clearFiltersBtn" class="btn btn-secondary">取消篩選</button>
+                        <button id="resetCustomStockBtn" class="btn btn-warning" title="重設所有店鋪的自訂 Safety Stock 值">🔄 重設自訂值</button>
                         <span id="storeCount" class="store-count">顯示 0 間 / 已選 0 間</span>
                     </div>
                 </div>
@@ -555,6 +564,117 @@ MA01,澳門廣場,MO,B,M,
                     </div>
                 </div>
             </section>
+        </div><!-- /tab-calculator -->
+
+        <!-- ===== 分頁：快速報表 ===== -->
+        <div class="tab-panel" id="tab-quickReport">
+            <section class="section qr-section">
+                <h2>📊 快速報表 — 一鍵產出 Excel</h2>
+                <p class="hint">簡潔模式：選擇店鋪 → 自動計算 → 直接匯出 Excel，表格即所見即所得</p>
+
+                <!-- 頂部操作列 -->
+                <div class="qr-toolbar">
+                    <div class="qr-toolbar-left">
+                        <button id="qrSelectAll" class="btn btn-primary btn-sm">全選</button>
+                        <button id="qrDeselectAll" class="btn btn-secondary btn-sm">取消全選</button>
+                        <span class="qr-divider"></span>
+                        <button class="qr-filter-btn" data-qr-filter="HK">🇭🇰 香港</button>
+                        <button class="qr-filter-btn" data-qr-filter="MO">🇲🇴 澳門</button>
+                        <span class="qr-divider"></span>
+                        <select id="qrOmFilter" class="qr-select">
+                            <option value="">全部 OM</option>
+                        </select>
+                    </div>
+                    <div class="qr-toolbar-right">
+                        <span class="qr-selected-count" id="qrSelectedCount">已選 0 間店鋪</span>
+                        <button id="qrExportExcel" class="btn btn-apply btn-lg" disabled>📊 匯出 Excel</button>
+                    </div>
+                </div>
+
+                <!-- 即時預覽表格 -->
+                <div class="qr-table-wrapper">
+                    <table class="qr-table" id="qrTable">
+                        <thead>
+                            <tr>
+                                <th class="qr-th-check"><input type="checkbox" id="qrCheckAll" title="全選/取消"></th>
+                                <th>代號</th>
+                                <th>店鋪名稱</th>
+                                <th>區域</th>
+                                <th>舖類</th>
+                                <th>面積</th>
+                                <th>OM</th>
+                                <th class="qr-th-ss">Safety Stock</th>
+                                <th>Carry</th>
+                            </tr>
+                        </thead>
+                        <tbody id="qrTableBody">
+                            <!-- JS 動態生成 -->
+                        </tbody>
+                        <tfoot id="qrTableFoot">
+                            <!-- JS 動態生成合計列 -->
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- 底部彙總面板 -->
+                <div class="qr-summary-panel" id="qrSummaryPanel" style="display:none">
+                    <div class="qr-summary-grid">
+                        <div class="qr-stat-card">
+                            <div class="qr-stat-label">已選店鋪</div>
+                            <div class="qr-stat-value" id="qrStatStores">0</div>
+                        </div>
+                        <div class="qr-stat-card qr-stat-highlight">
+                            <div class="qr-stat-label">Safety Stock 總計</div>
+                            <div class="qr-stat-value" id="qrStatTotal">0</div>
+                        </div>
+                        <div class="qr-stat-card">
+                            <div class="qr-stat-label">Carry 店鋪</div>
+                            <div class="qr-stat-value" id="qrStatCarry">0</div>
+                        </div>
+                        <div class="qr-stat-card">
+                            <div class="qr-stat-label">平均 SS</div>
+                            <div class="qr-stat-value" id="qrStatAvg">0</div>
+                        </div>
+                    </div>
+
+                    <!-- 按類型彙總小表格 -->
+                    <details class="qr-details">
+                        <summary>📈 按店鋪類型彙總</summary>
+                        <table class="qr-sub-table" id="qrTypeSummaryTable">
+                            <thead>
+                                <tr>
+                                    <th>類型代碼</th>
+                                    <th>區域</th>
+                                    <th>舖類</th>
+                                    <th>面積</th>
+                                    <th>店鋪數</th>
+                                    <th>Safety Stock</th>
+                                    <th>小計</th>
+                                </tr>
+                            </thead>
+                            <tbody id="qrTypeSummaryBody"></tbody>
+                        </table>
+                    </details>
+
+                    <details class="qr-details">
+                        <summary>👤 按 OM 彙總</summary>
+                        <table class="qr-sub-table" id="qrOmSummaryTable">
+                            <thead>
+                                <tr>
+                                    <th>營運經理</th>
+                                    <th>店鋪數</th>
+                                    <th>SS 總計</th>
+                                    <th>平均 SS</th>
+                                    <th>佔比</th>
+                                </tr>
+                            </thead>
+                            <tbody id="qrOmSummaryBody"></tbody>
+                        </table>
+                    </details>
+                </div>
+            </section>
+        </div><!-- /tab-quickReport -->
+
         </main>
 
         <footer>

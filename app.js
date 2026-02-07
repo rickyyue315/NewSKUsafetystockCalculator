@@ -38,6 +38,8 @@ class SafetyStockCalculator {
         this.loadFromLocalStorage();
         // 初始化目標安全庫存顯示
         setTimeout(() => this.updateTargetSafetyStock(), 100);
+        // 初始化分頁切換與快速報表
+        this.initTabNavigation();
     }
 
     // ==================== 主題管理功能 ====================
@@ -251,6 +253,7 @@ class SafetyStockCalculator {
         document.getElementById('deselectAllBtn')?.addEventListener('click', () => this.deselectAllStores());
         document.getElementById('invertSelectionBtn')?.addEventListener('click', () => this.invertSelection());
         document.getElementById('clearFiltersBtn')?.addEventListener('click', () => this.clearFilters());
+        document.getElementById('resetCustomStockBtn')?.addEventListener('click', () => this.resetCustomStoreStock());
 
         // OM 店鋪清單面板關閉按鈕
         document.getElementById('closeOmPanel')?.addEventListener('click', () => this.closeOmStoresPanel());
@@ -533,6 +536,37 @@ class SafetyStockCalculator {
             btn.classList.remove('active');
         });
         this.applyFilters();
+    }
+
+    // 重設所有店鋪的自訂 Safety Stock 值，恢復為對照表的值
+    resetCustomStoreStock() {
+        if (this.selectedStores.length === 0) {
+            alert('⚠️ 請先選擇要重設的店鋪');
+            return;
+        }
+
+        const storeNames = this.selectedStores
+            .map(idx => this.stores[idx])
+            .map(s => `${s.Site} ${s.Shop}`)
+            .join('\n');
+
+        const confirmMsg = `確認要重設以下 ${this.selectedStores.length} 間店鋪的自訂 Safety Stock 值？\n\n${storeNames}\n\n系統將恢復使用對照表中的數值。`;
+
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        // 清除選中店鋪的自訂值
+        this.selectedStores.forEach(idx => {
+            const store = this.stores[idx];
+            delete this.customStoreStock[store.Site];
+        });
+
+        // 保存到 localStorage 並重新渲染
+        this.saveToLocalStorage();
+        this.renderStores();
+        
+        alert(`✅ 已成功重設 ${this.selectedStores.length} 間店鋪的自訂值`);
     }
 
     handleFilterClick(e) {
@@ -3299,6 +3333,416 @@ class SafetyStockCalculator {
                 this.renderMatrixSummary();
             }
         });
+    }
+
+    // ==================== 快速報表分頁 (Quick Report Tab) ====================
+
+    /**
+     * 初始化分頁切換與快速報表功能
+     * 在 init() 之後由 setupEventListeners 呼叫
+     */
+    initTabNavigation() {
+        // 分頁按鈕切換
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.dataset.tab;
+                // 切換按鈕 active
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // 切換面板
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                const panel = document.getElementById(`tab-${tabId}`);
+                if (panel) panel.classList.add('active');
+                // 初次切換到快速報表時渲染數據
+                if (tabId === 'quickReport') {
+                    this.renderQuickReport();
+                }
+            });
+        });
+
+        // 快速報表事件
+        document.getElementById('qrSelectAll')?.addEventListener('click', () => this.qrToggleAll(true));
+        document.getElementById('qrDeselectAll')?.addEventListener('click', () => this.qrToggleAll(false));
+        document.getElementById('qrCheckAll')?.addEventListener('change', (e) => this.qrToggleAll(e.target.checked));
+        document.getElementById('qrExportExcel')?.addEventListener('click', () => this.qrExportExcel());
+
+        // 區域快速篩選
+        document.querySelectorAll('.qr-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('active');
+                this.qrApplyFilters();
+            });
+        });
+
+        // OM 下拉篩選
+        document.getElementById('qrOmFilter')?.addEventListener('change', () => this.qrApplyFilters());
+
+        // 填充 OM 下拉
+        this.qrPopulateOmFilter();
+    }
+
+    /** 填充 OM 篩選下拉 */
+    qrPopulateOmFilter() {
+        const select = document.getElementById('qrOmFilter');
+        if (!select) return;
+        const oms = [...new Set(this.stores.map(s => s.OM).filter(Boolean))].sort();
+        oms.forEach(om => {
+            const opt = document.createElement('option');
+            opt.value = om;
+            opt.textContent = om;
+            select.appendChild(opt);
+        });
+    }
+
+    /** 渲染快速報表主表格（全部店鋪，含勾選） */
+    renderQuickReport() {
+        const tbody = document.getElementById('qrTableBody');
+        if (!tbody) return;
+
+        // 按區域 → 舖類 → 名稱排序
+        const sorted = [...this.stores].sort((a, b) => {
+            if (a.Regional !== b.Regional) return a.Regional.localeCompare(b.Regional);
+            if (a.Class !== b.Class) return a.Class.localeCompare(b.Class);
+            if (a.Size !== b.Size) return (SIZE_DEFINITIONS[a.Size]?.order || 9) - (SIZE_DEFINITIONS[b.Size]?.order || 9);
+            return a.Shop.localeCompare(b.Shop);
+        });
+
+        let html = '';
+        sorted.forEach((store, idx) => {
+            const origIdx = this.stores.indexOf(store);
+            const ss = this.customStoreStock[store.Site] !== undefined
+                ? this.customStoreStock[store.Site]
+                : this.getSafetyStock(store.Regional, store.Class, store.Size);
+            const carry = ss > 0 ? '✓' : '';
+            const checked = this.selectedStores.includes(origIdx) ? 'checked' : '';
+            const regionBadge = store.Regional === 'HK'
+                ? '<span class="qr-badge qr-badge-hk">HK</span>'
+                : '<span class="qr-badge qr-badge-mo">MO</span>';
+            const classBadge = `<span class="qr-badge qr-badge-${store.Class.toLowerCase()}">${store.Class}</span>`;
+
+            html += `<tr data-orig="${origIdx}" data-region="${store.Regional}" data-om="${store.OM || ''}">
+                <td><input type="checkbox" class="qr-chk" data-idx="${origIdx}" ${checked}></td>
+                <td>${store.Site}</td>
+                <td>${store.Shop}</td>
+                <td>${regionBadge}</td>
+                <td>${classBadge}</td>
+                <td>${store.Size}</td>
+                <td>${store.OM || ''}</td>
+                <td class="qr-cell-ss">${ss}</td>
+                <td class="qr-cell-carry">${carry}</td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+
+        // 綁定勾選事件
+        tbody.querySelectorAll('.qr-chk').forEach(chk => {
+            chk.addEventListener('change', () => this.qrOnCheckChange());
+        });
+
+        this.qrApplyFilters();
+        this.qrUpdateSummary();
+    }
+
+    /** 全選/取消全選（僅可見行） */
+    qrToggleAll(checked) {
+        const rows = document.querySelectorAll('#qrTableBody tr:not(.qr-row-hidden)');
+        rows.forEach(row => {
+            const chk = row.querySelector('.qr-chk');
+            if (chk) chk.checked = checked;
+        });
+        this.qrOnCheckChange();
+    }
+
+    /** 勾選變更回調 */
+    qrOnCheckChange() {
+        // 同步到主計算器的 selectedStores
+        const allChks = document.querySelectorAll('#qrTableBody .qr-chk');
+        const newSelection = [];
+        allChks.forEach(chk => {
+            if (chk.checked) {
+                newSelection.push(parseInt(chk.dataset.idx));
+            }
+        });
+        this.selectedStores = newSelection;
+        this.saveToLocalStorage();
+        this.updateCheckboxes();
+        this.updateStoresPreview();
+        this.updateStoreCount();
+        this.qrUpdateSummary();
+    }
+
+    /** 套用篩選（區域 + OM） */
+    qrApplyFilters() {
+        const activeRegions = [];
+        document.querySelectorAll('.qr-filter-btn.active').forEach(btn => {
+            activeRegions.push(btn.dataset.qrFilter);
+        });
+        const omVal = document.getElementById('qrOmFilter')?.value || '';
+
+        document.querySelectorAll('#qrTableBody tr').forEach(row => {
+            let show = true;
+            if (activeRegions.length > 0) {
+                show = show && activeRegions.includes(row.dataset.region);
+            }
+            if (omVal) {
+                show = show && row.dataset.om === omVal;
+            }
+            row.classList.toggle('qr-row-hidden', !show);
+        });
+        this.qrUpdateSummary();
+    }
+
+    /** 更新快速報表底部統計 */
+    qrUpdateSummary() {
+        const panel = document.getElementById('qrSummaryPanel');
+        const tfoot = document.getElementById('qrTableFoot');
+        const checkedRows = document.querySelectorAll('#qrTableBody .qr-chk:checked');
+
+        // 過濾掉隱藏的行
+        const visibleCheckedRows = Array.from(checkedRows).filter(chk => {
+            const row = chk.closest('tr');
+            return row && !row.classList.contains('qr-row-hidden');
+        });
+
+        if (visibleCheckedRows.length === 0) {
+            if (panel) panel.style.display = 'none';
+            if (tfoot) tfoot.innerHTML = '';
+            document.getElementById('qrSelectedCount').textContent = '已選 0 間店鋪';
+            const exportBtn = document.getElementById('qrExportExcel');
+            if (exportBtn) exportBtn.disabled = true;
+            return;
+        }
+
+        if (panel) panel.style.display = '';
+        const exportBtn = document.getElementById('qrExportExcel');
+        if (exportBtn) exportBtn.disabled = false;
+
+        let totalSS = 0, carryCount = 0;
+        const typeSummary = {};
+        const omSummary = {};
+
+        visibleCheckedRows.forEach(chk => {
+            const idx = parseInt(chk.dataset.idx);
+            const store = this.stores[idx];
+            const ss = this.customStoreStock[store.Site] !== undefined
+                ? this.customStoreStock[store.Site]
+                : this.getSafetyStock(store.Regional, store.Class, store.Size);
+            totalSS += ss;
+            if (ss > 0) carryCount++;
+
+            // 類型彙總
+            const tc = getStoreTypeCode(store.Regional, store.Class, store.Size);
+            if (!typeSummary[tc]) {
+                typeSummary[tc] = { typeCode: tc, region: store.Regional, category: store.Class, size: store.Size, count: 0, ss: ss, total: 0 };
+            }
+            typeSummary[tc].count++;
+            typeSummary[tc].total += ss;
+
+            // OM 彙總
+            const om = store.OM || '未分配';
+            if (!omSummary[om]) {
+                omSummary[om] = { name: om, count: 0, totalSS: 0 };
+            }
+            omSummary[om].count++;
+            omSummary[om].totalSS += ss;
+        });
+
+        const storeCount = visibleCheckedRows.length;
+        const avg = storeCount > 0 ? Math.round(totalSS / storeCount) : 0;
+
+        // 統計卡
+        document.getElementById('qrStatStores').textContent = storeCount;
+        document.getElementById('qrStatTotal').textContent = totalSS;
+        document.getElementById('qrStatCarry').textContent = carryCount;
+        document.getElementById('qrStatAvg').textContent = avg;
+        document.getElementById('qrSelectedCount').textContent = `已選 ${storeCount} 間店鋪`;
+
+        // tfoot 合計行
+        if (tfoot) {
+            tfoot.innerHTML = `<tr>
+                <td></td><td colspan="6" style="text-align:right">合計：</td>
+                <td style="text-align:center">${totalSS}</td>
+                <td style="text-align:center">${carryCount}</td>
+            </tr>`;
+        }
+
+        // 類型彙總表
+        const typeBody = document.getElementById('qrTypeSummaryBody');
+        if (typeBody) {
+            const types = Object.values(typeSummary).sort((a, b) => {
+                if (a.region !== b.region) return a.region.localeCompare(b.region);
+                if (a.category !== b.category) return a.category.localeCompare(b.category);
+                return (SIZE_DEFINITIONS[a.size]?.order || 9) - (SIZE_DEFINITIONS[b.size]?.order || 9);
+            });
+            let h = '';
+            types.forEach(t => {
+                h += `<tr><td>${t.typeCode}</td><td>${t.region}</td><td>${t.category}</td><td>${t.size}</td><td>${t.count}</td><td>${t.ss}</td><td>${t.total}</td></tr>`;
+            });
+            h += `<tr class="qr-sub-total"><td colspan="4">合計</td><td>${storeCount}</td><td></td><td>${totalSS}</td></tr>`;
+            typeBody.innerHTML = h;
+        }
+
+        // OM 彙總表
+        const omBody = document.getElementById('qrOmSummaryBody');
+        if (omBody) {
+            const oms = Object.values(omSummary).sort((a, b) => b.count - a.count);
+            let h = '';
+            oms.forEach(om => {
+                const pct = totalSS > 0 ? ((om.totalSS / totalSS) * 100).toFixed(1) : 0;
+                const avgOm = om.count > 0 ? Math.round(om.totalSS / om.count) : 0;
+                h += `<tr><td>${om.name}</td><td>${om.count}</td><td>${om.totalSS}</td><td>${avgOm}</td><td>${pct}%</td></tr>`;
+            });
+            h += `<tr class="qr-sub-total"><td>合計</td><td>${storeCount}</td><td>${totalSS}</td><td>${avg}</td><td>100%</td></tr>`;
+            omBody.innerHTML = h;
+        }
+    }
+
+    /** 快速報表 — 匯出 Excel */
+    qrExportExcel() {
+        if (typeof XLSX === 'undefined') {
+            alert('Excel 元件尚未載入，請稍後再試');
+            return;
+        }
+
+        const checkedRows = document.querySelectorAll('#qrTableBody .qr-chk:checked');
+        
+        // 過濾掉隱藏的行
+        const visibleCheckedRows = Array.from(checkedRows).filter(chk => {
+            const row = chk.closest('tr');
+            return row && !row.classList.contains('qr-row-hidden');
+        });
+
+        if (visibleCheckedRows.length === 0) {
+            alert('請至少勾選一間店鋪（篩選後至少要有一間可見的店鋪）');
+            return;
+        }
+
+        // ---- 收集資料 ----
+        const detailData = [];
+        const typeBucket = {};
+        const omBucket = {};
+
+        visibleCheckedRows.forEach(chk => {
+            const idx = parseInt(chk.dataset.idx);
+            const store = this.stores[idx];
+            const ss = this.customStoreStock[store.Site] !== undefined
+                ? this.customStoreStock[store.Site]
+                : this.getSafetyStock(store.Regional, store.Class, store.Size);
+            const tc = getStoreTypeCode(store.Regional, store.Class, store.Size);
+            const carry = ss > 0 ? 'Y' : '';
+
+            detailData.push({
+                '代號': store.Site,
+                '店鋪名稱': store.Shop,
+                '區域': store.Regional,
+                '舖類': store.Class,
+                '貨場面積': store.Size,
+                '類型代碼': tc,
+                'OM': store.OM || '',
+                'Safety Stock': ss,
+                'Carry': carry
+            });
+
+            if (!typeBucket[tc]) {
+                typeBucket[tc] = { '類型代碼': tc, '區域': store.Regional, '舖類': store.Class, '貨場面積': store.Size, '店鋪數': 0, 'Safety Stock': ss, '小計': 0 };
+            }
+            typeBucket[tc]['店鋪數']++;
+            typeBucket[tc]['小計'] += ss;
+
+            const om = store.OM || '未分配';
+            if (!omBucket[om]) {
+                omBucket[om] = { '營運經理': om, '店鋪數': 0, 'SS 總計': 0 };
+            }
+            omBucket[om]['店鋪數']++;
+            omBucket[om]['SS 總計'] += ss;
+        });
+
+        // 在 detail 底部加合計
+        const totalSS = detailData.reduce((s, d) => s + d['Safety Stock'], 0);
+        detailData.push({
+            '代號': '',
+            '店鋪名稱': '合計',
+            '區域': '',
+            '舖類': '',
+            '貨場面積': '',
+            '類型代碼': '',
+            'OM': '',
+            'Safety Stock': totalSS,
+            'Carry': ''
+        });
+
+        // 類型彙總
+        const typeData = Object.values(typeBucket).sort((a, b) => {
+            if (a['區域'] !== b['區域']) return a['區域'].localeCompare(b['區域']);
+            if (a['舖類'] !== b['舖類']) return a['舖類'].localeCompare(b['舖類']);
+            return (SIZE_DEFINITIONS[a['貨場面積']]?.order || 9) - (SIZE_DEFINITIONS[b['貨場面積']]?.order || 9);
+        });
+        typeData.push({ '類型代碼': '合計', '區域': '', '舖類': '', '貨場面積': '', '店鋪數': visibleCheckedRows.length, 'Safety Stock': '', '小計': totalSS });
+
+        // OM 彙總
+        const omData = Object.values(omBucket).sort((a, b) => b['店鋪數'] - a['店鋪數']);
+        omData.forEach(om => {
+            om['平均 SS'] = om['店鋪數'] > 0 ? Math.round(om['SS 總計'] / om['店鋪數']) : 0;
+            om['佔比'] = totalSS > 0 ? ((om['SS 總計'] / totalSS) * 100).toFixed(1) + '%' : '0%';
+        });
+        omData.push({ '營運經理': '合計', '店鋪數': visibleCheckedRows.length, 'SS 總計': totalSS, '平均 SS': visibleCheckedRows.length > 0 ? Math.round(totalSS / visibleCheckedRows.length) : 0, '佔比': '100%' });
+
+        // ---- 建立 Excel ----
+        const wb = XLSX.utils.book_new();
+
+        // Sheet 1：店鋪詳細清單
+        const ws1 = XLSX.utils.json_to_sheet(detailData);
+        ws1['!cols'] = [
+            { wch: 8 }, { wch: 16 }, { wch: 6 }, { wch: 6 }, { wch: 8 },
+            { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 6 }
+        ];
+        XLSX.utils.book_append_sheet(wb, ws1, '店鋪詳細清單');
+
+        // Sheet 2：類型彙總
+        const ws2 = XLSX.utils.json_to_sheet(typeData);
+        ws2['!cols'] = [
+            { wch: 10 }, { wch: 6 }, { wch: 6 }, { wch: 8 }, { wch: 8 }, { wch: 12 }, { wch: 10 }
+        ];
+        XLSX.utils.book_append_sheet(wb, ws2, '類型彙總');
+
+        // Sheet 3：OM 彙總
+        const ws3 = XLSX.utils.json_to_sheet(omData);
+        ws3['!cols'] = [
+            { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 8 }
+        ];
+        XLSX.utils.book_append_sheet(wb, ws3, 'OM彙總');
+
+        // Sheet 4：對照表
+        const matrixData = this.qrBuildMatrixSheet();
+        const ws4 = XLSX.utils.aoa_to_sheet(matrixData);
+        ws4['!cols'] = [
+            { wch: 12 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }
+        ];
+        XLSX.utils.book_append_sheet(wb, ws4, '對照表');
+
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+        XLSX.writeFile(wb, `SafetyStock_QuickReport_${dateStr}.xlsx`);
+        this.showToast('✅ Excel 已匯出');
+    }
+
+    /** 組裝對照表 Sheet 的二維陣列 */
+    qrBuildMatrixSheet() {
+        const sizes = ['XL', 'L', 'M', 'S', 'XS'];
+        const categories = ['A', 'B', 'C', 'D'];
+        const regions = ['HK', 'MO'];
+
+        const aoa = [['區域-舖類', 'XL', 'L', 'M', 'S', 'XS']];
+        regions.forEach(region => {
+            categories.forEach(cat => {
+                const row = [`${region}-${cat}`];
+                sizes.forEach(size => {
+                    row.push(this.getSafetyStock(region, cat, size));
+                });
+                aoa.push(row);
+            });
+        });
+        return aoa;
     }
 }
 

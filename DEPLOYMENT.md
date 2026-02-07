@@ -198,6 +198,27 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: .
 
+## 秘密（Secrets）與密碼管理（重要）
+
+在部署或 CI 流程中，請使用平台提供的秘密管理功能來保存密碼或金鑰，切勿將它們寫入程式碼或提交到倉庫。
+
+- GitHub Actions：在倉庫設定中新增 Secrets（Settings → Secrets），在 workflow 中透過 `${{ secrets.NAME }}` 讀取。範例：
+
+   ```yaml
+   env:
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+   ```
+
+   注意：不要在 workflow 或應用程式中將 secrets 輸出到日誌。
+
+- Zeabur / Netlify / 其他平台：使用其環境變數或 secrets 面板來設定敏感值，並在部署設定中參考它們。
+
+- 本地開發：可使用 `.env` 並把 `.env` 加入 `.gitignore`；確保檔案權限受限（例如 Unix 下 `chmod 600 .env`）。
+
+- 前端限制：本專案為純前端應用，瀏覽器端會暴露所有編譯後內容。任何敏感操作（管理密碼、管理界面解鎖）應以後端介面或受保護 API 實作，前端只使用短期授權 token 或以伺服器端驗證為主。
+
+建議：使用雲端秘密管理（Azure Key Vault、AWS Secrets Manager、HashiCorp Vault）或 GitHub Secrets，並將敏感邏輯下放到受控的伺服器端。若需要，我可以協助建立一個示例 workflow，示範如何安全地將 secret 傳遞給部署流程而不會外洩。
+
    （提示）你可以把 `publish_dir` 設為 `./` 或指定輸出資料夾；若使用 Zeabur 或 Netlify，可改用它們的 Action/CLI。也建議在 CI 中加入檢查步驟（lint、簡單測試），以提高 PR 審核品質。
 ```
 
@@ -388,4 +409,4 @@ MIT License - 可自由使用、修改和分發
 
 **祝部署順利！** 🚀
 
-最後更新：2026年1月31日
+最後更新：2026年2月8日
