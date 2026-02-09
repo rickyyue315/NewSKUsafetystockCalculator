@@ -37,15 +37,7 @@
             <p class="subtitle">新產品安全(緩衝)庫存計算器</p>
         </header>
 
-        <!-- 分頁切換導航 -->
-        <nav class="tab-navigation">
-            <button class="tab-btn active" data-tab="calculator">🧮 計算器</button>
-            <button class="tab-btn" data-tab="quickReport">📊 快速報表</button>
-        </nav>
-
         <main>
-        <!-- ===== 分頁：計算器（原有內容）===== -->
-        <div class="tab-panel active" id="tab-calculator">
             <!-- Safety Stock 對照表 -->
             <section class="section matrix-section">
                 <h2>📋 Safety Stock 對照表</h2>
@@ -73,7 +65,7 @@
                                 <div class="formula-params">
                                     <div class="param-item">
                                         <span class="param-name">🔢 基礎值：</span>
-                                        <span class="param-desc">所有店舖的 Safety Stock 基礎數值（預設 6）</span>
+                                        <span class="param-desc">所有店舖的 Safety Stock 基礎數值（預設 4）</span>
                                     </div>
                                     <div class="param-item">
                                         <span class="param-name">📊 Class權重：</span>
@@ -96,7 +88,7 @@
                                         <div class="formula-example-item">
                                             <strong>✅ 範例1 - 正常計算：</strong>
                                             <p><strong>條件：</strong>A級店舖 (Class權重=3) + 大型貨場 (Size權重=3) + 澳門 (區域係數=1.3)</p>
-                                            <p><strong>計算：</strong>6 + (3 × 3 × 1.3) = 6 + 11.7 ≈ <strong>18</strong> ✓</p>
+                                            <p><strong>計算：</strong>4 + (3 × 3 × 1.3) = 4 + 11.7 ≈ <strong>16</strong> ✓</p>
                                             <p class="example-note">💡 所有權重都有值，正常計算結果</p>
                                         </div>
 
@@ -251,11 +243,6 @@
                 <div id="matrixContainer" class="matrix-container">
                     <!-- Safety Stock 對照表將由 JavaScript 生成 -->
                 </div>
-
-                <!-- 對照表統計摘要 -->
-                <div id="matrixSummaryContainer" class="matrix-summary-container">
-                    <!-- 統計摘要將由 JavaScript 生成 -->
-                </div>
             </section>
 
             <!-- 店鋪選擇區域 -->
@@ -268,7 +255,6 @@
                         <button id="deselectAllBtn" class="btn btn-secondary">取消全選</button>
                         <button id="invertSelectionBtn" class="btn btn-secondary">反向選擇</button>
                         <button id="clearFiltersBtn" class="btn btn-secondary">取消篩選</button>
-                        <button id="resetCustomStockBtn" class="btn btn-warning" title="重設所有店鋪的自訂 Safety Stock 值">🔄 重設自訂值</button>
                         <span id="storeCount" class="store-count">顯示 0 間 / 已選 0 間</span>
                     </div>
                 </div>
@@ -339,7 +325,7 @@
                                 <div class="filter-buttons om-filter-buttons">
                                     <button class="filter-btn om-filter-btn" data-filter="manager" data-value="Candy" title="Candy 負責的店鋪">
                                         <span class="om-name">Candy</span>
-                                        <span class="om-count">11間</span>
+                                        <span class="om-count">13間</span>
                                     </button>
                                     <button class="filter-btn om-filter-btn" data-filter="manager" data-value="Eva" title="Eva 負責的店鋪">
                                         <span class="om-name">Eva</span>
@@ -347,7 +333,7 @@
                                     </button>
                                     <button class="filter-btn om-filter-btn" data-filter="manager" data-value="Hippo" title="Hippo 負責的店鋪">
                                         <span class="om-name">Hippo</span>
-                                        <span class="om-count">15間</span>
+                                        <span class="om-count">14間</span>
                                     </button>
                                     <button class="filter-btn om-filter-btn" data-filter="manager" data-value="Ivy" title="Ivy 負責的店鋪">
                                         <span class="om-name">Ivy</span>
@@ -564,121 +550,10 @@ MA01,澳門廣場,MO,B,M,
                     </div>
                 </div>
             </section>
-        </div><!-- /tab-calculator -->
-
-        <!-- ===== 分頁：快速報表 ===== -->
-        <div class="tab-panel" id="tab-quickReport">
-            <section class="section qr-section">
-                <h2>📊 快速報表 — 一鍵產出 Excel</h2>
-                <p class="hint">簡潔模式：選擇店鋪 → 自動計算 → 直接匯出 Excel，表格即所見即所得</p>
-
-                <!-- 頂部操作列 -->
-                <div class="qr-toolbar">
-                    <div class="qr-toolbar-left">
-                        <button id="qrSelectAll" class="btn btn-primary btn-sm">全選</button>
-                        <button id="qrDeselectAll" class="btn btn-secondary btn-sm">取消全選</button>
-                        <span class="qr-divider"></span>
-                        <button class="qr-filter-btn" data-qr-filter="HK">🇭🇰 香港</button>
-                        <button class="qr-filter-btn" data-qr-filter="MO">🇲🇴 澳門</button>
-                        <span class="qr-divider"></span>
-                        <select id="qrOmFilter" class="qr-select">
-                            <option value="">全部 OM</option>
-                        </select>
-                    </div>
-                    <div class="qr-toolbar-right">
-                        <span class="qr-selected-count" id="qrSelectedCount">已選 0 間店鋪</span>
-                        <button id="qrExportExcel" class="btn btn-apply btn-lg" disabled>📊 匯出 Excel</button>
-                    </div>
-                </div>
-
-                <!-- 即時預覽表格 -->
-                <div class="qr-table-wrapper">
-                    <table class="qr-table" id="qrTable">
-                        <thead>
-                            <tr>
-                                <th class="qr-th-check"><input type="checkbox" id="qrCheckAll" title="全選/取消"></th>
-                                <th>代號</th>
-                                <th>店鋪名稱</th>
-                                <th>區域</th>
-                                <th>舖類</th>
-                                <th>面積</th>
-                                <th>OM</th>
-                                <th class="qr-th-ss">Safety Stock</th>
-                                <th>Carry</th>
-                            </tr>
-                        </thead>
-                        <tbody id="qrTableBody">
-                            <!-- JS 動態生成 -->
-                        </tbody>
-                        <tfoot id="qrTableFoot">
-                            <!-- JS 動態生成合計列 -->
-                        </tfoot>
-                    </table>
-                </div>
-
-                <!-- 底部彙總面板 -->
-                <div class="qr-summary-panel" id="qrSummaryPanel" style="display:none">
-                    <div class="qr-summary-grid">
-                        <div class="qr-stat-card">
-                            <div class="qr-stat-label">已選店鋪</div>
-                            <div class="qr-stat-value" id="qrStatStores">0</div>
-                        </div>
-                        <div class="qr-stat-card qr-stat-highlight">
-                            <div class="qr-stat-label">Safety Stock 總計</div>
-                            <div class="qr-stat-value" id="qrStatTotal">0</div>
-                        </div>
-                        <div class="qr-stat-card">
-                            <div class="qr-stat-label">Carry 店鋪</div>
-                            <div class="qr-stat-value" id="qrStatCarry">0</div>
-                        </div>
-                        <div class="qr-stat-card">
-                            <div class="qr-stat-label">平均 SS</div>
-                            <div class="qr-stat-value" id="qrStatAvg">0</div>
-                        </div>
-                    </div>
-
-                    <!-- 按類型彙總小表格 -->
-                    <details class="qr-details">
-                        <summary>📈 按店鋪類型彙總</summary>
-                        <table class="qr-sub-table" id="qrTypeSummaryTable">
-                            <thead>
-                                <tr>
-                                    <th>類型代碼</th>
-                                    <th>區域</th>
-                                    <th>舖類</th>
-                                    <th>面積</th>
-                                    <th>店鋪數</th>
-                                    <th>Safety Stock</th>
-                                    <th>小計</th>
-                                </tr>
-                            </thead>
-                            <tbody id="qrTypeSummaryBody"></tbody>
-                        </table>
-                    </details>
-
-                    <details class="qr-details">
-                        <summary>👤 按 OM 彙總</summary>
-                        <table class="qr-sub-table" id="qrOmSummaryTable">
-                            <thead>
-                                <tr>
-                                    <th>營運經理</th>
-                                    <th>店鋪數</th>
-                                    <th>SS 總計</th>
-                                    <th>平均 SS</th>
-                                    <th>佔比</th>
-                                </tr>
-                            </thead>
-                            <tbody id="qrOmSummaryBody"></tbody>
-                        </table>
-                    </details>
-                </div>
-            </section>
-        </div><!-- /tab-quickReport -->
-
         </main>
 
         <footer>
-            <p>New SKU Safety (Buffer) Stock Calculator (2026) – RP Team Tool</p>
+            <p>New SKU Safety (Buffer) Stock Calculator (2026) – RP Team <span style="font-weight:normal;">(Based on a concept by CMPD-Natalie Wong)</span></p>
         </footer>
     </div>
 
