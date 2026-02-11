@@ -6,121 +6,152 @@
 const STORES_CONFIG = {
     stores: [
         // Ivy - 14間
-        { Site: "HA02", Shop: "駱克", Regional: "HK", Class: "B", Size: "S", OM: "Ivy" },
-        { Site: "HA06", Shop: "北角", Regional: "HK", Class: "B", Size: "M", OM: "Ivy" },
-        { Site: "HA15", Shop: "新中環", Regional: "HK", Class: "A", Size: "L", OM: "Ivy" },
-        { Site: "HA30", Shop: "禮頓中心", Regional: "HK", Class: "B", Size: "L", OM: "Ivy" },
-        { Site: "HB01", Shop: "加連威", Regional: "HK", Class: "C", Size: "S", OM: "Ivy" },
-        { Site: "HB10", Shop: "彌敦88", Regional: "HK", Class: "A", Size: "L", OM: "Ivy" },
-        { Site: "HB29", Shop: "重慶站", Regional: "HK", Class: "A", Size: "XL", OM: "Ivy" },
-        { Site: "HB38", Shop: "新港", Regional: "HK", Class: "C", Size: "M", OM: "Ivy" },
-        { Site: "HB63", Shop: "佐敦道31", Regional: "HK", Class: "B", Size: "M", OM: "Ivy" },
-        { Site: "HB66", Shop: "PopCorn", Regional: "HK", Class: "C", Size: "M", OM: "Ivy" },
-        { Site: "HB68", Shop: "新都城", Regional: "HK", Class: "C", Size: "S", OM: "Ivy" },
-        { Site: "HB75", Shop: "東港城2", Regional: "HK", Class: "C", Size: "M", OM: "Ivy" },
-        { Site: "HB83", Shop: "新加拿芬道", Regional: "HK", Class: "B", Size: "L", OM: "Ivy" },
-        { Site: "HB94", Shop: "康城", Regional: "HK", Class: "C", Size: "S", OM: "Ivy" },
+        { Site: "HA02", Shop: "駱克", Regional: "HK", Class: "B", Size: "S", OM: "Ivy", Type: "M" },
+        { Site: "HA06", Shop: "北角", Regional: "HK", Class: "B", Size: "M", OM: "Ivy", Type: "M" },
+        { Site: "HA15", Shop: "新中環", Regional: "HK", Class: "A", Size: "L", OM: "Ivy", Type: "M" },
+        { Site: "HA30", Shop: "禮頓中心", Regional: "HK", Class: "B", Size: "L", OM: "Ivy", Type: "M" },
+        { Site: "HB01", Shop: "加連威", Regional: "HK", Class: "C", Size: "S", OM: "Ivy", Type: "T" },
+        { Site: "HB10", Shop: "彌敦88", Regional: "HK", Class: "A", Size: "L", OM: "Ivy", Type: "T" },
+        { Site: "HB29", Shop: "重慶站", Regional: "HK", Class: "A", Size: "XL", OM: "Ivy", Type: "T" },
+        { Site: "HB38", Shop: "新港", Regional: "HK", Class: "C", Size: "M", OM: "Ivy", Type: "M" },
+        { Site: "HB63", Shop: "佐敦道31", Regional: "HK", Class: "B", Size: "M", OM: "Ivy", Type: "M" },
+        { Site: "HB66", Shop: "PopCorn", Regional: "HK", Class: "C", Size: "M", OM: "Ivy", Type: "M" },
+        { Site: "HB68", Shop: "新都城", Regional: "HK", Class: "C", Size: "S", OM: "Ivy", Type: "L" },
+        { Site: "HB75", Shop: "東港城2", Regional: "HK", Class: "C", Size: "M", OM: "Ivy", Type: "L" },
+        { Site: "HB83", Shop: "新加拿芬道", Regional: "HK", Class: "B", Size: "L", OM: "Ivy", Type: "T" },
+        { Site: "HB94", Shop: "康城", Regional: "HK", Class: "C", Size: "S", OM: "Ivy", Type: "L" },
 
         // Queenie - 15間
-        { Site: "HA20", Shop: "新香港仔", Regional: "HK", Class: "C", Size: "M", OM: "Queenie" },
-        { Site: "HA39", Shop: "金百利", Regional: "HK", Class: "A", Size: "M", OM: "Queenie" },
-        { Site: "HZ81", Shop: "莊士敦道", Regional: "HK", Class: "B", Size: "M", OM: "Queenie" },
-        { Site: "HA46", Shop: "莊士敦道2", Regional: "HK", Class: "B", Size: "S", OM: "Queenie" },
-        { Site: "HA32", Shop: "皇室堡", Regional: "HK", Class: "B", Size: "L", OM: "Queenie" },
-        { Site: "HA33", Shop: "羅素街8號", Regional: "HK", Class: "B", Size: "S", OM: "Queenie" },
-        { Site: "HA37", Shop: "新信德", Regional: "HK", Class: "C", Size: "XS", OM: "Queenie" },
-        { Site: "HA42", Shop: "啟超道", Regional: "HK", Class: "B", Size: "S", OM: "Queenie" },
-        { Site: "HA44", Shop: "黃竹坑", Regional: "HK", Class: "C", Size: "M", OM: "Queenie" },
-        { Site: "HA45", Shop: "合和商場", Regional: "HK", Class: "D", Size: "L", OM: "Queenie" },
-        { Site: "HC13", Shop: "沙田中心", Regional: "HK", Class: "C", Size: "S", OM: "Queenie" },
-        { Site: "HC27", Shop: "大埔超級城", Regional: "HK", Class: "C", Size: "M", OM: "Queenie" },
-        { Site: "HC33", Shop: "太和", Regional: "HK", Class: "C", Size: "M", OM: "Queenie" },
-        { Site: "HC60", Shop: "新大埔新達", Regional: "HK", Class: "C", Size: "M", OM: "Queenie" },
-        { Site: "HC66", Shop: "新沙田", Regional: "HK", Class: "B", Size: "M", OM: "Queenie" },
+        { Site: "HA20", Shop: "新香港仔", Regional: "HK", Class: "C", Size: "M", OM: "Queenie", Type: "L" },
+        { Site: "HA39", Shop: "金百利", Regional: "HK", Class: "A", Size: "M", OM: "Queenie", Type: "T" },
+        { Site: "HZ81", Shop: "莊士敦道", Regional: "HK", Class: "B", Size: "M", OM: "Queenie", Type: "M" },
+        { Site: "HA46", Shop: "莊士敦道2", Regional: "HK", Class: "B", Size: "S", OM: "Queenie", Type: "M" },
+        { Site: "HA32", Shop: "皇室堡", Regional: "HK", Class: "B", Size: "L", OM: "Queenie", Type: "M" },
+        { Site: "HA33", Shop: "羅素街8號", Regional: "HK", Class: "B", Size: "S", OM: "Queenie", Type: "T" },
+        { Site: "HA37", Shop: "新信德", Regional: "HK", Class: "C", Size: "XS", OM: "Queenie", Type: "M" },
+        { Site: "HA42", Shop: "啟超道", Regional: "HK", Class: "B", Size: "S", OM: "Queenie", Type: "T" },
+        { Site: "HA44", Shop: "黃竹坑", Regional: "HK", Class: "C", Size: "M", OM: "Queenie", Type: "M" },
+        { Site: "HA45", Shop: "合和商場", Regional: "HK", Class: "D", Size: "L", OM: "Queenie", Type: "M" },
+        { Site: "HC13", Shop: "沙田中心", Regional: "HK", Class: "C", Size: "S", OM: "Queenie", Type: "M" },
+        { Site: "HC27", Shop: "大埔超級城", Regional: "HK", Class: "C", Size: "M", OM: "Queenie", Type: "L" },
+        { Site: "HC33", Shop: "太和", Regional: "HK", Class: "C", Size: "M", OM: "Queenie", Type: "L" },
+        { Site: "HC60", Shop: "新大埔新達", Regional: "HK", Class: "C", Size: "M", OM: "Queenie", Type: "L" },
+        { Site: "HC66", Shop: "新沙田", Regional: "HK", Class: "B", Size: "M", OM: "Queenie", Type: "M" },
 
         // Candy - 12間
-        { Site: "HA21", Shop: "柴灣新翠", Regional: "HK", Class: "C", Size: "S", OM: "Candy" },
-        { Site: "HA40", Shop: "新山頂", Regional: "HK", Class: "D", Size: "S", OM: "Candy" },
-        { Site: "HB25", Shop: "奧海城", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
-        { Site: "HB38", Shop: "新港", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
-        { Site: "HB98", Shop: "星光行2", Regional: "HK", Class: "B", Size: "M", OM: "Candy" },
-        { Site: "HC05", Shop: "上水", Regional: "HK", Class: "B", Size: "M", OM: "Candy" },
-        { Site: "HC26", Shop: "沙田第一城", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
-        { Site: "HBA4", Shop: "中港城2", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
-        { Site: "HC42", Shop: "上水新都2", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
-        { Site: "HC45", Shop: "新馬鞍山", Regional: "HK", Class: "C", Size: "M", OM: "Candy" },
-        { Site: "HC63", Shop: "新東涌", Regional: "HK", Class: "B", Size: "M", OM: "Candy" },
-        { Site: "HC68", Shop: "新大圍", Regional: "HK", Class: "C", Size: "XS", OM: "Candy" },
+        { Site: "HA21", Shop: "柴灣新翠", Regional: "HK", Class: "C", Size: "S", OM: "Candy", Type: "L" },
+        { Site: "HA40", Shop: "新山頂", Regional: "HK", Class: "D", Size: "S", OM: "Candy", Type: "T" },
+        { Site: "HB25", Shop: "奧海城", Regional: "HK", Class: "C", Size: "M", OM: "Candy", Type: "L" },
+        { Site: "HB38", Shop: "新港", Regional: "HK", Class: "C", Size: "M", OM: "Candy", Type: "T" },
+        { Site: "HB98", Shop: "星光行2", Regional: "HK", Class: "B", Size: "M", OM: "Candy", Type: "T" },
+        { Site: "HC05", Shop: "上水", Regional: "HK", Class: "B", Size: "M", OM: "Candy", Type: "T" },
+        { Site: "HC26", Shop: "沙田第一城", Regional: "HK", Class: "C", Size: "M", OM: "Candy", Type: "L" },
+        { Site: "HBA4", Shop: "中港城2", Regional: "HK", Class: "C", Size: "M", OM: "Candy", Type: "T" },
+        { Site: "HC42", Shop: "上水新都2", Regional: "HK", Class: "C", Size: "M", OM: "Candy", Type: "M" },
+        { Site: "HC45", Shop: "新馬鞍山", Regional: "HK", Class: "C", Size: "M", OM: "Candy", Type: "L" },
+        { Site: "HC63", Shop: "新東涌", Regional: "HK", Class: "B", Size: "M", OM: "Candy", Type: "M" },
+        { Site: "HC68", Shop: "新大圍", Regional: "HK", Class: "C", Size: "XS", OM: "Candy", Type: "L" },
 
         // Violet - 8間
-        { Site: "HA19", Shop: "康山", Regional: "HK", Class: "C", Size: "S", OM: "Violet" },
-        { Site: "HB62", Shop: "油塘", Regional: "HK", Class: "C", Size: "L", OM: "Violet" },
-        { Site: "HB69", Shop: "西九龍", Regional: "HK", Class: "C", Size: "M", OM: "Violet" },
-        { Site: "HB86", Shop: "新都會駅", Regional: "HK", Class: "D", Size: "S", OM: "Violet" },
-        { Site: "HB91", Shop: "南昌站V Walk", Regional: "HK", Class: "D", Size: "XS", OM: "Violet" },
-        { Site: "HB93", Shop: "新好望角", Regional: "HK", Class: "A", Size: "M", OM: "Violet" },
-        { Site: "HB95", Shop: "觀塘APM2", Regional: "HK", Class: "B", Size: "S", OM: "Violet" },
-        { Site: "HB97", Shop: "新旺角文華", Regional: "HK", Class: "A", Size: "M", OM: "Violet" },
+        { Site: "HA19", Shop: "康山", Regional: "HK", Class: "C", Size: "S", OM: "Violet", Type: "L" },
+        { Site: "HB62", Shop: "油塘", Regional: "HK", Class: "C", Size: "L", OM: "Violet", Type: "L" },
+        { Site: "HB69", Shop: "西九龍", Regional: "HK", Class: "C", Size: "M", OM: "Violet", Type: "L" },
+        { Site: "HB86", Shop: "新都會駅", Regional: "HK", Class: "D", Size: "S", OM: "Violet", Type: "L" },
+        { Site: "HB91", Shop: "南昌站V Walk", Regional: "HK", Class: "D", Size: "XS", OM: "Violet", Type: "L" },
+        { Site: "HB93", Shop: "新好望角", Regional: "HK", Class: "A", Size: "M", OM: "Violet", Type: "T" },
+        { Site: "HB95", Shop: "觀塘APM2", Regional: "HK", Class: "B", Size: "S", OM: "Violet", Type: "M" },
+        { Site: "HB97", Shop: "新旺角文華", Regional: "HK", Class: "A", Size: "M", OM: "Violet", Type: "T" },
 
         // Hippo - 15間
-        { Site: "HB11", Shop: "德福", Regional: "HK", Class: "B", Size: "M", OM: "Hippo" },
-        { Site: "HB12", Shop: "黃埔", Regional: "HK", Class: "B", Size: "M", OM: "Hippo" },
-        { Site: "HB30", Shop: "淘大", Regional: "HK", Class: "C", Size: "S", OM: "Hippo" },
-        { Site: "HB41", Shop: "九龍城", Regional: "HK", Class: "D", Size: "M", OM: "Hippo" },
-        { Site: "HB49", Shop: "新蒲崗", Regional: "HK", Class: "C", Size: "M", OM: "Hippo" },
-        { Site: "HB56", Shop: "旺角160", Regional: "HK", Class: "B", Size: "M", OM: "Hippo" },
-        { Site: "HB72", Shop: "黃大仙", Regional: "HK", Class: "C", Size: "M", OM: "Hippo" },
-        { Site: "HB77", Shop: "新樂富", Regional: "HK", Class: "C", Size: "XS", OM: "Hippo" },
-        { Site: "HB87", Shop: "西九高鐵站", Regional: "HK", Class: "B", Size: "XS", OM: "Hippo" },
-        { Site: "HB96", Shop: "啟德", Regional: "HK", Class: "D", Size: "M", OM: "Hippo" },
-        { Site: "HBA2", Shop: "廣東道2", Regional: "HK", Class: "B", Size: "M", OM: "Hippo" },
-        { Site: "HBA3", Shop: "荷里活廣場2", Regional: "HK", Class: "C", Size: "S", OM: "Hippo" },
-        { Site: "HC19", Shop: "錦薈坊", Regional: "HK", Class: "C", Size: "M", OM: "Hippo" },
-        { Site: "HC31", Shop: "新屯門", Regional: "HK", Class: "C", Size: "M", OM: "Hippo" },
-        { Site: "HC67", Shop: "新V City", Regional: "HK", Class: "C", Size: "M", OM: "Hippo" },
+        { Site: "HB11", Shop: "德福", Regional: "HK", Class: "B", Size: "M", OM: "Hippo", Type: "M" },
+        { Site: "HB12", Shop: "黃埔", Regional: "HK", Class: "B", Size: "M", OM: "Hippo", Type: "M" },
+        { Site: "HB30", Shop: "淘大", Regional: "HK", Class: "C", Size: "S", OM: "Hippo", Type: "L" },
+        { Site: "HB41", Shop: "九龍城", Regional: "HK", Class: "D", Size: "M", OM: "Hippo", Type: "L" },
+        { Site: "HB49", Shop: "新蒲崗", Regional: "HK", Class: "C", Size: "M", OM: "Hippo", Type: "L" },
+        { Site: "HB56", Shop: "旺角160", Regional: "HK", Class: "B", Size: "M", OM: "Hippo", Type: "T" },
+        { Site: "HB72", Shop: "黃大仙", Regional: "HK", Class: "C", Size: "M", OM: "Hippo", Type: "M" },
+        { Site: "HB77", Shop: "新樂富", Regional: "HK", Class: "C", Size: "XS", OM: "Hippo", Type: "L" },
+        { Site: "HB87", Shop: "西九高鐵站", Regional: "HK", Class: "B", Size: "XS", OM: "Hippo", Type: "T" },
+        { Site: "HB96", Shop: "啟德", Regional: "HK", Class: "D", Size: "M", OM: "Hippo", Type: "M" },
+        { Site: "HBA2", Shop: "廣東道2", Regional: "HK", Class: "B", Size: "M", OM: "Hippo", Type: "T" },
+        { Site: "HBA3", Shop: "荷里活廣場2", Regional: "HK", Class: "C", Size: "S", OM: "Hippo", Type: "L" },
+        { Site: "HC19", Shop: "錦薈坊", Regional: "HK", Class: "C", Size: "M", OM: "Hippo", Type: "M" },
+        { Site: "HC31", Shop: "新屯門", Regional: "HK", Class: "C", Size: "M", OM: "Hippo", Type: "M" },
+        { Site: "HC67", Shop: "新V City", Regional: "HK", Class: "C", Size: "M", OM: "Hippo", Type: "M" },
 
         // Eva - 13間
-        { Site: "HB24", Shop: "始創", Regional: "HK", Class: "B", Size: "M", OM: "Eva" },
-        { Site: "HB80", Shop: "新世紀Moko", Regional: "HK", Class: "C", Size: "M", OM: "Eva" },
-        { Site: "HC02", Shop: "荃灣", Regional: "HK", Class: "B", Size: "M", OM: "Eva" },
-        { Site: "HC15", Shop: "悅來坊", Regional: "HK", Class: "C", Size: "M", OM: "Eva" },
-        { Site: "HC44", Shop: "新頌富", Regional: "HK", Class: "C", Size: "S", OM: "Eva" },
-        { Site: "HC49", Shop: "形點", Regional: "HK", Class: "C", Size: "M", OM: "Eva" },
-        { Site: "HC51", Shop: "新荃灣廣場", Regional: "HK", Class: "D", Size: "M", OM: "Eva" },
-        { Site: "HC55", Shop: "新新都會", Regional: "HK", Class: "B", Size: "L", OM: "Eva" },
-        { Site: "HC61", Shop: "如心廣場", Regional: "HK", Class: "C", Size: "M", OM: "Eva" },
-        { Site: "HC62", Shop: "新元朗", Regional: "HK", Class: "C", Size: "S", OM: "Eva" },
-        { Site: "HC64", Shop: "嘉湖", Regional: "HK", Class: "C", Size: "M", OM: "Eva" },
-        { Site: "HC69", Shop: "元朗廣場2", Regional: "HK", Class: "C", Size: "S", OM: "Eva" },
+        { Site: "HB24", Shop: "始創", Regional: "HK", Class: "B", Size: "M", OM: "Eva", Type: "M" },
+        { Site: "HB80", Shop: "新世紀Moko", Regional: "HK", Class: "C", Size: "M", OM: "Eva", Type: "M" },
+        { Site: "HC02", Shop: "荃灣", Regional: "HK", Class: "B", Size: "M", OM: "Eva", Type: "L" },
+        { Site: "HC15", Shop: "悅來坊", Regional: "HK", Class: "C", Size: "M", OM: "Eva", Type: "M" },
+        { Site: "HC44", Shop: "新頌富", Regional: "HK", Class: "C", Size: "S", OM: "Eva", Type: "L" },
+        { Site: "HC49", Shop: "形點", Regional: "HK", Class: "C", Size: "M", OM: "Eva", Type: "M" },
+        { Site: "HC51", Shop: "新荃灣廣場", Regional: "HK", Class: "D", Size: "M", OM: "Eva", Type: "M" },
+        { Site: "HC55", Shop: "新新都會", Regional: "HK", Class: "B", Size: "L", OM: "Eva", Type: "L" },
+        { Site: "HC61", Shop: "如心廣場", Regional: "HK", Class: "C", Size: "M", OM: "Eva", Type: "M" },
+        { Site: "HC62", Shop: "新元朗", Regional: "HK", Class: "C", Size: "S", OM: "Eva", Type: "L" },
+        { Site: "HC64", Shop: "嘉湖", Regional: "HK", Class: "C", Size: "M", OM: "Eva", Type: "L" },
+        { Site: "HC69", Shop: "元朗廣場2", Regional: "HK", Class: "C", Size: "S", OM: "Eva", Type: "M" },
 
         // Windy - 9間 (澳門)
-        { Site: "HD02", Shop: "高士德", Regional: "MO", Class: "B", Size: "L", OM: "Windy" },
-        { Site: "HD03", Shop: "議事亭", Regional: "MO", Class: "A", Size: "XL", OM: "Windy" },
-        { Site: "HD09", Shop: "新威尼斯人", Regional: "MO", Class: "A", Size: "L", OM: "Windy" },
-        { Site: "HD11", Shop: "新澳門廣場", Regional: "MO", Class: "A", Size: "L", OM: "Windy" },
-        { Site: "HD15", Shop: "信達廣場", Regional: "MO", Class: "A", Size: "L", OM: "Windy" },
-        { Site: "HD16", Shop: "澳門南灣中心", Regional: "MO", Class: "C", Size: "L", OM: "Windy" },
-        { Site: "HD18", Shop: "倫敦人", Regional: "MO", Class: "A", Size: "XL", OM: "Windy" },
-        { Site: "HD19", Shop: "板樟堂", Regional: "MO", Class: "A", Size: "L", OM: "Windy" },
-        { Site: "HD20", Shop: "澳門銀河2", Regional: "MO", Class: "B", Size: "S", OM: "Windy" }
+        { Site: "HD02", Shop: "高士德", Regional: "MO", Class: "B", Size: "L", OM: "Windy", Type: "L" },
+        { Site: "HD03", Shop: "議事亭", Regional: "MO", Class: "A", Size: "XL", OM: "Windy", Type: "T" },
+        { Site: "HD09", Shop: "新威尼斯人", Regional: "MO", Class: "A", Size: "L", OM: "Windy", Type: "T" },
+        { Site: "HD11", Shop: "新澳門廣場", Regional: "MO", Class: "A", Size: "L", OM: "Windy", Type: "T" },
+        { Site: "HD15", Shop: "信達廣場", Regional: "MO", Class: "A", Size: "L", OM: "Windy", Type: "T" },
+        { Site: "HD16", Shop: "澳門南灣中心", Regional: "MO", Class: "C", Size: "L", OM: "Windy", Type: "T" },
+        { Site: "HD18", Shop: "倫敦人", Regional: "MO", Class: "A", Size: "XL", OM: "Windy", Type: "T" },
+        { Site: "HD19", Shop: "板樟堂", Regional: "MO", Class: "A", Size: "L", OM: "Windy", Type: "T" },
+        { Site: "HD20", Shop: "澳門銀河2", Regional: "MO", Class: "B", Size: "S", OM: "Windy", Type: "T" }
     ]
 };
 
-// Safety Stock 對照表 - 根據權重邏輯生成
-// 公式：Safety Stock = baseValue + (classWeight × sizeWeight × regionFactor)
-// 基礎值=4, HK係數=1.0, MO係數=1.33
+// Safety Stock 對照表 - 三維結構（Region → Class → Type → Size）
+// 根據實際業務需求設定，整合客源類型（T/M/L）
 const SAFETY_STOCK_MATRIX = {
     "HK": {
-        "A": { "XL": 9, "L": 8, "M": 7, "S": 6, "XS": 6 },
-        "B": { "XL": 8, "L": 7, "M": 6, "S": 6, "XS": 6 },
-        "C": { "XL": 7, "L": 6, "M": 6, "S": 5, "XS": 5 },
-        "D": { "XL": 7, "L": 6, "M": 6, "S": 5, "XS": 5 }
+        "A": {
+            "T": { "XL": 17, "L": 15, "M": 13, "S": 12, "XS": 10 },
+            "M": { "XL": 17, "L": 15, "M": 13, "S": 12, "XS": 10 },
+            "L": { "XL": 17, "L": 15, "M": 13, "S": 12, "XS": 10 }
+        },
+        "B": {
+            "T": { "XL": 14, "L": 13, "M": 12, "S": 10, "XS": 9 },
+            "M": { "XL": 14, "L": 13, "M": 12, "S": 10, "XS": 9 },
+            "L": { "XL": 14, "L": 13, "M": 12, "S": 10, "XS": 9 }
+        },
+        "C": {
+            "T": { "XL": 13, "L": 12, "M": 10, "S": 9, "XS": 9 },
+            "M": { "XL": 13, "L": 12, "M": 10, "S": 9, "XS": 9 },
+            "L": { "XL": 13, "L": 12, "M": 10, "S": 9, "XS": 9 }
+        },
+        "D": {
+            "T": { "XL": 12, "L": 11, "M": 9, "S": 9, "XS": 8 },
+            "M": { "XL": 12, "L": 11, "M": 9, "S": 9, "XS": 8 },
+            "L": { "XL": 12, "L": 11, "M": 9, "S": 9, "XS": 8 }
+        }
     },
     "MO": {
-        "A": { "XL": 11, "L": 9, "M": 8, "S": 7, "XS": 7 },
-        "B": { "XL": 9, "L": 8, "M": 7, "S": 6, "XS": 6 },
-        "C": { "XL": 7, "L": 7, "M": 6, "S": 5, "XS": 5 },
-        "D": { "XL": 7, "L": 7, "M": 6, "S": 5, "XS": 5 }
+        "A": {
+            "T": { "XL": 27, "L": 25, "M": 16, "S": 13, "XS": 12 },
+            "M": { "XL": 27, "L": 25, "M": 16, "S": 13, "XS": 12 },
+            "L": { "XL": 27, "L": 25, "M": 16, "S": 13, "XS": 12 }
+        },
+        "B": {
+            "T": { "XL": 17, "L": 16, "M": 14, "S": 12, "XS": 10 },
+            "M": { "XL": 17, "L": 16, "M": 14, "S": 12, "XS": 10 },
+            "L": { "XL": 17, "L": 16, "M": 14, "S": 12, "XS": 10 }
+        },
+        "C": {
+            "T": { "XL": 14, "L": 13, "M": 12, "S": 10, "XS": 10 },
+            "M": { "XL": 14, "L": 13, "M": 12, "S": 10, "XS": 10 },
+            "L": { "XL": 14, "L": 13, "M": 12, "S": 10, "XS": 10 }
+        },
+        "D": {
+            "T": { "XL": 13, "L": 12, "M": 10, "S": 10, "XS": 9 },
+            "M": { "XL": 13, "L": 12, "M": 10, "S": 10, "XS": 9 },
+            "L": { "XL": 13, "L": 12, "M": 10, "S": 10, "XS": 9 }
+        }
     }
 };
 
@@ -129,10 +160,10 @@ function getStoreTypeCode(region, category, size) {
     return `${region}${category}${size}`;
 }
 
-// 根據店鋪獲取 Safety Stock 值
-function getSafetyStockValue(region, category, size) {
+// 根據店鋪獲取 Safety Stock 值（含 Type）
+function getSafetyStockValue(region, category, size, type = 'M') {
     try {
-        return SAFETY_STOCK_MATRIX[region][category][size] || 0;
+        return SAFETY_STOCK_MATRIX[region][category][type][size] || 0;
     } catch (e) {
         return 0;
     }
@@ -184,6 +215,13 @@ const REGION_DEFINITIONS = {
     "MO": { name: "澳門", color: "#e91e63" }
 };
 
+// Type 定義（店舖類型）
+const TYPE_DEFINITIONS = {
+    "T": { name: "遊客區", description: "Tourist - 主要服務遊客的店舖", color: "#ff6b6b" },
+    "M": { name: "混合型", description: "Mixed - 遊客與本地客源混合的店舖", color: "#4ecdc4" },
+    "L": { name: "本地型", description: "Local - 主要服務本地客源的店舖", color: "#45b7d1" }
+};
+
 // 默認的計算配置
 const DEFAULT_CALCULATION_CONFIG = {
     method: "matrix", // 使用對照表方式
@@ -194,10 +232,11 @@ const DEFAULT_CALCULATION_CONFIG = {
 // ==================== 權重設定配置 ====================
 // 用於快速計算 Safety Stock 對照表
 
-// 預設權重配置 - 根據用戶提供的數值設定
+// 預設權重配置 - 包含 Type（店舖類型）權重
 const WEIGHT_CONFIG = {
-    class: { A: 2, B: 1.5, C: 1, D: 1 },
-    size: { XL: 2.5, L: 2, M: 1.5, S: 1, XS: 1 },
+    class: { A: 1.8, B: 1.4, C: 1, D: 1 },
+    size: { XL: 2.0, L: 1.6, M: 1.2, S: 0.8, XS: 0.8 },
+    type: { T: 1.2, M: 1.0, L: 0.9 },
     baseValue: 4,
     regionFactor: { HK: 1.0, MO: 1.33 },
     salesTarget: 0,
@@ -205,44 +244,49 @@ const WEIGHT_CONFIG = {
     targetTotal: 0
 };
 
-// 預設模板 - 提供多種權重設定選項
+// 預設模板 - 提供多種權重設定選項（已整合 Type 權重）
 const WEIGHT_TEMPLATES = {
-    // 目前設定（根據用戶提供的數值）
+    // 目前設定（平衡型 - 新增 Type 權重）
     current: {
-        class: { A: 2, B: 1.5, C: 1, D: 1 },
-        size: { XL: 2.5, L: 2, M: 1.5, S: 1, XS: 1 },
+        class: { A: 1.8, B: 1.4, C: 1, D: 1 },
+        size: { XL: 2.0, L: 1.6, M: 1.2, S: 0.8, XS: 0.8 },
+        type: { T: 1.2, M: 1.0, L: 0.9 },
         baseValue: 4,
         regionFactor: { HK: 1.0, MO: 1.33 }
     },
 
     // 預設權重（與目前設定相同）
     default: {
-        class: { A: 2, B: 1.5, C: 1, D: 1 },
-        size: { XL: 2.5, L: 2, M: 1.5, S: 1, XS: 1 },
+        class: { A: 1.8, B: 1.4, C: 1, D: 1 },
+        size: { XL: 2.0, L: 1.6, M: 1.2, S: 0.8, XS: 0.8 },
+        type: { T: 1.2, M: 1.0, L: 0.9 },
         baseValue: 4,
         regionFactor: { HK: 1.0, MO: 1.33 }
     },
 
-    // 平衡權重（較平均分配）
+    // 平衡權重（較平均分配，Type 權重較小）
     balanced: {
-        class: { A: 1.8, B: 1.5, C: 1.2, D: 1 },
-        size: { XL: 2.2, L: 1.8, M: 1.5, S: 1.2, XS: 1 },
+        class: { A: 1.6, B: 1.3, C: 1, D: 0.9 },
+        size: { XL: 1.8, L: 1.5, M: 1.2, S: 0.9, XS: 0.8 },
+        type: { T: 1.1, M: 1.0, L: 0.95 },
         baseValue: 4,
         regionFactor: { HK: 1.0, MO: 1.3 }
     },
 
-    // 保守型（較低的庫存配置）
+    // 保守型（較低的庫存配置，Type 差異最小）
     conservative: {
-        class: { A: 1.5, B: 1.2, C: 0.8, D: 0.8 },
-        size: { XL: 2, L: 1.5, M: 1.2, S: 0.8, XS: 0.8 },
+        class: { A: 1.3, B: 1.0, C: 0.8, D: 0.8 },
+        size: { XL: 1.5, L: 1.2, M: 1.0, S: 0.7, XS: 0.7 },
+        type: { T: 1.05, M: 1.0, L: 0.98 },
         baseValue: 3,
         regionFactor: { HK: 1.0, MO: 1.2 }
     },
 
-    // 積極型（較高的庫存配置）
+    // 積極型（較高的庫存配置，Type 差異明顯）
     aggressive: {
-        class: { A: 2.5, B: 2, C: 1.5, D: 1.2 },
-        size: { XL: 3, L: 2.5, M: 2, S: 1.5, XS: 1.2 },
+        class: { A: 2.0, B: 1.6, C: 1.2, D: 1 },
+        size: { XL: 2.4, L: 2.0, M: 1.5, S: 1.0, XS: 0.9 },
+        type: { T: 1.3, M: 1.0, L: 0.85 },
         baseValue: 5,
         regionFactor: { HK: 1.0, MO: 1.4 }
     }
@@ -250,15 +294,17 @@ const WEIGHT_TEMPLATES = {
 
 // 根據權重計算 Safety Stock
 //
-// 計算邏輯：Safety Stock = 基礎值 + (Class權重 × Size權重 × 區域係數)
+// 計算邏輯：Safety Stock = 基礎值 + (Class權重 × Size權重 × Type權重 × 區域係數)
 //
 // 重要特性：
 // - 如果任何權重參數為 0，整個乘法結果為 0，最終 Safety Stock = 基礎值 + 0
 // - 如果區域係數為 0，表示該區域不需要庫存，結果直接為 0
+// - Type 權重用於調整不同店舖類型的庫存需求（T: 遊客區, M: 混合型, L: 本地型）
 // - 常用場景：設定某個區域的係數為 0 可禁用該區域的庫存需求
-function calculateSafetyStockWithWeights(region, category, size, weights) {
+function calculateSafetyStockWithWeights(region, category, size, type, weights) {
     const classWeight = weights.class[category] || 1;
     const sizeWeight = weights.size[size] || 1;
+    const typeWeight = (weights.type && weights.type[type]) || 1;
     const regionFactor = weights.regionFactor[region];
     const baseValue = weights.baseValue || 6;
     
@@ -267,9 +313,9 @@ function calculateSafetyStockWithWeights(region, category, size, weights) {
         return 0;
     }
     
-    // 計算公式：基礎值 + (Class權重 × Size權重 × 區域係數)
+    // 計算公式：基礎值 + (Class權重 × Size權重 × Type權重 × 區域係數)
     // 注意：如果乘法中任何項為 0，整個乘積為 0
-    let result = baseValue + (classWeight * sizeWeight * regionFactor);
+    let result = baseValue + (classWeight * sizeWeight * typeWeight * regionFactor);
     
     // 確保最小值為 0
     if (result < 0) result = 0;
@@ -278,12 +324,13 @@ function calculateSafetyStockWithWeights(region, category, size, weights) {
     return Math.round(result);
 }
 
-// 根據權重生成整個對照表
+// 根據權重生成整個對照表（基於混合型 Type=M 作為基準）
 function generateMatrixWithWeights(weights) {
     const matrix = {};
     const regions = ['HK', 'MO'];
     const categories = ['A', 'B', 'C', 'D'];
     const sizes = ['XL', 'L', 'M', 'S', 'XS'];
+    const baseType = 'M'; // 使用混合型作為對照表基準
     
     regions.forEach(region => {
         matrix[region] = {};
@@ -291,7 +338,7 @@ function generateMatrixWithWeights(weights) {
             matrix[region][category] = {};
             sizes.forEach(size => {
                 matrix[region][category][size] = calculateSafetyStockWithWeights(
-                    region, category, size, weights
+                    region, category, size, baseType, weights
                 );
             });
         });

@@ -12,6 +12,7 @@ class SafetyStockCalculator {
             region: [],
             category: [],
             size: [],
+            type: [],
             storeGroup: [],
             manager: [],
             specialStore: []
@@ -382,7 +383,7 @@ class SafetyStockCalculator {
             const store = this.getStoreBySite(storeCode);
             const value = this.customStoreStock[storeCode] !== undefined
                 ? this.customStoreStock[storeCode]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size);
+                : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type);
             span.textContent = value;
             span.classList.remove('editing');
         }
@@ -416,14 +417,25 @@ class SafetyStockCalculator {
             div.dataset.region = store.Regional;
             div.dataset.category = store.Class;
             div.dataset.size = store.Size;
+            div.dataset.type = store.Type || '';
             div.dataset.storeGroup = store.Site ? store.Site.substring(0, 2).toUpperCase() : '';
             div.dataset.manager = store.OM || '';
 
             // 檢查是否有個別店鋪的自訂值，或全局對照表的自訂值
-            let safetyStock = this.customStoreStock[store.Site] !== undefined
-                ? this.customStoreStock[store.Site]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size);
+            let safetyStock;
+            if (this.customStoreStock[store.Site] !== undefined) {
+                safetyStock = this.customStoreStock[store.Site];
+            } else {
+                // 使用對照表值，現在已經整合 Type
+                safetyStock = this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type || 'M');
+            }
             const typeCode = getStoreTypeCode(store.Regional, store.Class, store.Size);
+
+            // 根據 Type 生成色彩標籤
+            const typeColors = { 'T': '#ff6b6b', 'M': '#4ecdc4', 'L': '#45b7d1' };
+            const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
+            const typeColor = typeColors[store.Type] || '#ccc';
+            const typeLabel = typeLabels[store.Type] || '未分類';
 
             div.innerHTML = `
                 <input type="checkbox" id="store-${originalIndex}" value="${originalIndex}">
@@ -432,6 +444,7 @@ class SafetyStockCalculator {
                 <span class="store-badge region-${store.Regional.toLowerCase()}">${store.Regional}</span>
                 <span class="store-badge category-${store.Class.toLowerCase()}">${store.Class}</span>
                 <span class="store-badge size-badge">${store.Size}</span>
+                <span class="store-badge type-badge" style="background-color: ${typeColor}; color: white;">${typeLabel}</span>
                 <span class="store-safety-stock editable-store-stock" data-store-code="${store.Site}" title="點擊編輯 Safety Stock">${safetyStock}</span>
             `;
 
@@ -528,6 +541,7 @@ class SafetyStockCalculator {
             region: [],
             category: [],
             size: [],
+            type: [],
             storeGroup: [],
             manager: [],
             specialStore: []
@@ -536,6 +550,125 @@ class SafetyStockCalculator {
             btn.classList.remove('active');
         });
         this.applyFilters();
+    }
+
+    // ==================== 診斷函數 ====================
+    
+    /**
+     * 全面診斷系統狀態和功能
+     * 用於排查問題和驗證系統完整性
+     */
+    runDiagnostics() {
+        console.clear();
+        console.log('🔍 ========== 系統診斷開始 ==========');
+        
+        const results = {
+            timestamp: new Date().toISOString(),
+            checks: {}
+        };
+        
+        // 1. 檢查店鋪數據
+        console.log('\n📊 1. 店鋪數據檢查');
+        results.checks.stores = {
+            total: this.stores.length,
+            valid: this.stores.filter(s => s.Site && s.Regional && s.Class && s.Size).length,
+            withType: this.stores.filter(s => s.Type).length,
+            typeMissing: this.stores.filter(s => !s.Type).map(s => s.Site)
+        };
+        console.log(`   ✓ 總店鋪數: ${results.checks.stores.total}`);
+        console.log(`   ✓ 有效店鋪: ${results.checks.stores.valid}`);
+        console.log(`   ✓ 有 Type 屬性: ${results.checks.stores.withType}`);
+        if (results.checks.stores.typeMissing.length > 0) {
+            console.warn(`   ⚠️  缺少 Type 的店鋪: ${results.checks.stores.typeMissing.join(', ')}`);
+        }
+        
+        // 2. 檢查筛选功能
+        console.log('\n🔽 2. 篩選功能檢查');
+        results.checks.filters = {
+            activeFilters: JSON.stringify(this.activeFilters),
+            filterButtons: document.querySelectorAll('.filter-btn').length,
+            activeButtons: document.querySelectorAll('.filter-btn.active').length,
+            storeItemsTotal: document.querySelectorAll('.store-item').length,
+            storeItemsVisible: document.querySelectorAll('.store-item:not([style*="display: none"])').length
+        };
+        console.log(`   ✓ 過濾按鈕總數: ${results.checks.filters.filterButtons}`);
+        console.log(`   ✓ 活躍篩選: ${results.checks.filters.activeButtons}`);
+        console.log(`   ✓ 店鋪項目: ${results.checks.filters.storeItemsTotal} (${results.checks.filters.storeItemsVisible} 可見)`);
+        console.log(`   ✓ activeFilters 內容:`, this.activeFilters);
+        
+        // 3. 檢查店鋪選擇
+        console.log('\n✅ 3. 店鋪選擇檢查');
+        results.checks.selection = {
+            selectedCount: this.selectedStores.length,
+            selectedIndices: this.selectedStores,
+            selectedStores: this.selectedStores.map(idx => this.stores[idx]?.Site || `unknown-${idx}`),
+            checkboxesChecked: document.querySelectorAll('.store-item input:checked').length
+        };
+        console.log(`   ✓ 已選店鋪: ${results.checks.selection.selectedCount}`);
+        console.log(`   ✓ 選中複選框: ${results.checks.selection.checkboxesChecked}`);
+        if (results.checks.selection.selectedCount !== results.checks.selection.checkboxesChecked) {
+            console.warn('   ⚠️  selectedStores 與複選框不同步！');
+        }
+        
+        // 4. 檢查對照表
+        console.log('\n📋 4. 對照表檢查');
+        const matrixValid = this.isValidMatrixDraftStructure(this.matrixDraft);
+        results.checks.matrix = {
+            draftStructureValid: matrixValid,
+            hasCustomSafetyStock: Object.keys(this.customSafetyStock).length,
+            hasCustomStoreStock: Object.keys(this.customStoreStock).length,
+            draftSize: Object.keys(this.matrixDraft).length
+        };
+        console.log(`   ✓ Draft 3D 結構有效: ${matrixValid}`);
+        console.log(`   ✓ 自訂對照表值: ${results.checks.matrix.hasCustomSafetyStock}`);
+        console.log(`   ✓ 自訂店鋪值: ${results.checks.matrix.hasCustomStoreStock}`);
+        
+        // 5. 檢查 DOM 元素
+        console.log('\n🎨 5. DOM 元素檢查');
+        const requiredElements = [
+            'storesContainer',
+            'matrixContainer',
+            'matrixSummaryContainer',
+            'calculateBtn',
+            'exportBtn',
+            'selectAllBtn',
+            'clearFiltersBtn'
+        ];
+        results.checks.dom = {};
+        requiredElements.forEach(id => {
+            const exists = !!document.getElementById(id);
+            results.checks.dom[id] = exists;
+            console.log(`   ${exists ? '✓' : '✗'} #${id}`);
+        });
+        
+        // 6. 檢查計算相關
+        console.log('\n🧮 6. 計算功能檢查');
+        results.checks.calculation = {
+            resultsCount: this.results.length,
+            summaryResultsCount: this.summaryResults.length,
+            lastCalculationTime: this.lastCalculationTime || '未執行'
+        };
+        console.log(`   ✓ 計算結果: ${results.checks.calculation.resultsCount}`);
+        console.log(`   ✓ 摘要結果: ${results.checks.calculation.summaryResultsCount}`);
+        
+        // 7. 檢查本地儲存
+        console.log('\n💾 7. 本地儲存檢查');
+        try {
+            const stored = localStorage.getItem('safetyStockCalculatorV2');
+            results.checks.localStorage = {
+                exists: !!stored,
+                size: stored ? (stored.length / 1024).toFixed(2) + ' KB' : 'N/A'
+            };
+            console.log(`   ✓ 儲存存在: ${results.checks.localStorage.exists}`);
+            console.log(`   ✓ 大小: ${results.checks.localStorage.size}`);
+        } catch (e) {
+            console.error('   ✗ localStorage 讀取失敗:', e.message);
+        }
+        
+        console.log('\n📋 診斷報告:', results);
+        console.log('🔍 ========== 診斷完成 ==========');
+        
+        return results;
     }
 
     // 重設所有店鋪的自訂 Safety Stock 值，恢復為對照表的值
@@ -700,6 +833,11 @@ class SafetyStockCalculator {
                 show = show && this.activeFilters.size.includes(item.dataset.size);
             }
             
+            // 檢查客源類型篩選
+            if (this.activeFilters.type.length > 0) {
+                show = show && this.activeFilters.type.includes(item.dataset.type);
+            }
+            
             // 檢查店鋪組別篩選 (HA/HB/HC/HD)
             if (this.activeFilters.storeGroup.length > 0) {
                 show = show && this.activeFilters.storeGroup.includes(item.dataset.storeGroup);
@@ -764,17 +902,20 @@ class SafetyStockCalculator {
             }
             const code = getStoreTypeCode(store.Regional, store.Class, store.Size);
 
-            // 計算該店鋪的實際 Safety Stock（優先使用個別店鋪的自訂值）
-            const storeActualSS = this.customStoreStock[store.Site] !== undefined
-                ? this.customStoreStock[store.Site]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size);
+            // 計算該店鋪的實際 Safety Stock（優先使用個別店鋪的自訂值，否則使用對照表值）
+            let storeActualSS;
+            if (this.customStoreStock[store.Site] !== undefined) {
+                storeActualSS = this.customStoreStock[store.Site];
+            } else {
+                storeActualSS = this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type || 'M');
+            }
 
             if (!typeStats[code]) {
                 typeStats[code] = {
                     region: store.Regional,
                     category: store.Class,
                     size: store.Size,
-                    safetyStock: this.getSafetyStock(store.Regional, store.Class, store.Size),
+                    safetyStock: this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type || 'M'),
                     avgCustomSS: 0,
                     totalCustomSS: 0,
                     count: 0
@@ -853,33 +994,37 @@ class SafetyStockCalculator {
 
     // ==================== Safety Stock Matrix ====================
     
-    getSafetyStock(region, category, size) {
-        const key = `${region}-${category}-${size}`;
+    getSafetyStock(region, category, size, type = 'M') {
+        const key = `${region}-${category}-${type}-${size}`;
         if (this.customSafetyStock[key] !== undefined) {
             return this.customSafetyStock[key];
         }
-        return getSafetyStockValue(region, category, size);
+        return getSafetyStockValue(region, category, size, type);
     }
 
-    getMatrixDraftValue(region, category, size) {
-        if (this.matrixDraft?.[region]?.[category]?.[size] !== undefined) {
-            return this.matrixDraft[region][category][size];
+    getMatrixDraftValue(region, category, size, type = 'M') {
+        if (this.matrixDraft?.[region]?.[category]?.[type]?.[size] !== undefined) {
+            return this.matrixDraft[region][category][type][size];
         }
-        return this.getSafetyStock(region, category, size);
+        return this.getSafetyStock(region, category, size, type);
     }
 
     buildMatrixDraftFromApplied() {
         const sizes = ['XL', 'L', 'M', 'S', 'XS'];
         const categories = ['A', 'B', 'C', 'D'];
         const regions = ['HK', 'MO'];
+        const types = ['T', 'M', 'L'];
         const matrix = {};
 
         regions.forEach(region => {
             matrix[region] = {};
             categories.forEach(category => {
                 matrix[region][category] = {};
-                sizes.forEach(size => {
-                    matrix[region][category][size] = this.getSafetyStock(region, category, size);
+                types.forEach(type => {
+                    matrix[region][category][type] = {};
+                    sizes.forEach(size => {
+                        matrix[region][category][type][size] = this.getSafetyStock(region, category, size, type);
+                    });
                 });
             });
         });
@@ -893,6 +1038,35 @@ class SafetyStockCalculator {
             : this.buildMatrixDraftFromApplied();
     }
 
+    // 驗證matrixDraft是否為有效的3D結構
+    isValidMatrixDraftStructure(matrix) {
+        if (!matrix || typeof matrix !== 'object') return false;
+        
+        const regions = ['HK', 'MO'];
+        const categories = ['A', 'B', 'C', 'D'];
+        const types = ['T', 'M', 'L'];
+        const sizes = ['XL', 'L', 'M', 'S', 'XS'];
+        
+        try {
+            for (let region of regions) {
+                if (!matrix[region]) return false;
+                for (let cat of categories) {
+                    if (!matrix[region][cat]) return false;
+                    for (let type of types) {
+                        if (!matrix[region][cat][type]) return false;
+                        for (let size of sizes) {
+                            const val = matrix[region][cat][type][size];
+                            if (typeof val !== 'number' || val < 0) return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     renderSafetyStockMatrix() {
         const container = document.getElementById('matrixContainer');
         if (!container) return;
@@ -900,6 +1074,8 @@ class SafetyStockCalculator {
         const sizes = ['XL', 'L', 'M', 'S', 'XS'];
         const categories = ['A', 'B', 'C', 'D'];
         const regions = ['HK', 'MO'];
+        const types = ['T', 'M', 'L'];
+        const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
         
         let html = '';
         
@@ -910,7 +1086,7 @@ class SafetyStockCalculator {
                     <table class="matrix-table">
                         <thead>
                             <tr>
-                                <th>舖類 \\ 面積</th>
+                                <th>級別 \\ 類別 \\ 面積</th>
                                 ${sizes.map(s => `<th>${s}</th>`).join('')}
                             </tr>
                         </thead>
@@ -918,18 +1094,21 @@ class SafetyStockCalculator {
             `;
             
             categories.forEach(cat => {
-                html += `<tr><td class="category-cell category-${cat.toLowerCase()}">${cat}級</td>`;
-                sizes.forEach(size => {
-                    const value = this.getMatrixDraftValue(region, cat, size);
-                    const key = `${region}-${cat}-${size}`;
-                    html += `
-                        <td class="matrix-cell" data-key="${key}">
-                            <span class="display-value">${value}</span>
-                            <input type="number" class="edit-value" value="${value}" min="0" style="display:none">
-                        </td>
-                    `;
+                types.forEach(type => {
+                    const rowLabel = `${cat}級(${typeLabels[type]})`;
+                    html += `<tr><td class="category-cell category-${cat.toLowerCase()}">${rowLabel}</td>`;
+                    sizes.forEach(size => {
+                        const value = this.getMatrixDraftValue(region, cat, size, type);
+                        const key = `${region}-${cat}-${type}-${size}`;
+                        html += `
+                            <td class="matrix-cell" data-key="${key}">
+                                <span class="display-value">${value}</span>
+                                <input type="number" class="edit-value" value="${value}" min="0" style="display:none">
+                            </td>
+                        `;
+                    });
+                    html += '</tr>';
                 });
-                html += '</tr>';
             });
             
             html += `
@@ -950,6 +1129,8 @@ class SafetyStockCalculator {
         const regions = ['HK', 'MO'];
         const categories = ['A', 'B', 'C', 'D'];
         const sizes = ['XL', 'L', 'M', 'S', 'XS'];
+        const types = ['T', 'M', 'L'];
+        const typeLabels = { T: '遊客', M: '混合', L: '本地' };
         
         const summary = {
             HK: { values: [], storeCounts: 0 },
@@ -960,7 +1141,8 @@ class SafetyStockCalculator {
         regions.forEach(region => {
             categories.forEach(category => {
                 sizes.forEach(size => {
-                    const value = this.getMatrixDraftValue(region, category, size);
+                    // 使用混合型（Type=M）作為基準值用於摘要計算
+                    const value = this.getMatrixDraftValue(region, category, size, 'M');
                     summary[region].values.push(value);
                     
                     // 計算該區域的店舖數
@@ -984,7 +1166,7 @@ class SafetyStockCalculator {
         // 計算依現有店舖數量估算總量
         let totalHK = 0, totalMO = 0;
         this.stores.forEach(store => {
-            const value = this.getMatrixDraftValue(store.Regional, store.Class, store.Size);
+            const value = this.getMatrixDraftValue(store.Regional, store.Class, store.Size, store.Type);
             if (store.Regional === 'HK') {
                 totalHK += value;
             } else {
@@ -1011,7 +1193,7 @@ class SafetyStockCalculator {
         
         const html = `
             <div class="matrix-summary-box">
-                <h4>📊 統計摘要</h4>
+                <h4>📈 統計摘要</h4>
                 <div class="summary-content">
                     <div class="summary-item">
                         <span class="summary-label">🇭🇰 香港 (HK):</span>
@@ -1053,31 +1235,61 @@ class SafetyStockCalculator {
     }
 
     saveMatrixEdit() {
-        document.querySelectorAll('.matrix-cell').forEach(cell => {
-            const key = cell.dataset.key;
-            const input = cell.querySelector('.edit-value');
-            const display = cell.querySelector('.display-value');
-            const value = parseInt(input.value) || 0;
-            const [region, category, size] = key.split('-');
-
-            if (!this.matrixDraft[region]) this.matrixDraft[region] = {};
-            if (!this.matrixDraft[region][category]) this.matrixDraft[region][category] = {};
-            this.matrixDraft[region][category][size] = value;
-            display.textContent = value;
+        try {
+            let savedCount = 0;
+            document.querySelectorAll('.matrix-cell').forEach(cell => {
+                try {
+                    const key = cell.dataset.key;
+                    const input = cell.querySelector('.edit-value');
+                    const display = cell.querySelector('.display-value');
+                    
+                    if (!input || !display) {
+                        console.warn(`跳過無效單元格: ${key}`);
+                        return;
+                    }
+                    
+                    const value = parseInt(input.value) || 0;
+                    const parts = key.split('-');
+                    
+                    if (parts.length !== 4) {
+                        console.error(`無效的 key 格式: ${key} (長度: ${parts.length})`);
+                        return;
+                    }
+                    
+                    const [region, category, type, size] = parts;
+                    
+                    // 初始化嵌套對象
+                    if (!this.matrixDraft[region]) this.matrixDraft[region] = {};
+                    if (!this.matrixDraft[region][category]) this.matrixDraft[region][category] = {};
+                    if (!this.matrixDraft[region][category][type]) this.matrixDraft[region][category][type] = {};
+                    
+                    this.matrixDraft[region][category][type][size] = value;
+                    display.textContent = value;
+                    
+                    cell.classList.remove('editing');
+                    display.style.display = 'inline-block';
+                    input.style.display = 'none';
+                    
+                    savedCount++;
+                } catch (cellErr) {
+                    console.error('儲存單個單元格時出錯:', cellErr);
+                }
+            });
             
-            cell.classList.remove('editing');
-            display.style.display = 'inline-block';
-            input.style.display = 'none';
-        });
-        
-        document.getElementById('editMatrixBtn').style.display = 'inline-block';
-        document.getElementById('saveMatrixBtn').style.display = 'none';
-        document.getElementById('cancelMatrixBtn').style.display = 'none';
-        document.getElementById('resetMatrixBtn').style.display = 'none';
-        
-        this.saveToLocalStorage();
-        this.renderMatrixSummary(); // 更新統計摘要
-        this.showToast('✅ 對照表已保存，請按「套用到選擇店鋪」更新店鋪 Safety');
+            console.log(`成功保存 ${savedCount} 個單元格`);
+            
+            document.getElementById('editMatrixBtn').style.display = 'inline-block';
+            document.getElementById('saveMatrixBtn').style.display = 'none';
+            document.getElementById('cancelMatrixBtn').style.display = 'none';
+            document.getElementById('resetMatrixBtn').style.display = 'none';
+            
+            this.saveToLocalStorage();
+            this.renderMatrixSummary(); // 更新統計摘要
+            this.showToast(`✅ 對照表已保存 (${savedCount} 個值)，請按「套用到選擇店鋪」更新店鋪 Safety`);
+        } catch (err) {
+            console.error('保存矩陣編輯時出錯:', err);
+            this.showToast('❌ 保存失敗，請檢查瀏覽器控制台查看錯誤信息');
+        }
     }
 
     cancelMatrixEdit() {
@@ -1100,18 +1312,35 @@ class SafetyStockCalculator {
     }
 
     applyMatrixToStores() {
-        const confirmed = confirm('確定要套用目前對照表到「選擇店鋪」嗎？此操作會即時影響店鋪 Safety。');
+        const confirmed = confirm('確定要套用目前對照表到「選擇店鋪」嗎？此操作會即時影響店鋪 Safety Stock。');
         if (!confirmed) return;
 
+        // 清空之前的自訂值
         this.customSafetyStock = {};
-        Object.keys(this.matrixDraft || {}).forEach(region => {
-            Object.keys(this.matrixDraft[region] || {}).forEach(category => {
-                Object.keys(this.matrixDraft[region][category] || {}).forEach(size => {
-                    const key = `${region}-${category}-${size}`;
-                    this.customSafetyStock[key] = this.matrixDraft[region][category][size];
+        this.customStoreStock = {};
+        
+        // 在matrixDraft中找出所有編輯過的值（與原始值不同的部分）
+        if (this.matrixDraft) {
+            Object.keys(this.matrixDraft).forEach(region => {
+                Object.keys(this.matrixDraft[region] || {}).forEach(category => {
+                    Object.keys(this.matrixDraft[region][category] || {}).forEach(type => {
+                        Object.keys(this.matrixDraft[region][category][type] || {}).forEach(size => {
+                            const draftValue = this.matrixDraft[region][category][type][size];
+                            const originalValue = getSafetyStockValue(region, category, size, type);
+                            
+                            // 只儲存編輯過的值（與原始值不同）
+                            if (draftValue !== originalValue) {
+                                const key = `${region}-${category}-${type}-${size}`;
+                                this.customSafetyStock[key] = draftValue;
+                            }
+                        });
+                    });
                 });
             });
-        });
+        }
+        
+        // 清空個別店舖的自訂值，讓系統根據矩陣和店舖的 Type 屬性自動查詢
+        this.customStoreStock = {};
 
         this.saveToLocalStorage();
         this.renderStores();
@@ -1133,10 +1362,15 @@ class SafetyStockCalculator {
         // 計算每間店鋪的結果
         this.selectedStores.forEach(storeIndex => {
             const store = this.stores[storeIndex];
-            // 優先使用個別店鋪的自訂值，否則使用對照表或全局自訂值
-            const safetyStock = this.customStoreStock[store.Site] !== undefined
-                ? this.customStoreStock[store.Site]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size);
+            // 優先使用個別店鋪的自訂值，否則使用對照表值再根據 Type 調整
+            let safetyStock;
+            if (this.customStoreStock[store.Site] !== undefined) {
+                // 已手動設定的個別店舖值
+                safetyStock = this.customStoreStock[store.Site];
+            } else {
+                // 使用對照表值，現在已經整合 Type
+                safetyStock = this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type || 'M');
+            }
             const typeCode = getStoreTypeCode(store.Regional, store.Class, store.Size);
 
             this.results.push({
@@ -1145,6 +1379,7 @@ class SafetyStockCalculator {
                 region: store.Regional,
                 category: store.Class,
                 size: store.Size,
+                type: store.Type || '',
                 typeCode: typeCode,
                 safetyStock: safetyStock,
                 remarks: '',
@@ -1161,6 +1396,7 @@ class SafetyStockCalculator {
                     region: result.region,
                     category: result.category,
                     size: result.size,
+                    type: result.type,
                     safetyStock: result.safetyStock,
                     storeCount: 0,
                     allShopQty: 0,
@@ -1204,7 +1440,7 @@ class SafetyStockCalculator {
             // 區域標題
             const regionRow = document.createElement('tr');
             regionRow.className = 'group-header';
-            regionRow.innerHTML = `<td colspan="8" class="region-header-${region.toLowerCase()}">${REGION_DEFINITIONS[region].name}</td>`;
+            regionRow.innerHTML = `<td colspan="9" class="region-header-${region.toLowerCase()}">${REGION_DEFINITIONS[region].name}</td>`;
             tbody.appendChild(regionRow);
             
             // 數據行
@@ -1216,10 +1452,17 @@ class SafetyStockCalculator {
                 const carryStatus = result.safetyStock > 0 ? 'Y' : 'FALSE';
                 if (result.safetyStock > 0) carryCount += result.storeCount;
                 
+                // Type 標籤樣式
+                const typeColors = { 'T': '#ff6b6b', 'M': '#4ecdc4', 'L': '#45b7d1' };
+                const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
+                const typeColor = typeColors[result.type] || '#ccc';
+                const typeLabel = typeLabels[result.type] || '-';
+                
                 tr.innerHTML = `
                     <td>${result.region}</td>
                     <td><span class="badge category-${result.category.toLowerCase()}">${result.category}</span></td>
                     <td><span class="badge">${result.size}</span></td>
+                    <td><span class="badge" style="background:${typeColor}; color:white;">${typeLabel}</span></td>
                     <td><strong>${result.typeCode}</strong></td>
                     <td style="text-align:center">${result.storeCount}</td>
                     <td style="text-align:center" class="editable-cell" data-field="safetyStock">
@@ -1240,7 +1483,7 @@ class SafetyStockCalculator {
         const totalRow = document.createElement('tr');
         totalRow.className = 'total-row';
         totalRow.innerHTML = `
-            <td colspan="4" style="text-align:right">TOTAL:</td>
+            <td colspan="5" style="text-align:right">TOTAL:</td>
             <td style="text-align:center"><strong>${totalStores}</strong></td>
             <td style="text-align:center">Safety Stock:</td>
             <td style="text-align:center;background:#ffeb3b"><strong>${totalSafetyStock}</strong></td>
@@ -1252,7 +1495,7 @@ class SafetyStockCalculator {
         const carryRow = document.createElement('tr');
         carryRow.className = 'carry-row';
         carryRow.innerHTML = `
-            <td colspan="4" style="text-align:right">No. of shops carry:</td>
+            <td colspan="5" style="text-align:right">No. of shops carry:</td>
             <td style="text-align:center"><strong>${carryCount}</strong></td>
             <td colspan="3"></td>
         `;
@@ -1294,10 +1537,17 @@ class SafetyStockCalculator {
             
             const carryStatus = result.safetyStock > 0 ? 'Y' : 'FALSE';
             
+            // Type 標籤樣式
+            const typeColors = { 'T': '#ff6b6b', 'M': '#4ecdc4', 'L': '#45b7d1' };
+            const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
+            const typeColor = typeColors[result.type] || '#ccc';
+            const typeLabel = typeLabels[result.type] || '-';
+            
             tr.innerHTML = `
                 <td>${result.region}</td>
                 <td>${result.code}</td>
                 <td>${result.name}</td>
+                <td><span class="badge" style="background:${typeColor}; color:white;">${typeLabel}</span></td>
                 <td>${result.typeCode}</td>
                 <td><span class="badge category-${result.category.toLowerCase()}">${result.category}</span></td>
                 <td>${result.size}</td>
@@ -1888,7 +2138,7 @@ class SafetyStockCalculator {
             
             // 建構公式：查詢對照表
             const rowNum = 5 + index; // Excel列號（1-based，加上標題和空行）
-            const safetyStockFormula = this.buildSafetyStockFormula(result.region, result.category, result.size, matrixSheetRef);
+            const safetyStockFormula = this.buildSafetyStockFormula(result.region, result.category, result.size, result.type, matrixSheetRef);
             
             detailData.push([
                 result.region,
@@ -2144,25 +2394,17 @@ class SafetyStockCalculator {
     }
 
     // 建構 Safety Stock 的 VLOOKUP 公式
-    buildSafetyStockFormula(region, category, size, sheetName) {
-        // 建構公式：使用 VLOOKUP 或 INDEX/MATCH 從對照表查詢
-        // 對照表格式: 第一列是 Row Header (HK-A, HK-B 等)，列是 Size (XL, L, M, S, XS)
+    buildSafetyStockFormula(region, category, size, type, sheetName) {
+        // 建構公式：使用 VLOOKUP 從對照表查詢（現包含 Type 維度）
+        // 對照表格式: 第一列是 Row Header (HK-A-T, HK-A-M, HK-A-L 等)，列是 Size (XL, L, M, S, XS)
         
-        // 簡化方法：使用 HLOOKUP 查詢 Size，再用 VLOOKUP 查詢 Region-Category
-        const regionCatKey = `${region}-${category}`;
+        const typeLabel = { 'T': '遊客', 'M': '混合', 'L': '本地' }[type] || '混合';
+        const regionCatTypeKey = `${region}-${category}-${type}(${typeLabel})`;
         
         // VLOOKUP 公式格式：VLOOKUP(lookup_value, table_array, col_index_num, [range_lookup])
-        // 在對照表中查詢區域-舖類的行，然後根據Size列索引
-        
-        // 使用動態參考：INDIRECT 來建構單元格引用
         const sizeColumn = this.getSizeColumnNumber(size); // 取得Size對應的列號
         
-        // 簡單公式：直接從對照表中的命名範圍或特定位置查詢
-        // 假設對照表格式如下：
-        // 第1列: Size標題 (XL, L, M, S, XS)
-        // 第2-N列: Region-Category
-        
-        return `VLOOKUP("${regionCatKey}",'${sheetName}'!A:F,${sizeColumn},FALSE)`;
+        return `VLOOKUP("${regionCatTypeKey}",'${sheetName}'!A:F,${sizeColumn},FALSE)`;
     }
 
     // 取得 Size 對應的列號
@@ -2177,56 +2419,41 @@ class SafetyStockCalculator {
         return sizeMap[size] || 2;
     }
 
-    // 為 Excel 構建可編輯的對照表數據
+    // 為 Excel 構建可編輯的對照表數據（含 Type 維度）
     buildEditableMatrixForExcel() {
         const matrixData = [];
         
         // 標題行
-        matrixData.push(['Safety Stock 對照表（可在此編輯）', 'XL', 'L', 'M', 'S', 'XS']);
+        matrixData.push(['Safety Stock 對照表（含客源類型）', 'XL', 'L', 'M', 'S', 'XS']);
         matrixData.push([]);
         
         const regions = ['HK', 'MO'];
         const categories = ['A', 'B', 'C', 'D'];
+        const types = ['T', 'M', 'L'];
+        const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
         const sizes = ['XL', 'L', 'M', 'S', 'XS'];
         
         regions.forEach(region => {
             matrixData.push([`${region} 區域`, '', '', '', '', '']);
             
             categories.forEach(category => {
-                const rowLabel = `${region}-${category}`;
-                const rowData = [rowLabel];
-                
-                sizes.forEach(size => {
-                    const key = `${region}-${category}-${size}`;
-                    const value = this.getSafetyStockValue(region, category, size);
-                    rowData.push(value);
+                types.forEach(type => {
+                    const rowLabel = `${region}-${category}-${type}(${typeLabels[type]})`;
+                    const rowData = [rowLabel];
+                    
+                    sizes.forEach(size => {
+                        const value = this.getSafetyStock(region, category, size, type);
+                        rowData.push(value);
+                    });
+                    
+                    matrixData.push(rowData);
                 });
-                
-                matrixData.push(rowData);
             });
             
             matrixData.push([]); // 區域之間的空行
         });
         
         return matrixData;
-    }
-
-    // 取得 Safety Stock 值（從當前對照表）
-    getSafetyStockValue(region, category, size) {
-        // 先查詢 customSafetyStock（使用者自訂）
-        const key = `${region}-${category}-${size}`;
-        if (this.customSafetyStock[key] !== undefined) {
-            return this.customSafetyStock[key];
-        }
-        
-        // 再查詢預設對照表
-        if (this.safetyStockMatrix[region] && 
-            this.safetyStockMatrix[region][category] && 
-            this.safetyStockMatrix[region][category][size] !== undefined) {
-            return this.safetyStockMatrix[region][category][size];
-        }
-        
-        return 0;
     }
 
     exportConfiguration() {
@@ -2709,6 +2936,7 @@ class SafetyStockCalculator {
             // 檢查是否需要更新店鋪資料（如果 localStorage 中的店鋪數量與 config.js 不同）
             const configStoreCount = STORES_CONFIG.stores.length;
             let storeCountMismatch = false;
+            let needsTypeUpdate = false;
 
             if (data && data.stores) {
                 const savedStoreCount = data.stores.length;
@@ -2716,18 +2944,34 @@ class SafetyStockCalculator {
                     console.log(`店鋪數量已更新：${savedStoreCount} → ${configStoreCount}，使用新的店鋪資料`);
                     storeCountMismatch = true;
                 }
+                
+                // 檢查是否缺少 Type 屬性（數據版本檢查）
+                if (!storeCountMismatch && data.stores.length > 0) {
+                    const hasTypeProperty = data.stores.every(store => store.hasOwnProperty('Type'));
+                    if (!hasTypeProperty) {
+                        console.log('偵測到舊版本店鋪資料（缺少 Type 屬性），正在更新...');
+                        needsTypeUpdate = true;
+                    }
+                }
             }
 
             if (data) {
-                // 如果店鋪數量不匹配，清除舊的選擇並重新渲染
-                if (storeCountMismatch) {
+                // 如果店鋪數量不匹配或需要更新 Type，使用 config.js 的新資料
+                if (storeCountMismatch || needsTypeUpdate) {
+                    // 重置為 config.js 的店鋪資料
+                    this.stores = JSON.parse(JSON.stringify(STORES_CONFIG.stores));
                     this.renderStores();
                     this.selectedStores = this.stores.map((_, index) => index);
                     this.updateCheckboxes();
                     this.updateStoresPreview();
                     this.updateStoreCount();
                     this.saveToLocalStorage();
-                    this.showToast(`🔄 店鋪資料已更新（${configStoreCount} 間），已預設全選`);
+                    
+                    if (needsTypeUpdate) {
+                        this.showToast(`✅ 店鋪資料已更新（新增 Type 分類），已預設全選`);
+                    } else {
+                        this.showToast(`🔄 店鋪資料已更新（${configStoreCount} 間），已預設全選`);
+                    }
                 } else {
                     // 正常載入選擇的店鋪
                     if (data.selectedStores) {
@@ -2739,7 +2983,7 @@ class SafetyStockCalculator {
                         this.updateCheckboxes();
                         this.updateStoresPreview();
                     }
-                    // 載入保存的店鋪資料（只有數量匹配時才載入）
+                    // 載入保存的店鋪資料（只有數量匹配且有 Type 時才載入）
                     if (data.stores && data.stores.length > 0) {
                         this.stores = data.stores;
                         STORES_CONFIG.stores = data.stores;
@@ -2765,7 +3009,15 @@ class SafetyStockCalculator {
                     this.loadWeightConfigToUI();
                 }
                 if (data.matrixDraft) {
-                    this.matrixDraft = data.matrixDraft;
+                    // 檢查matrixDraft是否是有效的3D結構（HK/MO → Category → Type → Size）
+                    const isValid3DMatrix = this.isValidMatrixDraftStructure(data.matrixDraft);
+                    if (isValid3DMatrix) {
+                        this.matrixDraft = data.matrixDraft;
+                        console.log('✓ 成功加載保存的對照表草稿');
+                    } else {
+                        console.warn('偵測到舊版本或無效的對照表格式，正在重新構建...');
+                        this.matrixDraft = this.buildMatrixDraftFromApplied();
+                    }
                 } else {
                     this.matrixDraft = this.buildMatrixDraftFromApplied();
                 }
@@ -2897,17 +3149,22 @@ class SafetyStockCalculator {
 
         return {
             class: {
-                A: getValue('weightClassA', 3),
-                B: getValue('weightClassB', 2),
-                C: getValue('weightClassC', 1.5),
-                D: getValue('weightClassD', 1.5)
+                A: getValue('weightClassA', 1.8),
+                B: getValue('weightClassB', 1.4),
+                C: getValue('weightClassC', 1),
+                D: getValue('weightClassD', 1)
             },
             size: {
-                XL: getValue('weightSizeXL', 4),
-                L: getValue('weightSizeL', 3),
-                M: getValue('weightSizeM', 2.5),
-                S: getValue('weightSizeS', 2),
-                XS: getValue('weightSizeXS', 1.5)
+                XL: getValue('weightSizeXL', 2.0),
+                L: getValue('weightSizeL', 1.6),
+                M: getValue('weightSizeM', 1.2),
+                S: getValue('weightSizeS', 0.8),
+                XS: getValue('weightSizeXS', 0.8)
+            },
+            type: {
+                T: getValue('weightTypeT', 1.2),
+                M: getValue('weightTypeM', 1.0),
+                L: getValue('weightTypeL', 0.9)
             },
             baseValue: getValue('baseValue', 4),
             regionFactor: {
@@ -2937,6 +3194,13 @@ class SafetyStockCalculator {
         setValue('weightSizeM', this.weightConfig.size.M);
         setValue('weightSizeS', this.weightConfig.size.S);
         setValue('weightSizeXS', this.weightConfig.size.XS);
+
+        // 載入 Type 權重
+        if (this.weightConfig.type) {
+            setValue('weightTypeT', this.weightConfig.type.T);
+            setValue('weightTypeM', this.weightConfig.type.M);
+            setValue('weightTypeL', this.weightConfig.type.L);
+        }
 
         setValue('baseValue', this.weightConfig.baseValue);
         setValue('hkFactor', this.weightConfig.regionFactor.HK);
@@ -2979,6 +3243,13 @@ class SafetyStockCalculator {
         setValue('weightSizeS', template.size.S);
         setValue('weightSizeXS', template.size.XS);
 
+        // 套用 Type 權重
+        if (template.type) {
+            setValue('weightTypeT', template.type.T);
+            setValue('weightTypeM', template.type.M);
+            setValue('weightTypeL', template.type.L);
+        }
+
         setValue('baseValue', template.baseValue);
         setValue('hkFactor', template.regionFactor.HK);
         setValue('moFactor', template.regionFactor.MO);
@@ -2992,7 +3263,7 @@ class SafetyStockCalculator {
     // 預覽權重計算結果
     previewWeights() {
         const weights = this.readWeightsFromUI();
-        let previewMatrix = generateMatrixWithWeights(weights);
+        let previewMatrix = this.buildWeightMatrixByType(weights);
         const targetTotal = Math.round(weights.targetTotal || 0);
         let targetInfo = null;
 
@@ -3005,6 +3276,8 @@ class SafetyStockCalculator {
         const regions = ['HK', 'MO'];
         const categories = ['A', 'B', 'C', 'D'];
         const sizes = ['XL', 'L', 'M', 'S', 'XS'];
+        const types = ['T', 'M', 'L'];
+        const typeLabels = { T: '遊客', M: '混合', L: '本地' };
 
         regions.forEach(region => {
             html += `
@@ -3012,10 +3285,10 @@ class SafetyStockCalculator {
                     <table class="weight-preview-table">
                         <thead>
                             <tr>
-                                <th class="region-header" colspan="6">${region === 'HK' ? '🇭🇰 香港' : '🇲🇴 澳門'} (${region})</th>
+                                <th class="region-header region-header-${region.toLowerCase()}" colspan="6">${region === 'HK' ? '🇭🇰 香港' : '🇲🇴 澳門'} (${region})</th>
                             </tr>
-                            <tr>
-                                <th>Class \ Size</th>
+                            <tr class="size-header">
+                                <th>級別 \\ 類別 \\ 面積</th>
                                 <th>XL</th>
                                 <th>L</th>
                                 <th>M</th>
@@ -3027,12 +3300,14 @@ class SafetyStockCalculator {
             `;
 
             categories.forEach(category => {
-                html += `<tr><td class="category-cell category-${category.toLowerCase()}">${category}級</td>`;
-                sizes.forEach(size => {
-                    const value = previewMatrix[region][category][size];
-                    html += `<td class="value-cell">${value}</td>`;
+                types.forEach(type => {
+                    html += `<tr><td class="category-cell category-${category.toLowerCase()}">${category}級(${typeLabels[type]})</td>`;
+                    sizes.forEach(size => {
+                        const value = previewMatrix?.[region]?.[category]?.[type]?.[size] ?? 0;
+                        html += `<td class="value-cell">${value}</td>`;
+                    });
+                    html += '</tr>';
                 });
-                html += '</tr>';
             });
 
             html += `
@@ -3064,18 +3339,21 @@ class SafetyStockCalculator {
         const regions = ['HK', 'MO'];
         const categories = ['A', 'B', 'C', 'D'];
         const sizes = ['XL', 'L', 'M', 'S', 'XS'];
+        const types = ['T', 'M', 'L'];
 
         regions.forEach(region => {
             categories.forEach(category => {
-                sizes.forEach(size => {
-                    const value = matrix[region][category][size];
-                    if (region === 'HK') {
-                        totalHK += value;
-                        countHK++;
-                    } else {
-                        totalMO += value;
-                        countMO++;
-                    }
+                types.forEach(type => {
+                    sizes.forEach(size => {
+                        const value = matrix?.[region]?.[category]?.[type]?.[size] ?? 0;
+                        if (region === 'HK') {
+                            totalHK += value;
+                            countHK++;
+                        } else {
+                            totalMO += value;
+                            countMO++;
+                        }
+                    });
                 });
             });
         });
@@ -3109,7 +3387,7 @@ class SafetyStockCalculator {
         let totalAll = 0;
 
         this.stores.forEach(store => {
-            const value = matrix?.[store.Regional]?.[store.Class]?.[store.Size] ?? 0;
+            const value = matrix?.[store.Regional]?.[store.Class]?.[store.Type]?.[store.Size] ?? 0;
             totalAll += value;
             if (store.Regional === 'HK') {
                 totalHK += value;
@@ -3125,16 +3403,48 @@ class SafetyStockCalculator {
     getStoreTypeCounts() {
         const counts = {};
         this.stores.forEach(store => {
-            const key = `${store.Regional}-${store.Class}-${store.Size}`;
+            const type = store.Type || 'M';
+            const key = `${store.Regional}-${store.Class}-${type}-${store.Size}`;
             counts[key] = (counts[key] || 0) + 1;
         });
         return counts;
+    }
+
+    // 依權重生成三維矩陣（Region → Class → Type → Size）
+    buildWeightMatrixByType(weights) {
+        const regions = ['HK', 'MO'];
+        const categories = ['A', 'B', 'C', 'D'];
+        const types = ['T', 'M', 'L'];
+        const sizes = ['XL', 'L', 'M', 'S', 'XS'];
+        const matrix = {};
+
+        regions.forEach(region => {
+            matrix[region] = {};
+            categories.forEach(category => {
+                matrix[region][category] = {};
+                types.forEach(type => {
+                    matrix[region][category][type] = {};
+                    sizes.forEach(size => {
+                        matrix[region][category][type][size] = calculateSafetyStockWithWeights(
+                            region,
+                            category,
+                            size,
+                            type,
+                            weights
+                        );
+                    });
+                });
+            });
+        });
+
+        return matrix;
     }
 
     // 依目標總量縮放矩陣
     scaleMatrixToTarget(matrix, targetTotal) {
         const regions = ['HK', 'MO'];
         const categories = ['A', 'B', 'C', 'D'];
+        const types = ['T', 'M', 'L'];
         const sizes = ['XL', 'L', 'M', 'S', 'XS'];
         const counts = this.getStoreTypeCounts();
 
@@ -3143,11 +3453,13 @@ class SafetyStockCalculator {
 
         regions.forEach(region => {
             categories.forEach(category => {
-                sizes.forEach(size => {
-                    const value = matrix[region][category][size];
-                    const count = counts[`${region}-${category}-${size}`] || 0;
-                    currentTotal += count * value;
-                    cells.push({ region, category, size, count, value });
+                types.forEach(type => {
+                    sizes.forEach(size => {
+                        const value = matrix?.[region]?.[category]?.[type]?.[size] ?? 0;
+                        const count = counts[`${region}-${category}-${type}-${size}`] || 0;
+                        currentTotal += count * value;
+                        cells.push({ region, category, type, size, count, value });
+                    });
                 });
             });
         });
@@ -3195,9 +3507,14 @@ class SafetyStockCalculator {
             scaledMatrix[region] = {};
             categories.forEach(category => {
                 scaledMatrix[region][category] = {};
-                sizes.forEach(size => {
-                    const cell = cells.find(item => item.region === region && item.category === category && item.size === size);
-                    scaledMatrix[region][category][size] = cell ? cell.base : 0;
+                types.forEach(type => {
+                    scaledMatrix[region][category][type] = {};
+                    sizes.forEach(size => {
+                        const cell = cells.find(item =>
+                            item.region === region && item.category === category && item.type === type && item.size === size
+                        );
+                        scaledMatrix[region][category][type][size] = cell ? cell.base : 0;
+                    });
                 });
             });
         });
@@ -3215,67 +3532,69 @@ class SafetyStockCalculator {
     }
 
     /**
-     * 強制尺寸單調性約束：確保 XL >= L >= M >= S >= XS
-     * 修正 scaleMatrixToTarget 中餘量分配造成的違規情況。
+    * 強制尺寸單調性約束：確保 XL >= L >= M >= S >= XS
+    * 修正 scaleMatrixToTarget 中餘量分配造成的違規情況。
      *
      * 策略：
-     * 1. 對每個 (region, class) 組合，將較小尺寸的值 cap 到不超過較大尺寸
+    * 1. 對每個 (region, class, type) 組合，將較小尺寸的值 cap 到不超過較大尺寸
      * 2. 將釋放的配額以「從大到小每輪各 +1」的方式平均回填，
      *    保證不違反順序且盡量貼近目標總量
      */
     enforceMonotonicity(scaledMatrix, counts) {
         const regions = ['HK', 'MO'];
         const categories = ['A', 'B', 'C', 'D'];
+        const types = ['T', 'M', 'L'];
         const sizes = ['XL', 'L', 'M', 'S', 'XS'];
         let totalFreed = 0;
 
         regions.forEach(region => {
             categories.forEach(category => {
-                let groupFreed = 0;
+                types.forEach(type => {
+                    let groupFreed = 0;
 
-                // Step 1: 將較小尺寸 cap 到不超過較大尺寸
-                for (let i = 1; i < sizes.length; i++) {
-                    const curVal = scaledMatrix[region][category][sizes[i]];
-                    const prevVal = scaledMatrix[region][category][sizes[i - 1]];
-                    if (curVal > prevVal) {
-                        const excess = curVal - prevVal;
-                        const count = counts[`${region}-${category}-${sizes[i]}`] || 0;
-                        groupFreed += excess * count;
-                        scaledMatrix[region][category][sizes[i]] = prevVal;
+                    // Step 1: 將較小尺寸 cap 到不超過較大尺寸
+                    for (let i = 1; i < sizes.length; i++) {
+                        const curVal = scaledMatrix?.[region]?.[category]?.[type]?.[sizes[i]] ?? 0;
+                        const prevVal = scaledMatrix?.[region]?.[category]?.[type]?.[sizes[i - 1]] ?? 0;
+                        if (curVal > prevVal) {
+                            const excess = curVal - prevVal;
+                            const count = counts[`${region}-${category}-${type}-${sizes[i]}`] || 0;
+                            groupFreed += excess * count;
+                            scaledMatrix[region][category][type][sizes[i]] = prevVal;
+                        }
                     }
-                }
 
-                totalFreed += groupFreed;
+                    totalFreed += groupFreed;
 
-                // Step 2: 將釋放的配額回填到本組，
-                // 每一輪從 XL → L → M → S → XS 各嘗試 +1，保持單調遞減
-                if (groupFreed > 0) {
-                    let remaining = groupFreed;
-                    let safety = 0;
+                    // Step 2: 將釋放的配額回填到本組
+                    if (groupFreed > 0) {
+                        let remaining = groupFreed;
+                        let safety = 0;
 
-                    while (remaining > 0 && safety < 10000) {
-                        safety++;
-                        let addedAny = false;
+                        while (remaining > 0 && safety < 10000) {
+                            safety++;
+                            let addedAny = false;
 
-                        for (let i = 0; i < sizes.length; i++) {
-                            const size = sizes[i];
-                            const count = counts[`${region}-${category}-${size}`] || 0;
-                            if (count === 0 || count > remaining) continue;
+                            for (let i = 0; i < sizes.length; i++) {
+                                const size = sizes[i];
+                                const count = counts[`${region}-${category}-${type}-${size}`] || 0;
+                                if (count === 0 || count > remaining) continue;
 
-                            // 檢查單調性：新值不能超過更大尺寸的值
-                            const newVal = scaledMatrix[region][category][size] + 1;
-                            if (i > 0 && newVal > scaledMatrix[region][category][sizes[i - 1]]) {
-                                continue;
+                                // 檢查單調性：新值不能超過更大尺寸的值
+                                const newVal = scaledMatrix[region][category][type][size] + 1;
+                                if (i > 0 && newVal > scaledMatrix[region][category][type][sizes[i - 1]]) {
+                                    continue;
+                                }
+
+                                scaledMatrix[region][category][type][size] = newVal;
+                                remaining -= count;
+                                addedAny = true;
                             }
 
-                            scaledMatrix[region][category][size] = newVal;
-                            remaining -= count;
-                            addedAny = true;
+                            if (!addedAny) break;
                         }
-
-                        if (!addedAny) break;
                     }
-                }
+                });
             });
         });
 
@@ -3285,7 +3604,7 @@ class SafetyStockCalculator {
     // 套用權重到對照表
     applyWeights() {
         const weights = this.readWeightsFromUI();
-        let newMatrix = generateMatrixWithWeights(weights);
+        let newMatrix = this.buildWeightMatrixByType(weights);
         const targetTotal = Math.round(weights.targetTotal || 0);
         let targetInfo = null;
 
@@ -3412,7 +3731,7 @@ class SafetyStockCalculator {
             const origIdx = this.stores.indexOf(store);
             const ss = this.customStoreStock[store.Site] !== undefined
                 ? this.customStoreStock[store.Site]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size);
+                : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type);
             const carry = ss > 0 ? '✓' : '';
             const checked = this.selectedStores.includes(origIdx) ? 'checked' : '';
             const regionBadge = store.Regional === 'HK'
@@ -3526,7 +3845,7 @@ class SafetyStockCalculator {
             const store = this.stores[idx];
             const ss = this.customStoreStock[store.Site] !== undefined
                 ? this.customStoreStock[store.Site]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size);
+                : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type);
             totalSS += ss;
             if (ss > 0) carryCount++;
 
@@ -3627,7 +3946,7 @@ class SafetyStockCalculator {
             const store = this.stores[idx];
             const ss = this.customStoreStock[store.Site] !== undefined
                 ? this.customStoreStock[store.Site]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size);
+                : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type);
             const tc = getStoreTypeCode(store.Regional, store.Class, store.Size);
             const carry = ss > 0 ? 'Y' : '';
 
@@ -3731,15 +4050,19 @@ class SafetyStockCalculator {
         const sizes = ['XL', 'L', 'M', 'S', 'XS'];
         const categories = ['A', 'B', 'C', 'D'];
         const regions = ['HK', 'MO'];
+        const types = ['T', 'M', 'L'];
+        const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
 
-        const aoa = [['區域-舖類', 'XL', 'L', 'M', 'S', 'XS']];
+        const aoa = [['區域-舖類-客源', 'XL', 'L', 'M', 'S', 'XS']];
         regions.forEach(region => {
             categories.forEach(cat => {
-                const row = [`${region}-${cat}`];
-                sizes.forEach(size => {
-                    row.push(this.getSafetyStock(region, cat, size));
+                types.forEach(type => {
+                    const row = [`${region}-${cat}-${type}(${typeLabels[type]})`];
+                    sizes.forEach(size => {
+                        row.push(this.getSafetyStock(region, cat, size, type));
+                    });
+                    aoa.push(row);
                 });
-                aoa.push(row);
             });
         });
         return aoa;
@@ -3749,4 +4072,9 @@ class SafetyStockCalculator {
 // 頁面加載時初始化應用
 document.addEventListener('DOMContentLoaded', () => {
     window.calculator = new SafetyStockCalculator();
+    
+    // 在控制台輸出診斷命令提示
+    console.log('%c🔍 系統診斷命令已可用', 'color: #4CAF50; font-weight: bold; font-size: 14px;');
+    console.log('%c執行以下命令進行全面診斷：', 'color: #2196F3;');
+    console.log('%cwindow.calculator.runDiagnostics()', 'background: #222; color: #0f0; padding: 5px; font-family: monospace;');
 });
