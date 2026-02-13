@@ -33,8 +33,8 @@
         </div>
 
         <header>
-            <h1>🧮 New SKU Safety (Buffer) Stock Calculator</h1>
-            <p class="subtitle">新產品安全(緩衝)庫存計算器</p>
+            <h1>🧮 New SKU Safety (Replenishment) Stock Calculator</h1>
+            <p class="subtitle">新產品安全(補貨)庫存計算器</p>
         </header>
 
         <!-- 分頁切換導航 -->
@@ -99,16 +99,16 @@
                                         <!-- 範例1：正常情況 -->
                                         <div class="formula-example-item">
                                             <strong>✅ 範例1 - 遊客區大型A級店舖：</strong>
-                                            <p><strong>條件：</strong>A級店舖 (Class權重=1.8) + 大型貨場 (Size權重=1.6) + 遊客區 (Type權重=1.2) + 澳門 (區域係數=1.33)</p>
-                                            <p><strong>計算：</strong>4 + (1.8 × 1.6 × 1.2 × 1.33) = 4 + 4.6 ≈ <strong>9</strong> ✓</p>
+                                            <p><strong>條件：</strong>A級店舖 (Class權重=2.2) + 大型貨場 (Size權重=2.2) + 遊客區 (Type權重=1.2) + 澳門 (區域係數=1.33)</p>
+                                            <p><strong>計算：</strong>2 + (2.2 × 2.2 × 1.2 × 1.33) = 2 + 7.7 ≈ <strong>10</strong> ✓</p>
                                             <p class="example-note">💡 遊客區店舖 (Type=T) 庫存需求較高（權重1.2）</p>
                                         </div>
 
                                         <!-- 範例2：本地客源 -->
                                         <div class="formula-example-item">
                                             <strong>✅ 範例2 - 本地客源小型C級店舖：</strong>
-                                            <p><strong>條件：</strong>C級店舖 (Class權重=1.0) + 小型貨場 (Size權重=0.8) + 本地客源 (Type權重=0.9) + 香港 (區域係數=1.0)</p>
-                                            <p><strong>計算：</strong>4 + (1.0 × 0.8 × 0.9 × 1.0) = 4 + 0.72 ≈ <strong>5</strong> ✓</p>
+                                            <p><strong>條件：</strong>C級店舖 (Class權重=1.3) + 小型貨場 (Size權重=1.2) + 本地客源 (Type權重=0.9) + 香港 (區域係數=1.0)</p>
+                                            <p><strong>計算：</strong>2 + (1.3 × 1.2 × 0.9 × 1.0) = 2 + 1.4 ≈ <strong>3</strong> ✓</p>
                                             <p class="example-note">💡 本地客源店舖 (Type=L) 庫存需求較低（權重0.9）</p>
                                         </div>
 
@@ -130,19 +130,19 @@
                             <div class="weight-inputs">
                                 <label class="weight-label-a">
                                     <span class="weight-label-text">A級</span>
-                                    <input type="number" id="weightClassA" value="3" min="0" step="0.5" class="weight-input">
+                                    <input type="number" id="weightClassA" value="2.2" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label class="weight-label-b">
                                     <span class="weight-label-text">B級</span>
-                                    <input type="number" id="weightClassB" value="2" min="0" step="0.5" class="weight-input">
+                                    <input type="number" id="weightClassB" value="1.7" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label class="weight-label-c">
                                     <span class="weight-label-text">C級</span>
-                                    <input type="number" id="weightClassC" value="1.5" min="0" step="0.5" class="weight-input">
+                                    <input type="number" id="weightClassC" value="1.3" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label class="weight-label-d">
                                     <span class="weight-label-text">D級</span>
-                                    <input type="number" id="weightClassD" value="1.5" min="0" step="0.5" class="weight-input">
+                                    <input type="number" id="weightClassD" value="1.1" min="0" step="0.1" class="weight-input">
                                 </label>
                             </div>
                         </div>
@@ -153,23 +153,23 @@
                             <div class="weight-inputs">
                                 <label>
                                     <span class="weight-label-text">XL</span>
-                                    <input type="number" id="weightSizeXL" value="4" min="0" step="0.5" class="weight-input">
+                                    <input type="number" id="weightSizeXL" value="2.8" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label>
                                     <span class="weight-label-text">L</span>
-                                    <input type="number" id="weightSizeL" value="3" min="0" step="0.5" class="weight-input">
+                                    <input type="number" id="weightSizeL" value="2.2" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label>
                                     <span class="weight-label-text">M</span>
-                                    <input type="number" id="weightSizeM" value="2.5" min="0" step="0.5" class="weight-input">
+                                    <input type="number" id="weightSizeM" value="1.6" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label>
                                     <span class="weight-label-text">S</span>
-                                    <input type="number" id="weightSizeS" value="2" min="0" step="0.5" class="weight-input">
+                                    <input type="number" id="weightSizeS" value="1.2" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label>
                                     <span class="weight-label-text">XS</span>
-                                    <input type="number" id="weightSizeXS" value="1.5" min="0" step="0.5" class="weight-input">
+                                    <input type="number" id="weightSizeXS" value="0.9" min="0" step="0.1" class="weight-input">
                                 </label>
                             </div>
                         </div>
@@ -200,7 +200,7 @@
                             <div class="weight-inputs">
                                 <label>
                                     <span class="weight-label-text">基礎值</span>
-                                    <input type="number" id="baseValue" value="4" min="0" class="weight-input">
+                                    <input type="number" id="baseValue" value="2" min="0" class="weight-input">
                                 </label>
                                 <label>
                                     <span class="weight-label-text">HK 係數</span>
@@ -358,9 +358,9 @@
                             <div class="filter-group">
                                 <label class="filter-label">按客源類型</label>
                                 <div class="filter-buttons">
-                                    <button class="filter-btn" data-filter="type" data-value="T" style="background:#ff6b6b; color:white;">🔴 遊客 (T)</button>
-                                    <button class="filter-btn" data-filter="type" data-value="M" style="background:#4ecdc4; color:white;">🔵 混合 (M)</button>
-                                    <button class="filter-btn" data-filter="type" data-value="L" style="background:#45b7d1; color:white;">🟢 本地 (L)</button>
+                                    <button class="filter-btn" data-filter="type" data-value="T">遊客 (T)</button>
+                                    <button class="filter-btn" data-filter="type" data-value="M">混合 (M)</button>
+                                    <button class="filter-btn" data-filter="type" data-value="L">本地 (L)</button>
                                 </div>
                             </div>
 
@@ -722,7 +722,7 @@ MA01,澳門廣場,MO,B,M,
         </main>
 
         <footer>
-            <p>New SKU Safety (Buffer) Stock Calculator (2026) – RP Team (Based on a concept by CMPD-Natalie Wong)</p>
+            <p>New SKU Safety (Replenishment) Stock Calculator (2026) – RP Team (Based on a concept by CMPD-Natalie Wong)</p>
         </footer>
     </div>
 

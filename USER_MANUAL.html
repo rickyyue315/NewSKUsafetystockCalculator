@@ -642,12 +642,12 @@
         <!-- 標題 -->
         <h1 id="title">
             🧮 New SKU Safety Stock Calculator<br>
-            <span style="font-size: 18pt; color: #666;">新產品安全（緩衝）庫存計算器 使用說明書</span>
+            <span style="font-size: 18pt; color: #666;">新產品安全（補貨）庫存計算器 使用說明書</span>
         </h1>
 
         <!-- 版本資訊 -->
             <p style="text-align: center; color: #888; margin-bottom: 30px;">
-            版本 v1.3 | 更新日期：2026年2月8日
+            版本 v1.4 | 更新日期：2026年2月11日
         </p>
 
         <!-- 目錄 -->
@@ -676,21 +676,27 @@
             <h3>核心資料與函式</h3>
             <ul>
                 <li><strong>`config.js`：</strong>主要業務資料來源（`STORES_CONFIG`, `SAFETY_STOCK_MATRIX`, `WEIGHT_CONFIG`, `WEIGHT_TEMPLATES`）。</li>
-                <li><strong>`getSafetyStockValue(region, category, size)`：</strong>從 `SAFETY_STOCK_MATRIX` 讀取 Safety Stock 值。</li>
-                <li><strong>`calculateSafetyStockWithWeights(region, category, size, weights)`：</strong>使用權重計算單一 Safety Stock 值。</li>
-                <li><strong>`generateMatrixWithWeights(weights)`：</strong>根據權重生成整張對照表。</li>
+                <li><strong>店鋪資料結構：</strong>`{ Site, Shop, Regional, Class, Size, OM, Type }`（Type = T/M/L 客源類型）。</li>
+                <li><strong>`getSafetyStockValue(region, category, size, type)`：</strong>從 `SAFETY_STOCK_MATRIX` 讀取 Safety Stock 值（含 Type）。</li>
+                <li><strong>`calculateSafetyStockWithWeights(region, category, size, type, weights)`：</strong>使用權重計算單一 Safety Stock 值（含 Type）。</li>
+                <li><strong>`generateMatrixWithWeights(weights)`：</strong>根據權重生成整張對照表（以 Type=M 作為基準）。</li>
+                <li><strong>`matrixDraft`：</strong>對照表草稿（編輯/套用前的暫存）。</li>
                 <li><strong>`customStoreStock`：</strong>物件，存儲個別店鋪覆寫的 Safety Stock（key = `Site`）。</li>
+                <li><strong>`customSafetyStock`：</strong>物件，存儲對照表覆寫值（key = `${region}-${category}-${type}-${size}`）。</li>
             </ul>
 
             <h3>重要 UI 元素 (id)</h3>
             <ul>
                 <li><code>calculateBtn</code> - 執行計算</li>
                 <li><code>exportBtn</code> / <code>exportExcelBtn</code> - 匯出 CSV / Excel</li>
+                <li><code>exportExcelWithFormulasBtn</code> - 匯出 Excel（含公式）</li>
+                <li><code>printBtn</code> - 打印結果</li>
                 <li><code>exportConfigBtn</code> / <code>importFile</code> - 匯出 / 匯入 JSON 設定</li>
                 <li><code>storesCsvFile</code> - 店鋪 CSV 上傳 input</li>
                 <li><code>editMatrixBtn</code> / <code>saveMatrixBtn</code> - 編輯對照表</li>
                 <li><code>themeToggleBtn</code>, <code>themePanel</code>, <code>themeList</code> - 主題切換</li>
                 <li><code>storesContainer</code> - 店鋪列表容器（內含 `.editable-store-stock` 可 inline 編輯）</li>
+                <li><code>qrExportExcel</code>, <code>qrOmFilter</code>, <code>qrTable</code> - 快速報表區域</li>
             </ul>
 
             <h3>其他說明</h3>
@@ -845,7 +851,7 @@ php -S localhost:8000</pre>
                 <div class="interface-title">📸 主介面截圖（結構示意圖）</div>
                 
                 <div class="mock-ui">
-                    <div class="mock-header">🧮 New SKU Safety (Buffer) Stock Calculator - 新產品安全（緩衝）庫存計算器</div>
+                    <div class="mock-header">🧮 New SKU Safety (Replenishment) Stock Calculator - 新產品安全（補貨）庫存計算器</div>
                     
                     <div class="mock-content">
                         <!-- 對照表區域 -->
@@ -868,10 +874,9 @@ php -S localhost:8000</pre>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <tr><td>A級</td><td>8</td><td>6</td><td>5</td><td>4</td><td>3</td></tr>
-                                                    <tr><td>B級</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td></tr>
-                                                    <tr><td>C級</td><td>5</td><td>4</td><td>3</td><td>2</td><td>2</td></tr>
-                                                    <tr><td>D級</td><td>4</td><td>3</td><td>2</td><td>2</td><td>1</td></tr>
+                                                    <tr><td>A級(遊客)</td><td>17</td><td>15</td><td>13</td><td>12</td><td>10</td></tr>
+                                                    <tr><td>A級(混合)</td><td>17</td><td>15</td><td>13</td><td>12</td><td>10</td></tr>
+                                                    <tr><td>A級(本地)</td><td>17</td><td>15</td><td>13</td><td>12</td><td>10</td></tr>
                                                 </tbody>
                                             </table>
                                         </div>
@@ -891,10 +896,9 @@ php -S localhost:8000</pre>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <tr><td>A級</td><td>10</td><td>8</td><td>6</td><td>5</td><td>4</td></tr>
-                                                    <tr><td>B級</td><td>8</td><td>6</td><td>5</td><td>4</td><td>3</td></tr>
-                                                    <tr><td>C級</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td></tr>
-                                                    <tr><td>D級</td><td>5</td><td>4</td><td>3</td><td>2</td><td>2</td></tr>
+                                                    <tr><td>A級(遊客)</td><td>27</td><td>25</td><td>16</td><td>13</td><td>12</td></tr>
+                                                    <tr><td>A級(混合)</td><td>27</td><td>25</td><td>16</td><td>13</td><td>12</td></tr>
+                                                    <tr><td>A級(本地)</td><td>27</td><td>25</td><td>16</td><td>13</td><td>12</td></tr>
                                                 </tbody>
                                             </table>
                                         </div>
@@ -902,6 +906,7 @@ php -S localhost:8000</pre>
                                 </div>
                                 <div style="text-align: center; margin-top: 10px;">
                                     <span class="mock-btn mock-btn-warning">編輯對照表</span>
+                                    <span class="mock-btn mock-btn-success">保存</span>
                                     <span class="mock-btn mock-btn-success">套用到選擇店鋪</span>
                                 </div>
                             </div>
@@ -931,6 +936,25 @@ php -S localhost:8000</pre>
                                     <span class="mock-btn mock-btn-primary">D級</span>
                                 </div>
                                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
+                                    <span style="font-weight: bold;">按客源：</span>
+                                    <span class="mock-btn mock-btn-primary">T</span>
+                                    <span class="mock-btn mock-btn-primary">M</span>
+                                    <span class="mock-btn mock-btn-primary">L</span>
+                                </div>
+                                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
+                                    <span style="font-weight: bold;">按組別：</span>
+                                    <span class="mock-btn mock-btn-primary">HA</span>
+                                    <span class="mock-btn mock-btn-primary">HB</span>
+                                    <span class="mock-btn mock-btn-primary">HC</span>
+                                    <span class="mock-btn mock-btn-primary">HD</span>
+                                </div>
+                                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
+                                    <span style="font-weight: bold;">特別店鋪：</span>
+                                    <span class="mock-btn mock-btn-primary">HA40</span>
+                                    <span class="mock-btn mock-btn-primary">HB87</span>
+                                    <span class="mock-btn mock-btn-primary">HB91</span>
+                                </div>
+                                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
                                     <span style="font-weight: bold;">按OM：</span>
                                     <span class="mock-btn mock-btn-primary">Candy</span>
                                     <span class="mock-btn mock-btn-primary">Eva</span>
@@ -948,10 +972,12 @@ php -S localhost:8000</pre>
                             <div class="mock-section-title">📊 計算結果</div>
                             <div class="mock-section-content">
                                 <div style="margin-bottom: 10px;">
-                                    <span class="mock">🔢 -btn mock-btn-success計算 Safety Stock</span>
+                                    <span class="mock-btn mock-btn-success">🔢 計算 Safety Stock</span>
                                     <span class="mock-btn mock-btn-primary">📥 匯出 CSV</span>
                                     <span class="mock-btn mock-btn-primary">📊 匯出 Excel</span>
+                                    <span class="mock-btn mock-btn-primary">📊 匯出 Excel (含公式)</span>
                                     <span class="mock-btn mock-btn-primary">💾 匯出配置</span>
+                                    <span class="mock-btn mock-btn-primary">🖨️ 打印</span>
                                 </div>
                                 <table class="mock-table">
                                     <thead>
@@ -959,6 +985,7 @@ php -S localhost:8000</pre>
                                             <th>HK/MO</th>
                                             <th>舖類</th>
                                             <th>面積</th>
+                                            <th>客源</th>
                                             <th>代碼</th>
                                             <th>店數</th>
                                             <th>SS</th>
@@ -967,10 +994,10 @@ php -S localhost:8000</pre>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr><td>🇭🇰 香港</td><td><span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:3px;">A</span></td><td>XL</td><td><strong>HKAXL</strong></td><td>5</td><td>8</td><td>40</td><td>Y</td></tr>
-                                        <tr><td>🇭🇰 香港</td><td><span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:3px;">A</span></td><td>L</td><td><strong>HKAL</strong></td><td>12</td><td>6</td><td>72</td><td>Y</td></tr>
-                                        <tr><td>🇭🇰 香港</td><td><span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:3px;">A</span></td><td>M</td><td><strong>HKAM</strong></td><td>8</td><td>5</td><td>40</td><td>Y</td></tr>
-                                        <tr><td style="background: #ffeb3b;" colspan="3"><strong>TOTAL:</strong></td><td style="background: #ffeb3b;"></td><td style="background: #ffeb3b;"><strong>97</strong></td><td style="background: #ffeb3b;">SS:</td><td style="background: #ffeb3b;"><strong>856</strong></td><td style="background: #ffeb3b;"></td></tr>
+                                        <tr><td>🇭🇰 香港</td><td><span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:3px;">A</span></td><td>XL</td><td><span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:3px;">T</span></td><td><strong>HKAXL</strong></td><td>5</td><td>17</td><td>85</td><td>Y</td></tr>
+                                        <tr><td>🇭🇰 香港</td><td><span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:3px;">A</span></td><td>L</td><td><span style="background:#4ecdc4;color:white;padding:2px 6px;border-radius:3px;">M</span></td><td><strong>HKAL</strong></td><td>12</td><td>15</td><td>180</td><td>Y</td></tr>
+                                        <tr><td>🇭🇰 香港</td><td><span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:3px;">A</span></td><td>M</td><td><span style="background:#45b7d1;color:white;padding:2px 6px;border-radius:3px;">L</span></td><td><strong>HKAM</strong></td><td>8</td><td>13</td><td>104</td><td>Y</td></tr>
+                                        <tr><td style="background: #ffeb3b;" colspan="4"><strong>TOTAL:</strong></td><td style="background: #ffeb3b;"></td><td style="background: #ffeb3b;"><strong>97</strong></td><td style="background: #ffeb3b;">SS:</td><td style="background: #ffeb3b;"><strong>856</strong></td><td style="background: #ffeb3b;"></td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -979,8 +1006,12 @@ php -S localhost:8000</pre>
                 </div>
             </div>
 
+            <div class="info-box">
+                <strong>分頁說明：</strong>上方提供「🧮 計算器」與「📊 快速報表」兩個分頁，可依需求切換操作模式。
+            </div>
+
             <h3>3.2 店鋪類型代碼說明</h3>
-            <p>店鋪類型代碼由三部分組成：<code style="background: #667eea; color: white; padding: 3px 8px; border-radius: 4px;">區域 + 舖類 + 面積</code></p>
+            <p>店鋪類型代碼由三部分組成：<code style="background: #667eea; color: white; padding: 3px 8px; border-radius: 4px;">區域 + 舖類 + 面積</code>，客源類型 (Type) 會以獨立欄位顯示。</p>
             
             <table>
                 <thead>
@@ -989,6 +1020,7 @@ php -S localhost:8000</pre>
                         <th>區域</th>
                         <th>舖類</th>
                         <th>貨場面積</th>
+                        <th>客源類型</th>
                         <th>範例店鋪</th>
                     </tr>
                 </thead>
@@ -998,6 +1030,7 @@ php -S localhost:8000</pre>
                         <td>🇭🇰 香港</td>
                         <td><span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:3px;">A 級</span></td>
                         <td>XL（特大）</td>
+                        <td>遊客區 (T)</td>
                         <td>銅鑼灣旗艦店</td>
                     </tr>
                     <tr>
@@ -1005,6 +1038,7 @@ php -S localhost:8000</pre>
                         <td>🇭🇰 香港</td>
                         <td><span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:3px;">A 級</span></td>
                         <td>L（大）</td>
+                        <td>混合型 (M)</td>
                         <td>中環店</td>
                     </tr>
                     <tr>
@@ -1012,6 +1046,7 @@ php -S localhost:8000</pre>
                         <td>🇭🇰 香港</td>
                         <td><span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:3px;">A 級</span></td>
                         <td>M（中）</td>
+                        <td>本地型 (L)</td>
                         <td>旺角店</td>
                     </tr>
                     <tr>
@@ -1019,6 +1054,7 @@ php -S localhost:8000</pre>
                         <td>🇲🇴 澳門</td>
                         <td><span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:3px;">A 級</span></td>
                         <td>D</td>
+                        <td>遊客區 (T)</td>
                         <td>澳門半島店</td>
                     </tr>
                 </tbody>
@@ -1100,6 +1136,38 @@ php -S localhost:8000</pre>
                     </tr>
                 </tbody>
             </table>
+
+            <h3>3.5 客源類型 (Type) 說明</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>代碼</th>
+                        <th>名稱</th>
+                        <th>說明</th>
+                        <th>權重預設值</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>T</strong></td>
+                        <td>遊客區</td>
+                        <td>主要服務遊客客源</td>
+                        <td>1.2</td>
+                    </tr>
+                    <tr>
+                        <td><strong>M</strong></td>
+                        <td>混合型</td>
+                        <td>遊客與本地客源混合</td>
+                        <td>1.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>L</strong></td>
+                        <td>本地型</td>
+                        <td>主要服務本地客源</td>
+                        <td>0.9</td>
+                    </tr>
+                </tbody>
+            </table>
         </section>
 
         <div class="divider"></div>
@@ -1109,17 +1177,20 @@ php -S localhost:8000</pre>
             <h2><span class="index-tag">4</span>基本操作流程</h2>
 
             <h3>4.1 快速開始指南</h3>
-            
+            <p>系統提供兩種操作模式：</p>
+            <ul>
+                <li><strong>計算器模式：</strong>完整流程（對照表/權重設定 → 選擇店鋪 → 計算 → 匯出）</li>
+                <li><strong>快速報表模式：</strong>簡化流程（選擇店鋪 → 直接匯出 Excel）</li>
+            </ul>
+
             <div class="step-flow">
-                <div class="step">步驟 1<br>選擇店鋪</div>
+                <div class="step">步驟 1<br>選擇分頁</div>
                 <div class="step-arrow">→</div>
-                <div class="step">步驟 2<br>設定參數</div>
+                <div class="step">步驟 2<br>設定對照表/權重</div>
                 <div class="step-arrow">→</div>
-                <div class="step">步驟 3<br>計算結果</div>
+                <div class="step">步驟 3<br>選擇店鋪</div>
                 <div class="step-arrow">→</div>
-                <div class="step">步驟 4<br>查看結果</div>
-                <div class="step-arrow">→</div>
-                <div class="step">步驟 5<br>匯出資料</div>
+                <div class="step">步驟 4<br>計算/匯出</div>
             </div>
 
             <h3>4.2 選擇店鋪</h3>
@@ -1161,6 +1232,16 @@ php -S localhost:8000</pre>
 
             <h4>方法三：使用篩選器</h4>
             <p>您可以結合多個篩選條件來精準選擇店鋪：</p>
+
+            <ul>
+                <li><strong>區域：</strong>HK / MO</li>
+                <li><strong>舖類：</strong>A / B / C / D</li>
+                <li><strong>貨場面積：</strong>XL / L / M / S / XS</li>
+                <li><strong>客源類型：</strong>T / M / L</li>
+                <li><strong>店鋪組別：</strong>HA / HB / HC / HD</li>
+                <li><strong>特別店鋪：</strong>快速選取指定店鋪代號（如 HA40 / HB87 / HB91）</li>
+                <li><strong>營運經理 (OM)：</strong>點擊 OM 按鈕會在右側顯示該 OM 的店鋪清單</li>
+            </ul>
 
             <div class="flowchart">
                 <div style="text-align: center;">
@@ -1208,20 +1289,27 @@ php -S localhost:8000</pre>
             <h4>方式一：直接編輯對照表</h4>
             <ol>
                 <li>點擊 <span class="mock-btn mock-btn-warning">編輯對照表</span> 按鈕</li>
-                <li>點擊要修改的儲存格</li>
+                <li>點擊要修改的儲存格（包含客源 Type 的列）</li>
                 <li>輸入新數值</li>
-                <li>點擊 <span class="mock-btn mock-btn-success">保存</span></li>
-                <li>點擊 <span class="mock-btn mock-btn-success">套用到選擇店鋪</span></li>
+                <li>點擊 <span class="mock-btn mock-btn-success">保存</span>（僅保存到對照表草稿）</li>
+                <li>點擊 <span class="mock-btn mock-btn-success">套用到選擇店鋪</span>（才會更新店鋪 Safety Stock）</li>
             </ol>
 
             <h4>方式二：使用權重計算</h4>
-            <p>（詳細說明請參閱第 6 節）</p>
+            <ol>
+                <li>展開 <span class="mock-btn mock-btn-secondary">⚙️ 權重快速設定</span></li>
+                <li>調整 Class / Size / Type 權重與基礎值、區域係數</li>
+                <li>（可選）輸入銷售目標與天數，系統自動計算目標總 Safety</li>
+                <li>點擊 <span class="mock-btn mock-btn-primary">👁️ 預覽結果</span></li>
+                <li>點擊 <span class="mock-btn mock-btn-success">🚀 套用權重計算</span> 更新對照表</li>
+                <li>最後點擊 <span class="mock-btn mock-btn-success">套用到選擇店鋪</span> 套用到店鋪</li>
+            </ol>
 
             <h3>4.4 執行計算</h3>
             <ol>
                 <li>確認已選擇至少一間店鋪</li>
                 <li>點擊 <span class="mock-btn mock-btn-success" style="font-size: 14pt; padding: 10px 20px;">🔢 計算 Safety Stock</span></li>
-                <li>系統會顯示計算結果</li>
+                <li>系統會顯示計算結果（可直接點擊彙總表中的 Safety Stock 進行微調）</li>
             </ol>
 
             <h3>4.5 查看結果</h3>
@@ -1239,6 +1327,7 @@ php -S localhost:8000</pre>
                     <tr><td>HK/MO</td><td>區域</td></tr>
                     <tr><td>舖類</td><td>A/B/C/D 級別</td></tr>
                     <tr><td>貨場面積</td><td>XL/L/M/S/XS</td></tr>
+                    <tr><td>客源</td><td>T(遊客) / M(混合) / L(本地)</td></tr>
                     <tr><td>類型代碼</td><td>店鋪類型代碼</td></tr>
                     <tr><td>店鋪數量</td><td>該類型的店鋪數量</td></tr>
                     <tr><td>Safety Stock</td><td>每間店鋪的安全庫存量</td></tr>
@@ -1253,10 +1342,10 @@ php -S localhost:8000</pre>
                     <tr>
                         <th>欄位</th>
                         <th>說明</th>
-                    </thead>
+                    </tr>
+                </thead>
                 <tbody>
-                    <tr><td </tr>
-               >營運經理</td><td>OM 姓名</td></tr>
+                    <tr><td>營運經理</td><td>OM 姓名</td></tr>
                     <tr><td>區域分佈</td><td>香港/澳門店鋪數量</td></tr>
                     <tr><td>店鋪數量</td><td>該 OM 負責的店鋪數量</td></tr>
                     <tr><td>平均 SS</td><td>平均 Safety Stock</td></tr>
@@ -1267,7 +1356,16 @@ php -S localhost:8000</pre>
             </table>
 
             <h4>📋 店鋪詳細清單</h4>
-            <p>顯示所有選擇店鋪的詳細資料。</p>
+            <p>顯示所有選擇店鋪的詳細資料（含客源 Type、OM、Carry）。</p>
+
+            <h3>4.6 快速報表（Quick Report）</h3>
+            <ol>
+                <li>切換到 <strong>📊 快速報表</strong> 分頁</li>
+                <li>使用上方篩選（區域 / OM）快速縮小範圍</li>
+                <li>勾選要匯出的店鋪（可使用全選/取消全選）</li>
+                <li>下方會即時顯示統計與彙總表</li>
+                <li>點擊 <span class="mock-btn mock-btn-success">📊 匯出 Excel</span>（只會匯出目前可見且已勾選的店鋪）</li>
+            </ol>
         </section>
 
         <div class="page-break"></div>
@@ -1293,7 +1391,13 @@ php -S localhost:8000</pre>
                 <strong>💡 小提示：</strong>個別店鋪的自訂值會覆蓋對照表的預設值。
             </div>
 
-            <h3>5.2 主題切換</h3>
+            <h3>5.2 彙總表即時調整</h3>
+            <p>在「按店舖類型彙總」表格中，點擊 Safety Stock 欄位即可快速修改該類型數值，系統會即時更新總計。</p>
+
+            <h3>5.3 重設自訂值</h3>
+            <p>若已對個別店鋪做過編輯，可使用 <span class="mock-btn mock-btn-warning">🔄 重設自訂值</span> 來恢復對照表的預設值（只會重設已選擇的店鋪）。</p>
+
+            <h3>5.4 主題切換</h3>
             <p>程式支援多種配色主題，點擊右上角的 <span style="font-size: 16pt;">🎨</span> 按鈕選擇：</p>
 
             <div class="tag-cloud">
@@ -1324,7 +1428,7 @@ php -S localhost:8000</pre>
             <div class="formula">
                 <div class="formula-title">Safety Stock 計算公式</div>
                 <div class="formula-content">
-                    SS = 基礎值 + (Class權重 × Size權重 × 區域係數)
+                    SS = 基礎值 + (Class權重 × Size權重 × Type權重 × 區域係數)
                 </div>
             </div>
 
@@ -1334,7 +1438,9 @@ php -S localhost:8000</pre>
                     <li><strong>基礎值</strong>：所有店鋪的 Safety Stock 基礎數值（預設 4）</li>
                     <li><strong>Class權重</strong>：根據舖類級別（A/B/C/D）設定的權重係數</li>
                     <li><strong>Size權重</strong>：根據貨場面積（XL/L/M/S/XS）設定的權重係數</li>
+                    <li><strong>Type權重</strong>：根據客源類型（T/M/L）設定的權重係數</li>
                     <li><strong>區域係數</strong>：香港(HK)通常為 1.0，澳門(MO)通常較高（如 1.33）</li>
+                    <li><strong>特例</strong>：當區域係數為 0 時，該區域 Safety Stock 直接為 0</li>
                 </ul>
             </div>
 
@@ -1372,6 +1478,22 @@ php -S localhost:8000</pre>
                     <tr><td><strong>M</strong></td><td>中型</td><td>2.5</td></tr>
                     <tr><td><strong>S</strong></td><td>小型</td><td>2</td></tr>
                     <tr><td><strong>XS</strong></td><td>超小型</td><td>1.5</td></tr>
+                </tbody>
+            </table>
+
+            <h4>Type 權重（T:M:L）</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>類型</th>
+                        <th>說明</th>
+                        <th>預設值</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>T</strong></td><td>遊客區</td><td>1.2</td></tr>
+                    <tr><td><strong>M</strong></td><td>混合型</td><td>1.0</td></tr>
+                    <tr><td><strong>L</strong></td><td>本地型</td><td>0.9</td></tr>
                 </tbody>
             </table>
 
@@ -1437,13 +1559,13 @@ php -S localhost:8000</pre>
                 <div style="background: white; padding: 15px; border-radius: 6px;">
                     <div class="calculation-row">
                         <span><strong>條件：</strong></span>
-                        <span>A級店鋪 (Class權重=3) + 大型貨場 (Size權重=3) + 澳門 (區域係數=1.33)</span>
+                        <span>A級店鋪 (Class權重=3) + 大型貨場 (Size權重=3) + 遊客區 (Type權重=1.2) + 澳門 (區域係數=1.33)</span>
                     </div>
                     <div class="calculation-row">
                         <span><strong>計算：</strong></span>
-                        <span>4 + (3 × 3 × 1.33) = 4 + 11.97 ≈ <strong>16</strong></span>
+                        <span>4 + (3 × 3 × 1.2 × 1.33) = 4 + 14.36 ≈ <strong>18</strong></span>
                     </div>
-                    <div class="calculation-result">Safety Stock = 16</div>
+                    <div class="calculation-result">Safety Stock = 18</div>
                 </div>
             </div>
 
@@ -1452,13 +1574,13 @@ php -S localhost:8000</pre>
                 <div style="background: white; padding: 15px; border-radius: 6px;">
                     <div class="calculation-row">
                         <span><strong>條件：</strong></span>
-                        <span>B級店鋪 (Class權重=2) + 中型貨場 (Size權重=1.5) + 某區域 (區域係數=0)</span>
+                        <span>B級店鋪 (Class權重=2) + 中型貨場 (Size權重=2.5) + 混合型 (Type權重=1.0) + 某區域 (區域係數=0)</span>
                     </div>
                     <div class="calculation-row">
                         <span><strong>計算：</strong></span>
-                        <span>4 + (2 × 1.5 × 0) = 4 + 0 = <strong>4</strong></span>
+                        <span>區域係數為 0 → Safety Stock 直接為 <strong>0</strong></span>
                     </div>
-                    <div class="calculation-result">Safety Stock = 4</div>
+                    <div class="calculation-result">Safety Stock = 0</div>
                 </div>
             </div>
 
@@ -1521,6 +1643,7 @@ php -S localhost:8000</pre>
                 <li>系統會自動計算目標總 Safety Stock</li>
                 <li>點擊 <span class="mock-btn mock-btn-primary">👁️ 預覽結果</span> 查看計算結果</li>
                 <li>確認後點擊 <span class="mock-btn mock-btn-success">🚀 套用權重計算</span></li>
+                <li>點擊 <span class="mock-btn mock-btn-success">套用到選擇店鋪</span> 套用到店鋪</li>
             </ol>
 
             <h4>6.8.4 介面示意圖</h4>
@@ -1680,6 +1803,7 @@ php -S localhost:8000</pre>
                 <li>讀取已計算或手動輸入的「目標總 Safety Stock」</li>
                 <li>根據各類型店鋪的權重比例，自動分配庫存到對照表</li>
                 <li>使用 <code>scaleMatrixToTarget()</code> 函數將對照表縮放至目標值</li>
+                <li>完成後請點擊 <span class="mock-btn mock-btn-success">套用到選擇店鋪</span> 以更新店鋪 Safety Stock</li>
             </ol>
 
             <div class="calculation-example">
@@ -1708,32 +1832,9 @@ php -S localhost:8000</pre>
 
             <h4>6.8.7 資料持久化</h4>
             <p>銷售目標計算的參數會自動保存在瀏覽器中：</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>儲存項目</th>
-                        <th>localStorage 鍵值</th>
-                        <th>說明</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>銷售目標數量</td>
-                        <td><code>salesTarget</code></td>
-                        <td>月銷售目標數量</td>
-                    </tr>
-                    <tr>
-                        <td>Safety Stock 天數</td>
-                        <td><code>safetyStockDays</code></td>
-                        <td>庫存保護天數（1-30）</td>
-                    </tr>
-                    <tr>
-                        <td>目標總 Safety</td>
-                        <td><code>targetTotal</code></td>
-                        <td>計算或手動輸入的目標值</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="info-box">
+                <strong>儲存位置：</strong>系統會將銷售目標相關設定寫入 localStorage 的 <code>safetyStockCalculatorV2</code> → <code>weightConfig</code> 中，包含 <code>salesTarget</code>、<code>safetyStockDays</code>、<code>targetTotal</code>。
+            </div>
 
             <div class="success-box">
                 <strong>💡 小提示：</strong>刷新頁面後，您的設定會自動恢復，無需重新輸入。
@@ -1763,8 +1864,8 @@ php -S localhost:8000</pre>
 
             <table>
                 <thead>
-                    <tr>工作表名>
-                        <th稱</th>
+                    <tr>
+                        <th>工作表名稱</th>
                         <th>內容</th>
                     </tr>
                 </thead>
@@ -1774,6 +1875,25 @@ php -S localhost:8000</pre>
                     <tr><td>OM彙總</td><td>按營運經理分組的統計</td></tr>
                 </tbody>
             </table>
+
+            <h4>匯出 Excel（含公式）</h4>
+            <ol>
+                <li>點擊 <span class="mock-btn mock-btn-primary">📊 匯出 Excel (含公式)</span></li>
+                <li>會產生可編輯的對照表工作表，並用公式連動明細與彙總</li>
+            </ol>
+
+            <h4>打印</h4>
+            <ol>
+                <li>點擊 <span class="mock-btn mock-btn-primary">🖨️ 打印</span></li>
+                <li>會以新視窗開啟列印版面，可輸出為 PDF</li>
+            </ol>
+
+            <h4>快速報表匯出 Excel</h4>
+            <ol>
+                <li>切換到 <strong>📊 快速報表</strong> 分頁</li>
+                <li>勾選要匯出的店鋪後，點擊 <span class="mock-btn mock-btn-success">📊 匯出 Excel</span></li>
+                <li>會產生「店鋪詳細清單 / 類型彙總 / OM彙總 / 對照表」四個工作表</li>
+            </ol>
 
             <h4>匯出配置（JSON）</h4>
             <ol>
@@ -1785,8 +1905,11 @@ php -S localhost:8000</pre>
                 <li>對照表自訂值</li>
                 <li>已選擇的店鋪</li>
                 <li>店鋪列表</li>
-                <li>權重設定</li>
             </ul>
+
+            <div class="info-box">
+                <strong>備註：</strong>匯出配置不包含權重設定與個別店鋪的自訂值。
+            </div>
 
             <h3>7.2 匯入配置</h3>
             <ol>
@@ -1794,6 +1917,10 @@ php -S localhost:8000</pre>
                 <li>選擇之前導出的 <code>.json</code> 檔案</li>
                 <li>系統會自動載入所有設定</li>
             </ol>
+
+            <div class="info-box">
+                <strong>提示：</strong>匯入配置只會還原「對照表自訂值、已選店鋪、店鋪名單」。若需要權重設定，請在權重面板中重新調整。
+            </div>
 
             <h3>7.3 匯出格式說明</h3>
 
@@ -1923,7 +2050,7 @@ MO,MA01,澳門廣場,MOBM,B,M,7,Y</pre>
             <div class="formula">
                 <div class="formula-title">Safety Stock 計算公式</div>
                 <div class="formula-content">
-                    SS = 基礎值 + (Class權重 × Size權重 × 區域係數)
+                    SS = 基礎值 + (Class權重 × Size權重 × Type權重 × 區域係數)
                 </div>
             </div>
 
@@ -1953,6 +2080,11 @@ MO,MA01,澳門廣場,MOBM,B,M,7,Y</pre>
                         <td>0 - 5</td>
                     </tr>
                     <tr>
+                        <td>Type權重</td>
+                        <td>客源類型係數</td>
+                        <td>0 - 2</td>
+                    </tr>
+                    <tr>
                         <td>區域係數</td>
                         <td>區域調整係數</td>
                         <td>0 - 2</td>
@@ -1967,8 +2099,10 @@ MO,MA01,澳門廣場,MOBM,B,M,7,Y</pre>
                         <th>區域</th>
                         <th>舖類</th>
                         <th>面積</th>
+                        <th>客源</th>
                         <th>Class權重</th>
                         <th>Size權重</th>
+                        <th>Type權重</th>
                         <th>區域係數</th>
                         <th>基礎值</th>
                         <th>Safety Stock</th>
@@ -1980,56 +2114,66 @@ MO,MA01,澳門廣場,MOBM,B,M,7,Y</pre>
                         <td>HK</td>
                         <td>A</td>
                         <td>XL</td>
+                        <td>T</td>
                         <td>3</td>
                         <td>4</td>
+                        <td>1.2</td>
                         <td>1.0</td>
                         <td>4</td>
-                        <td><strong>16</strong></td>
-                        <td>4 + (3×4×1.0) = 16</td>
+                        <td><strong>19</strong></td>
+                        <td>4 + (3×4×1.2×1.0) = 18.4 ≈ 19</td>
                     </tr>
                     <tr>
                         <td>HK</td>
                         <td>A</td>
                         <td>L</td>
+                        <td>M</td>
                         <td>3</td>
                         <td>3</td>
                         <td>1.0</td>
+                        <td>1.0</td>
                         <td>4</td>
                         <td><strong>13</strong></td>
-                        <td>4 + (3×3×1.0) = 13</td>
+                        <td>4 + (3×3×1.0×1.0) = 13</td>
                     </tr>
                     <tr>
                         <td>HK</td>
                         <td>A</td>
                         <td>M</td>
+                        <td>L</td>
                         <td>3</td>
                         <td>2.5</td>
+                        <td>0.9</td>
                         <td>1.0</td>
                         <td>4</td>
-                        <td><strong>12</strong></td>
-                        <td>4 + (3×2.5×1.0) = 11.5 ≈ 12</td>
+                        <td><strong>11</strong></td>
+                        <td>4 + (3×2.5×0.9×1.0) = 10.75 ≈ 11</td>
                     </tr>
                     <tr>
                         <td>HK</td>
                         <td>B</td>
                         <td>M</td>
+                        <td>M</td>
                         <td>2</td>
                         <td>2.5</td>
                         <td>1.0</td>
+                        <td>1.0</td>
                         <td>4</td>
                         <td><strong>9</strong></td>
-                        <td>4 + (2×2.5×1.0) = 9</td>
+                        <td>4 + (2×2.5×1.0×1.0) = 9</td>
                     </tr>
                     <tr>
                         <td>MO</td>
                         <td>A</td>
                         <td>M</td>
+                        <td>T</td>
                         <td>3</td>
                         <td>2.5</td>
+                        <td>1.2</td>
                         <td>1.33</td>
                         <td>4</td>
-                        <td><strong>14</strong></td>
-                        <td>4 + (3×2.5×1.33) = 14</td>
+                        <td><strong>16</strong></td>
+                        <td>4 + (3×2.5×1.2×1.33) = 15.97 ≈ 16</td>
                     </tr>
                 </tbody>
             </table>
@@ -2080,7 +2224,7 @@ MO,MA01,澳門廣場,MOBM,B,M,7,Y</pre>
 
         <!-- 頁腳 -->
         <div class="footer">
-            <p><strong>New SKU Safety (Buffer) Stock Calculator (2026) – RP Team (Based on a concept by CMPD-Natalie Wong)</strong></p>
+            <p><strong>New SKU Safety (Replenishment) Stock Calculator (2026) – RP Team (Based on a concept by CMPD-Natalie Wong)</strong></p>
             <p style="margin-top: 15px; font-size: 9pt; color: #999;">
                 本說明文件支援 PDF 列印，請使用瀏覽器的「列印」功能將其儲存為 PDF 檔案。
             </p>

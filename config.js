@@ -234,10 +234,10 @@ const DEFAULT_CALCULATION_CONFIG = {
 
 // 預設權重配置 - 包含 Type（店舖類型）權重
 const WEIGHT_CONFIG = {
-    class: { A: 1.8, B: 1.4, C: 1, D: 1 },
-    size: { XL: 2.0, L: 1.6, M: 1.2, S: 0.8, XS: 0.8 },
+    class: { A: 2.2, B: 1.7, C: 1.3, D: 1.1 },
+    size: { XL: 2.8, L: 2.2, M: 1.6, S: 1.2, XS: 0.9 },
     type: { T: 1.2, M: 1.0, L: 0.9 },
-    baseValue: 4,
+    baseValue: 2,
     regionFactor: { HK: 1.0, MO: 1.33 },
     salesTarget: 0,
     safetyStockDays: 7,
@@ -246,48 +246,48 @@ const WEIGHT_CONFIG = {
 
 // 預設模板 - 提供多種權重設定選項（已整合 Type 權重）
 const WEIGHT_TEMPLATES = {
-    // 目前設定（平衡型 - 新增 Type 權重）
+    // 目前設定（標準型 - 接近現有對照表）
     current: {
-        class: { A: 1.8, B: 1.4, C: 1, D: 1 },
-        size: { XL: 2.0, L: 1.6, M: 1.2, S: 0.8, XS: 0.8 },
+        class: { A: 2.2, B: 1.7, C: 1.3, D: 1.1 },
+        size: { XL: 2.8, L: 2.2, M: 1.6, S: 1.2, XS: 0.9 },
         type: { T: 1.2, M: 1.0, L: 0.9 },
-        baseValue: 4,
+        baseValue: 2,
         regionFactor: { HK: 1.0, MO: 1.33 }
     },
 
     // 預設權重（與目前設定相同）
     default: {
-        class: { A: 1.8, B: 1.4, C: 1, D: 1 },
-        size: { XL: 2.0, L: 1.6, M: 1.2, S: 0.8, XS: 0.8 },
+        class: { A: 2.2, B: 1.7, C: 1.3, D: 1.1 },
+        size: { XL: 2.8, L: 2.2, M: 1.6, S: 1.2, XS: 0.9 },
         type: { T: 1.2, M: 1.0, L: 0.9 },
-        baseValue: 4,
+        baseValue: 2,
         regionFactor: { HK: 1.0, MO: 1.33 }
     },
 
-    // 平衡權重（較平均分配，Type 權重較小）
+    // 平衡權重（中等庫存配置，Type 權重適中）
     balanced: {
-        class: { A: 1.6, B: 1.3, C: 1, D: 0.9 },
-        size: { XL: 1.8, L: 1.5, M: 1.2, S: 0.9, XS: 0.8 },
-        type: { T: 1.1, M: 1.0, L: 0.95 },
-        baseValue: 4,
+        class: { A: 2.8, B: 2.1, C: 1.6, D: 1.3 },
+        size: { XL: 3.4, L: 2.7, M: 2.0, S: 1.4, XS: 1.1 },
+        type: { T: 1.15, M: 1.0, L: 0.92 },
+        baseValue: 2,
         regionFactor: { HK: 1.0, MO: 1.3 }
     },
 
     // 保守型（較低的庫存配置，Type 差異最小）
     conservative: {
-        class: { A: 1.3, B: 1.0, C: 0.8, D: 0.8 },
-        size: { XL: 1.5, L: 1.2, M: 1.0, S: 0.7, XS: 0.7 },
-        type: { T: 1.05, M: 1.0, L: 0.98 },
-        baseValue: 3,
-        regionFactor: { HK: 1.0, MO: 1.2 }
+        class: { A: 2.2, B: 1.7, C: 1.3, D: 1.1 },
+        size: { XL: 2.8, L: 2.2, M: 1.6, S: 1.2, XS: 0.9 },
+        type: { T: 1.08, M: 1.0, L: 0.95 },
+        baseValue: 1,
+        regionFactor: { HK: 1.0, MO: 1.25 }
     },
 
     // 積極型（較高的庫存配置，Type 差異明顯）
     aggressive: {
-        class: { A: 2.0, B: 1.6, C: 1.2, D: 1 },
-        size: { XL: 2.4, L: 2.0, M: 1.5, S: 1.0, XS: 0.9 },
-        type: { T: 1.3, M: 1.0, L: 0.85 },
-        baseValue: 5,
+        class: { A: 3.8, B: 2.9, C: 2.2, D: 1.8 },
+        size: { XL: 4.5, L: 3.6, M: 2.7, S: 2.0, XS: 1.6 },
+        type: { T: 1.25, M: 1.0, L: 0.85 },
+        baseValue: 3,
         regionFactor: { HK: 1.0, MO: 1.4 }
     }
 };
@@ -306,7 +306,7 @@ function calculateSafetyStockWithWeights(region, category, size, type, weights) 
     const sizeWeight = weights.size[size] || 1;
     const typeWeight = (weights.type && weights.type[type]) || 1;
     const regionFactor = weights.regionFactor[region];
-    const baseValue = weights.baseValue || 6;
+    const baseValue = weights.baseValue || 2;
     
     // 如果區域係數為 0 或未定義，直接返回 0（該區域不需要庫存）
     if (regionFactor === 0 || regionFactor === undefined) {
