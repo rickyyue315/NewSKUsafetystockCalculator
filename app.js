@@ -81,6 +81,7 @@ class SafetyStockCalculator {
             this.renderStores();
             this.updateStoresPreview();
             this.updateStoreCount();
+            this.refreshQuickReportForMode();
         }
 
         if (options.recalculate !== false && this.summaryResults.length > 0) {
@@ -89,6 +90,18 @@ class SafetyStockCalculator {
 
         if (options.persist !== false) {
             this.saveToLocalStorage();
+        }
+    }
+
+    refreshQuickReportForMode() {
+        this.updateQuickReportModeUI();
+
+        const quickPanel = document.getElementById('tab-quickReport');
+        const quickBody = document.getElementById('qrTableBody');
+        if (!quickPanel || !quickBody) return;
+
+        if (quickPanel.classList.contains('active') || quickBody.children.length > 0) {
+            this.renderQuickReport();
         }
     }
 
@@ -521,6 +534,27 @@ class SafetyStockCalculator {
         return this.stores.find(s => s.Site === site);
     }
 
+    getStoreTypeLabel(type = 'M') {
+        const labels = { T: '遊客', M: '混合', L: '本地' };
+        return labels[type] || labels.M;
+    }
+
+    getQuickReportDimensionMeta(mode = this.calculationMode) {
+        if (mode === 'mode3') {
+            return {
+                key: '店鋪類型',
+                shortKey: '類型',
+                valueGetter: (store) => this.getStoreTypeLabel(store.Type || 'M')
+            };
+        }
+
+        return {
+            key: '貨場面積',
+            shortKey: '面積',
+            valueGetter: (store) => store.Size
+        };
+    }
+
     buildModeTypeCode(store, mode) {
         const region = store.Regional;
         const category = store.Class;
@@ -536,6 +570,30 @@ class SafetyStockCalculator {
         }
 
         return `${region}${category}${type}${size}`;
+    }
+
+    updateQuickReportModeUI() {
+        const mode = this.calculationMode;
+        const dimensionMeta = this.getQuickReportDimensionMeta(mode);
+        const hint = document.querySelector('#tab-quickReport .hint');
+        const tableDimensionHeader = document.querySelector('#qrTable thead th:nth-child(6)');
+        const summaryDimensionHeader = document.querySelector('#qrTypeSummaryTable thead th:nth-child(4)');
+
+        if (tableDimensionHeader) {
+            tableDimensionHeader.textContent = dimensionMeta.shortKey;
+        }
+
+        if (summaryDimensionHeader) {
+            summaryDimensionHeader.textContent = dimensionMeta.shortKey;
+        }
+
+        if (hint) {
+            hint.textContent = mode === 'mode2'
+                ? '簡潔模式：選擇店鋪 → 自動計算（模式 2：Type 固定為 M）→ 直接匯出 Excel'
+                : mode === 'mode3'
+                    ? '簡潔模式：選擇店鋪 → 自動計算（模式 3：Size 固定為 M）→ 直接匯出 Excel'
+                    : '簡潔模式：選擇店鋪 → 自動計算 → 直接匯出 Excel，表格即所見即所得';
+        }
     }
 
     // ==================== 店鋪選擇函數 ====================
@@ -4376,6 +4434,8 @@ class SafetyStockCalculator {
      * 在 init() 之後由 setupEventListeners 呼叫
      */
     initTabNavigation() {
+        this.updateQuickReportModeUI();
+
         // 分頁按鈕切換
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -4433,6 +4493,10 @@ class SafetyStockCalculator {
         const tbody = document.getElementById('qrTableBody');
         if (!tbody) return;
 
+        this.updateQuickReportModeUI();
+        const mode = this.calculationMode;
+        const dimensionMeta = this.getQuickReportDimensionMeta(mode);
+
         // 按區域 → 舖類 → 名稱排序
         const sorted = [...this.stores].sort((a, b) => {
             if (a.Regional !== b.Regional) return a.Regional.localeCompare(b.Regional);
@@ -4446,9 +4510,10 @@ class SafetyStockCalculator {
             const origIdx = this.stores.indexOf(store);
             const ss = this.customStoreStock[store.Site] !== undefined
                 ? this.customStoreStock[store.Site]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type, this.calculationMode);
+                : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type, mode);
             const carry = ss > 0 ? '✓' : '';
             const checked = this.selectedStores.includes(origIdx) ? 'checked' : '';
+            const dimensionValue = dimensionMeta.valueGetter(store);
             const regionBadge = store.Regional === 'HK'
                 ? '<span class="qr-badge qr-badge-hk">HK</span>'
                 : '<span class="qr-badge qr-badge-mo">MO</span>';
@@ -4460,7 +4525,7 @@ class SafetyStockCalculator {
                 <td>${store.Shop}</td>
                 <td>${regionBadge}</td>
                 <td>${classBadge}</td>
-                <td>${store.Size}</td>
+                <td>${dimensionValue}</td>
                 <td>${store.OM || ''}</td>
                 <td class="qr-cell-ss">${ss}</td>
                 <td class="qr-cell-carry">${carry}</td>
@@ -4532,6 +4597,7 @@ class SafetyStockCalculator {
         const tfoot = document.getElementById('qrTableFoot');
         const checkedRows = document.querySelectorAll('#qrTableBody .qr-chk:checked');
         const mode = this.calculationMode;
+        const dimensionMeta = this.getQuickReportDimensionMeta(mode);
 
         // 過濾掉隱藏的行
         const visibleCheckedRows = Array.from(checkedRows).filter(chk => {
@@ -4568,13 +4634,13 @@ class SafetyStockCalculator {
 
             // 類型彙總
             const tc = this.buildModeTypeCode(store, mode);
-            const sizeDisplay = mode === 'mode3' ? '全部' : store.Size;
+            const dimensionValue = dimensionMeta.valueGetter(store);
             if (!typeSummary[tc]) {
                 typeSummary[tc] = {
                     typeCode: tc,
                     region: store.Regional,
                     category: store.Class,
-                    size: sizeDisplay,
+                    dimension: dimensionValue,
                     type: store.Type || 'M',
                     count: 0,
                     ss: ss,
@@ -4625,11 +4691,11 @@ class SafetyStockCalculator {
                     const diff = (typeOrder[a.type] || 0) - (typeOrder[b.type] || 0);
                     if (diff !== 0) return diff;
                 }
-                return (SIZE_DEFINITIONS[a.size]?.order || 9) - (SIZE_DEFINITIONS[b.size]?.order || 9);
+                    return (SIZE_DEFINITIONS[a.dimension]?.order || 9) - (SIZE_DEFINITIONS[b.dimension]?.order || 9);
             });
             let h = '';
             types.forEach(t => {
-                h += `<tr><td>${t.typeCode}</td><td>${t.region}</td><td>${t.category}</td><td>${t.size}</td><td>${t.count}</td><td>${t.ss}</td><td>${t.total}</td></tr>`;
+                    h += `<tr><td>${t.typeCode}</td><td>${t.region}</td><td>${t.category}</td><td>${t.dimension}</td><td>${t.count}</td><td>${t.ss}</td><td>${t.total}</td></tr>`;
             });
             h += `<tr class="qr-sub-total"><td colspan="4">合計</td><td>${storeCount}</td><td></td><td>${totalSS}</td></tr>`;
             typeBody.innerHTML = h;
@@ -4676,6 +4742,8 @@ class SafetyStockCalculator {
         const typeLookup = {};
         const omBucket = {};
         const mode = this.calculationMode;
+        const dimensionMeta = this.getQuickReportDimensionMeta(mode);
+        const dimensionKey = dimensionMeta.key;
 
         visibleCheckedRows.forEach(chk => {
             const idx = parseInt(chk.dataset.idx);
@@ -4685,14 +4753,14 @@ class SafetyStockCalculator {
                 : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type, mode);
             const tc = this.buildModeTypeCode(store, mode);
             const carry = ss > 0 ? 'Y' : '';
-            const sizeDisplay = mode === 'mode3' ? '全部' : store.Size;
+            const dimensionValue = dimensionMeta.valueGetter(store);
 
             detailData.push({
                 '代號': store.Site,
                 '店鋪名稱': store.Shop,
                 '區域': store.Regional,
                 '舖類': store.Class,
-                '貨場面積': sizeDisplay,
+                [dimensionKey]: dimensionValue,
                 '類型代碼': tc,
                 'OM': store.OM || '',
                 'Safety Stock': ss,
@@ -4700,7 +4768,7 @@ class SafetyStockCalculator {
             });
 
             if (!typeBucket[tc]) {
-                typeBucket[tc] = { '類型代碼': tc, '區域': store.Regional, '舖類': store.Class, '貨場面積': sizeDisplay, '店鋪數': 0, 'Safety Stock': ss, '小計': 0 };
+                typeBucket[tc] = { '類型代碼': tc, '區域': store.Regional, '舖類': store.Class, [dimensionKey]: dimensionValue, '店鋪數': 0, 'Safety Stock': ss, '小計': 0 };
             }
             if (!typeLookup[tc]) {
                 typeLookup[tc] = store.Type || 'M';
@@ -4723,7 +4791,7 @@ class SafetyStockCalculator {
             '店鋪名稱': '合計',
             '區域': '',
             '舖類': '',
-            '貨場面積': '',
+            [dimensionKey]: '',
             '類型代碼': '',
             'OM': '',
             'Safety Stock': totalSS,
@@ -4742,9 +4810,9 @@ class SafetyStockCalculator {
                 const diff = (typeOrder[typeLookup[a['類型代碼']] || 'M'] || 0) - (typeOrder[typeLookup[b['類型代碼']] || 'M'] || 0);
                 if (diff !== 0) return diff;
             }
-            return (SIZE_DEFINITIONS[a['貨場面積']]?.order || 9) - (SIZE_DEFINITIONS[b['貨場面積']]?.order || 9);
+            return (SIZE_DEFINITIONS[a[dimensionKey]]?.order || 9) - (SIZE_DEFINITIONS[b[dimensionKey]]?.order || 9);
         });
-        typeData.push({ '類型代碼': '合計', '區域': '', '舖類': '', '貨場面積': '', '店鋪數': visibleCheckedRows.length, 'Safety Stock': '', '小計': totalSS });
+        typeData.push({ '類型代碼': '合計', '區域': '', '舖類': '', [dimensionKey]: '', '店鋪數': visibleCheckedRows.length, 'Safety Stock': '', '小計': totalSS });
 
         // OM 彙總
         const omData = Object.values(omBucket).sort((a, b) => b['店鋪數'] - a['店鋪數']);
