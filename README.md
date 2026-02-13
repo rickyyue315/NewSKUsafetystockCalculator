@@ -8,6 +8,7 @@
 
 - 店鋪管理：多條件篩選、全選/反選、逐店編輯 Safety Stock 值（inline edit）
 - Safety Stock 對照表：由 `SAFETY_STOCK_MATRIX` 提供，並支援用權重產生（`generateMatrixWithWeights`）
+- 三種計算模式：模式 1（級別/類別/面積）、模式 2（級別/面積）、模式 3（級別/類別）
 - 權重模板：`WEIGHT_TEMPLATES` 與 `WEIGHT_CONFIG` 支援快速重算矩陣
 - 主題系統：多種配色主題與主題面板（在 UI 中切換並保存至 localStorage）
 - 匯出/匯入：CSV、Excel（前端產生）與 JSON 設定匯入/匯出
@@ -43,14 +44,20 @@ npx http-server
 
 ## 核心資料結構
 
-- 店鋪物件：`{ Site, Shop, Regional, Class, Size, OM }`（來源：`STORES_CONFIG.stores`）
-- Safety Stock 查表：`SAFETY_STOCK_MATRIX[region][class][size]`
+- 店鋪物件：`{ Site, Shop, Regional, Class, Size, OM, Type }`（來源：`STORES_CONFIG.stores`）
+- Safety Stock 查表：`SAFETY_STOCK_MATRIX[region][class][type][size]`
 - 個別店鋪覆寫：`customStoreStock`（key = `Site`）
+
+## 計算模式
+
+- **模式 1：級別 / 類別 / 面積**（Class + Type + Size）
+- **模式 2：級別 / 面積**（Class + Size；Type 固定為 M）
+- **模式 3：級別 / 類別**（Class + Type；Size 固定為 M）
 
 ## 常用函式（程式內）
 
-- `getSafetyStockValue(region, category, size)` — 從 `SAFETY_STOCK_MATRIX` 讀值
-- `calculateSafetyStockWithWeights(region, category, size, weights)` — 根據權重計算單一值
+- `getSafetyStockValue(region, category, size, type)` — 從 `SAFETY_STOCK_MATRIX` 讀值
+- `calculateSafetyStockWithWeights(region, category, size, type, weights)` — 根據權重計算單一值
 - `generateMatrixWithWeights(weights)` — 使用權重產生整張對照表
 - `getStoreTypeCode(region, category, size)` — 產生店鋪類型代碼
 - `getStoreTypeSummary()` — 獲取店鋪類型摘要
@@ -83,11 +90,12 @@ npx http-server
 
 - **分類權重**：A/B/C/D 級別店鋪的不同權重
 - **面積權重**：XS/S/M/L/XL 面積的不同權重
+- **類別權重**：T/M/L 店舖類型的不同權重
 - **區域權重**：香港/澳門區域的不同權重
 - **基礎值**：權重計算的基準值
 - **模板系統**：預設、平衡、保守、積極等多種權重模板
 
-權重計算公式：`Safety Stock = baseValue + (classWeight × sizeWeight × regionFactor)`
+權重計算公式：`Safety Stock = baseValue + (classWeight × sizeWeight × typeWeight × regionFactor)`
 
 ## 主題系統
 
@@ -128,7 +136,7 @@ npx http-server
 - v1.0 (2026-01-31) — 初始上線
 - v1.1 (2026-02-02) — 新增權重計算、主題系統、個別店鋪編輯、OM管理等功能
 
-最後更新：2026年2月8日
+最後更新：2026年2月13日
 
 ## 授權
 

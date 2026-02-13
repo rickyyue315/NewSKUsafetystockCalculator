@@ -37,6 +37,16 @@
             <p class="subtitle">新產品安全(補貨)庫存計算器</p>
         </header>
 
+        <div class="mode-switcher" id="modeSwitcher">
+            <div class="mode-title">🧭 計算模式</div>
+            <div class="mode-buttons">
+                <button type="button" class="mode-btn active" data-mode="mode1">模式 1：級別 / 類別 / 面積</button>
+                <button type="button" class="mode-btn" data-mode="mode2">模式 2：級別 / 面積</button>
+                <button type="button" class="mode-btn" data-mode="mode3">模式 3：級別 / 類別</button>
+            </div>
+            <div class="mode-hint" id="modeHint">模式 1：級別 / 類別 / 面積</div>
+        </div>
+
         <!-- 分頁切換導航 -->
         <nav class="tab-navigation">
             <button class="tab-btn active" data-tab="calculator">🧮 計算器</button>
@@ -49,7 +59,7 @@
             <!-- Safety Stock 對照表 -->
             <section class="section matrix-section">
                 <h2>📋 Safety Stock 對照表</h2>
-                <p class="hint">此對照表根據區域、舖類和貨場面積決定每間店舖的 Safety Stock 數量</p>
+                <p class="hint" id="matrixHint">此對照表根據區域、舖類和貨場面積決定每間店舖的 Safety Stock 數量</p>
                 
                 <!-- 權重快速設定面板 -->
                 <div class="weight-settings-panel" id="weightSettingsPanel">
@@ -67,13 +77,14 @@
                             <div class="formula-content" id="formulaContent">
                                 <div class="formula-box">
                                     <div class="formula-title">計算公式：</div>
-                                    <code class="formula-code">Safety Stock = 基礎值 + (Class權重 × Size權重 × Type權重 × 區域係數)</code>
+                                    <code class="formula-code" id="formulaCode">Safety Stock = 基礎值 + (Class權重 × Size權重 × Type權重 × 區域係數)</code>
+                                    <div class="formula-note" id="formulaNote">模式 1：Class / Size / Type 全部參與</div>
                                 </div>
 
                                 <div class="formula-params">
                                     <div class="param-item">
                                         <span class="param-name">🔢 基礎值：</span>
-                                        <span class="param-desc">所有店舖的 Safety Stock 基礎數值（預設 4）</span>
+                                        <span class="param-desc">所有店舖的 Safety Stock 基礎數值（預設 2）</span>
                                     </div>
                                     <div class="param-item">
                                         <span class="param-name">📊 Class權重：</span>
@@ -81,11 +92,11 @@
                                     </div>
                                     <div class="param-item">
                                         <span class="param-name">📏 Size權重：</span>
-                                        <span class="param-desc">根據貨場面積 (XL/L/M/S/XS) 設定的權重係數</span>
+                                        <span class="param-desc" id="formulaSizeDesc">根據貨場面積 (XL/L/M/S/XS) 設定的權重係數</span>
                                     </div>
                                     <div class="param-item">
                                         <span class="param-name">🏪 Type權重：</span>
-                                        <span class="param-desc">根據店舖類型 (T-遊客區/M-混合型/L-本地客源) 設定的權重係數，用於調整不同客源特性的庫存需求</span>
+                                        <span class="param-desc" id="formulaTypeDesc">根據店舖類型 (T-遊客區/M-混合型/L-本地客源) 設定的權重係數，用於調整不同客源特性的庫存需求</span>
                                     </div>
                                     <div class="param-item">
                                         <span class="param-name">🌍 區域係數：</span>
@@ -177,7 +188,7 @@
                         <!-- Type 權重設定 (新增) -->
                         <div class="weight-group">
                             <h4>🏪 Type 權重 - 店舖類型 (T:M:L)</h4>
-                            <p class="weight-hint-small">T=遊客區 | M=混合型 | L=本地客源</p>
+                            <p class="weight-hint-small" id="weightTypeHint">T=遊客區 | M=混合型 | L=本地客源</p>
                             <div class="weight-inputs">
                                 <label class="weight-label-t">
                                     <span class="weight-label-text">T - 遊客區</span>
@@ -243,6 +254,7 @@
                                 <button type="button" class="btn btn-secondary template-btn" data-template="conservative">保守型</button>
                                 <button type="button" class="btn btn-secondary template-btn" data-template="aggressive">積極型</button>
                             </div>
+                            <p class="weight-hint-small" id="templateModeHint">模板會依目前模式套用</p>
                         </div>
 
                         <!-- 操作按鈕 -->

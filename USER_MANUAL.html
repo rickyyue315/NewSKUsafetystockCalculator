@@ -1193,6 +1193,15 @@ php -S localhost:8000</pre>
                 <div class="step">步驟 4<br>計算/匯出</div>
             </div>
 
+            <div class="info-box">
+                <strong>計算模式：</strong>
+                <ul style="margin-top: 10px;">
+                    <li><strong>模式 1：</strong>級別 / 類別 / 面積（Class + Type + Size）</li>
+                    <li><strong>模式 2：</strong>級別 / 面積（Type 固定為 M）</li>
+                    <li><strong>模式 3：</strong>級別 / 類別（Size 固定為 M）</li>
+                </ul>
+            </div>
+
             <h3>4.2 選擇店鋪</h3>
 
             <h4>方法一：手動勾選</h4>
@@ -1289,11 +1298,19 @@ php -S localhost:8000</pre>
             <h4>方式一：直接編輯對照表</h4>
             <ol>
                 <li>點擊 <span class="mock-btn mock-btn-warning">編輯對照表</span> 按鈕</li>
-                <li>點擊要修改的儲存格（包含客源 Type 的列）</li>
+                <li>點擊要修改的儲存格（表格內容會依計算模式變化）</li>
                 <li>輸入新數值</li>
                 <li>點擊 <span class="mock-btn mock-btn-success">保存</span>（僅保存到對照表草稿）</li>
                 <li>點擊 <span class="mock-btn mock-btn-success">套用到選擇店鋪</span>（才會更新店鋪 Safety Stock）</li>
             </ol>
+
+            <div class="tip-box">
+                <strong>提示：</strong>
+                <ul style="margin-top: 10px;">
+                    <li>模式 2：對照表以「級別/面積」為主，Type 固定為 M。</li>
+                    <li>模式 3：對照表以「級別/類別」為主，Size 固定為 M。</li>
+                </ul>
+            </div>
 
             <h4>方式二：使用權重計算</h4>
             <ol>
@@ -1433,9 +1450,17 @@ php -S localhost:8000</pre>
             </div>
 
             <div class="info-box">
+                <strong>模式差異：</strong>
+                <ul style="margin-top: 10px;">
+                    <li>模式 2：Type 固定為 M（不參與計算）</li>
+                    <li>模式 3：Size 固定為 M（不參與計算）</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
                 <strong>公式說明：</strong>
                 <ul style="margin-top: 10px;">
-                    <li><strong>基礎值</strong>：所有店鋪的 Safety Stock 基礎數值（預設 4）</li>
+                    <li><strong>基礎值</strong>：所有店鋪的 Safety Stock 基礎數值（預設 2）</li>
                     <li><strong>Class權重</strong>：根據舖類級別（A/B/C/D）設定的權重係數</li>
                     <li><strong>Size權重</strong>：根據貨場面積（XL/L/M/S/XS）設定的權重係數</li>
                     <li><strong>Type權重</strong>：根據客源類型（T/M/L）設定的權重係數</li>

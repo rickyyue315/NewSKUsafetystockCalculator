@@ -5,6 +5,15 @@
 格式基於 [Keep a Changelog](https://keepachangelog.com/)，
 項目遵循 [語義化版本](https://semver.org/)。
 
+## [1.2.0] - 2026-02-13
+
+### 變更
+
+- 新增三種計算模式：模式 1（級別/類別/面積）、模式 2（級別/面積）、模式 3（級別/類別）。
+- 對照表、計算、匯出與 Quick Report 全面支援模式感知。
+- 權重預覽與套用改為依模式更新草稿。
+- 更新 README、GUIDE、QUICK_START 與 USER_MANUAL 說明。
+
 ## [1.0.0] - 2026-01-31
 
 ### 新增功能 ✨
@@ -195,3 +204,4 @@ MIT License - 查看 LICENSE 文件了解詳情
 ---
 
 最後更新：2026年2月1日
+
