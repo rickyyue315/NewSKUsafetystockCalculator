@@ -27,6 +27,7 @@ class SafetyStockCalculator {
         this.matrixDraftMode2 = {}; // 模式2對照表草稿（Class+Size）
         this.matrixDraftMode3 = {}; // 模式3對照表草稿（Class+Type）
         this.calculationMode = 'mode1';
+        this.storeMap = new Map(); // 店鋪索引 Map（用於快速查找）
         
         this.init();
     }
@@ -378,6 +379,11 @@ class SafetyStockCalculator {
     loadStoresFromConfig() {
         if (STORES_CONFIG && STORES_CONFIG.stores) {
             this.stores = STORES_CONFIG.stores;
+            // 建立店鋪索引 Map 以提升查詢效能
+            this.storeMap = new Map();
+            this.stores.forEach(store => {
+                this.storeMap.set(store.Site, store);
+            });
         }
     }
 
@@ -531,7 +537,7 @@ class SafetyStockCalculator {
     }
 
     getStoreBySite(site) {
-        return this.stores.find(s => s.Site === site);
+        return this.storeMap.get(site) || this.stores.find(s => s.Site === site);
     }
 
     getStoreTypeLabel(type = 'M') {
@@ -651,6 +657,7 @@ class SafetyStockCalculator {
             `;
 
             const checkbox = div.querySelector('input[type="checkbox"]');
+            checkbox.checked = this.selectedStores.includes(originalIndex);
             checkbox.addEventListener('change', (e) => this.handleStoreToggle(e));
 
             const safetyStockSpan = div.querySelector('.store-safety-stock');
@@ -1120,11 +1127,16 @@ class SafetyStockCalculator {
                     region: store.Regional,
                     category: store.Class,
                     size: sizeDisplay,
-                    safetyStock: this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type || 'M', mode),
+                    safetyStock: storeActualSS,
+                    minSafetyStock: storeActualSS,
+                    maxSafetyStock: storeActualSS,
                     avgCustomSS: 0,
                     totalCustomSS: 0,
                     count: 0
                 };
+            } else {
+                typeStats[code].minSafetyStock = Math.min(typeStats[code].minSafetyStock, storeActualSS);
+                typeStats[code].maxSafetyStock = Math.max(typeStats[code].maxSafetyStock, storeActualSS);
             }
             typeStats[code].count++;
             typeStats[code].totalCustomSS += storeActualSS;
@@ -1156,6 +1168,10 @@ class SafetyStockCalculator {
             const stat = typeStats[code];
             const subtotal = stat.totalCustomSS; // 使用考慮個別店鋪自訂值的總計
             totalSS += subtotal;
+            const isMixed = stat.minSafetyStock !== stat.maxSafetyStock;
+            const avgSafetyStock = Math.round(stat.totalCustomSS / stat.count);
+            const displaySafetyStock = isMixed ? avgSafetyStock : stat.safetyStock;
+            const ssTitle = isMixed ? '此群組含不同自訂值，顯示平均值' : '';
             html += `
                 <tr>
                     <td><strong>${code}</strong></td>
@@ -1163,7 +1179,7 @@ class SafetyStockCalculator {
                     <td>${stat.category}</td>
                     <td>${stat.size}</td>
                     <td style="text-align:center">${stat.count}</td>
-                    <td style="text-align:center">${stat.safetyStock}</td>
+                    <td style="text-align:center" title="${ssTitle}">${displaySafetyStock}</td>
                     <td style="text-align:center"><strong>${subtotal}</strong></td>
                 </tr>
             `;
@@ -1737,8 +1753,18 @@ class SafetyStockCalculator {
         const confirmed = confirm('確定要套用目前對照表到「選擇店鋪」嗎？此操作會即時影響店鋪 Safety Stock。');
         if (!confirmed) return;
 
-        // 清空個別店舖的自訂值，讓系統根據矩陣自動查詢
-        this.customStoreStock = {};
+        // 只清空選擇店鋪的自訂值，避免影響未選店鋪
+        const selectedSites = new Set(
+            this.selectedStores
+                .map(index => this.stores[index])
+                .filter(store => store && store.Site)
+                .map(store => store.Site)
+        );
+        if (selectedSites.size > 0) {
+            selectedSites.forEach(site => {
+                delete this.customStoreStock[site];
+            });
+        }
 
         if (this.calculationMode === 'mode2') {
             this.customSafetyStockMode2 = {};
@@ -3085,20 +3111,29 @@ class SafetyStockCalculator {
                     }
                 }
 
+                if (config.stores) {
+                    this.stores = config.stores;
+                    STORES_CONFIG.stores = config.stores;
+                    // 重建店鋪索引 Map
+                    this.storeMap = new Map();
+                    this.stores.forEach(store => {
+                        this.storeMap.set(store.Site, store);
+                    });
+                    this.renderStores();
+                }
+
                 if (config.calculationMode) {
                     this.setCalculationMode(config.calculationMode, { render: false, persist: false });
                 }
                 
                 if (config.selectedStores) {
-                    this.selectedStores = config.selectedStores;
+                    const validStores = config.selectedStores.filter(idx => {
+                        return idx >= 0 && idx < this.stores.length && this.stores[idx] !== undefined;
+                    });
+                    this.selectedStores = validStores;
                     this.updateCheckboxes();
                     this.updateStoresPreview();
-                }
-                
-                if (config.stores) {
-                    this.stores = config.stores;
-                    STORES_CONFIG.stores = config.stores;
-                    this.renderStores();
+                    this.updateStoreCount();
                 }
 
                 this.renderSafetyStockMatrix();
@@ -3316,6 +3351,11 @@ class SafetyStockCalculator {
 
                 this.stores = parsed.stores;
                 STORES_CONFIG.stores = parsed.stores;
+                // 重建店鋪索引 Map
+                this.storeMap = new Map();
+                this.stores.forEach(store => {
+                    this.storeMap.set(store.Site, store);
+                });
                 this.selectedStores = [];
                 this.renderStores();
                 this.saveToLocalStorage();
@@ -3604,6 +3644,11 @@ class SafetyStockCalculator {
                     if (data.stores && data.stores.length > 0) {
                         this.stores = data.stores;
                         STORES_CONFIG.stores = data.stores;
+                        // 重建店鋪索引 Map
+                        this.storeMap = new Map();
+                        this.stores.forEach(store => {
+                            this.storeMap.set(store.Site, store);
+                        });
                         this.renderStores();
                     }
                 }
