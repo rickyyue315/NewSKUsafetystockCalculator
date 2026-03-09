@@ -2,7 +2,7 @@
 // 此文件存儲所有的店鋪名單和Safety Stock參數配置
 // 根據 Safety Stocks Calculation 1.xlsx 重新設計
 
-// 店鋪配置 - 完整的 85 間店鋪清單
+// 店鋪配置 - 完整的 86 間店鋪清單
 const STORES_CONFIG = {
     stores: [
         // Ivy - 14間
@@ -10,10 +10,10 @@ const STORES_CONFIG = {
         { Site: "HA06", Shop: "北角", Regional: "HK", Class: "B", Size: "M", OM: "Ivy", Type: "M" },
         { Site: "HA15", Shop: "新中環", Regional: "HK", Class: "A", Size: "L", OM: "Ivy", Type: "M" },
         { Site: "HA30", Shop: "禮頓中心", Regional: "HK", Class: "B", Size: "L", OM: "Ivy", Type: "M" },
+        { Site: "HA43", Shop: "德己立街2", Regional: "HK", Class: "C", Size: "M", OM: "Ivy", Type: "M" },
         { Site: "HB01", Shop: "加連威", Regional: "HK", Class: "C", Size: "S", OM: "Ivy", Type: "T" },
         { Site: "HB10", Shop: "彌敦88", Regional: "HK", Class: "A", Size: "L", OM: "Ivy", Type: "T" },
         { Site: "HB29", Shop: "重慶站", Regional: "HK", Class: "A", Size: "XL", OM: "Ivy", Type: "T" },
-        { Site: "HB38", Shop: "新港", Regional: "HK", Class: "C", Size: "M", OM: "Ivy", Type: "M" },
         { Site: "HB63", Shop: "佐敦道31", Regional: "HK", Class: "B", Size: "M", OM: "Ivy", Type: "M" },
         { Site: "HB66", Shop: "PopCorn", Regional: "HK", Class: "C", Size: "M", OM: "Ivy", Type: "M" },
         { Site: "HB68", Shop: "新都城", Regional: "HK", Class: "C", Size: "S", OM: "Ivy", Type: "L" },
@@ -21,10 +21,9 @@ const STORES_CONFIG = {
         { Site: "HB83", Shop: "新加拿芬道", Regional: "HK", Class: "B", Size: "L", OM: "Ivy", Type: "T" },
         { Site: "HB94", Shop: "康城", Regional: "HK", Class: "C", Size: "S", OM: "Ivy", Type: "L" },
 
-        // Queenie - 15間
+        // Queenie - 14間
         { Site: "HA20", Shop: "新香港仔", Regional: "HK", Class: "C", Size: "M", OM: "Queenie", Type: "L" },
         { Site: "HA39", Shop: "金百利", Regional: "HK", Class: "A", Size: "M", OM: "Queenie", Type: "T" },
-        { Site: "HZ81", Shop: "莊士敦道", Regional: "HK", Class: "B", Size: "M", OM: "Queenie", Type: "M" },
         { Site: "HA46", Shop: "莊士敦道2", Regional: "HK", Class: "B", Size: "S", OM: "Queenie", Type: "M" },
         { Site: "HA32", Shop: "皇室堡", Regional: "HK", Class: "B", Size: "L", OM: "Queenie", Type: "M" },
         { Site: "HA33", Shop: "羅素街8號", Regional: "HK", Class: "B", Size: "S", OM: "Queenie", Type: "T" },
@@ -38,13 +37,14 @@ const STORES_CONFIG = {
         { Site: "HC60", Shop: "新大埔新達", Regional: "HK", Class: "C", Size: "M", OM: "Queenie", Type: "L" },
         { Site: "HC66", Shop: "新沙田", Regional: "HK", Class: "B", Size: "M", OM: "Queenie", Type: "M" },
 
-        // Candy - 12間
+        // Candy - 13間
         { Site: "HA21", Shop: "柴灣新翠", Regional: "HK", Class: "C", Size: "S", OM: "Candy", Type: "L" },
         { Site: "HA40", Shop: "新山頂", Regional: "HK", Class: "D", Size: "S", OM: "Candy", Type: "T" },
         { Site: "HB25", Shop: "奧海城", Regional: "HK", Class: "C", Size: "M", OM: "Candy", Type: "L" },
         { Site: "HB38", Shop: "新港", Regional: "HK", Class: "C", Size: "M", OM: "Candy", Type: "T" },
         { Site: "HB98", Shop: "星光行2", Regional: "HK", Class: "B", Size: "M", OM: "Candy", Type: "T" },
         { Site: "HC05", Shop: "上水", Regional: "HK", Class: "B", Size: "M", OM: "Candy", Type: "T" },
+        { Site: "HC25", Shop: "新青衣", Regional: "HK", Class: "C", Size: "L", OM: "Candy", Type: "L" },
         { Site: "HC26", Shop: "沙田第一城", Regional: "HK", Class: "C", Size: "M", OM: "Candy", Type: "L" },
         { Site: "HBA4", Shop: "中港城2", Regional: "HK", Class: "C", Size: "M", OM: "Candy", Type: "T" },
         { Site: "HC42", Shop: "上水新都2", Regional: "HK", Class: "C", Size: "M", OM: "Candy", Type: "M" },
@@ -52,7 +52,7 @@ const STORES_CONFIG = {
         { Site: "HC63", Shop: "新東涌", Regional: "HK", Class: "B", Size: "M", OM: "Candy", Type: "M" },
         { Site: "HC68", Shop: "新大圍", Regional: "HK", Class: "C", Size: "XS", OM: "Candy", Type: "L" },
 
-        // Violet - 8間
+        // Violet - 9間
         { Site: "HA19", Shop: "康山", Regional: "HK", Class: "C", Size: "S", OM: "Violet", Type: "L" },
         { Site: "HB62", Shop: "油塘", Regional: "HK", Class: "C", Size: "L", OM: "Violet", Type: "L" },
         { Site: "HB69", Shop: "西九龍", Regional: "HK", Class: "C", Size: "M", OM: "Violet", Type: "L" },
@@ -61,14 +61,14 @@ const STORES_CONFIG = {
         { Site: "HB93", Shop: "新好望角", Regional: "HK", Class: "A", Size: "M", OM: "Violet", Type: "T" },
         { Site: "HB95", Shop: "觀塘APM2", Regional: "HK", Class: "B", Size: "S", OM: "Violet", Type: "M" },
         { Site: "HB97", Shop: "新旺角文華", Regional: "HK", Class: "A", Size: "M", OM: "Violet", Type: "T" },
+        { Site: "HBA5", Shop: "旺角中心", Regional: "HK", Class: "B", Size: "XS", OM: "Violet", Type: "T" },
 
-        // Hippo - 15間
+        // Hippo - 14間
         { Site: "HB11", Shop: "德福", Regional: "HK", Class: "B", Size: "M", OM: "Hippo", Type: "M" },
         { Site: "HB12", Shop: "黃埔", Regional: "HK", Class: "B", Size: "M", OM: "Hippo", Type: "M" },
         { Site: "HB30", Shop: "淘大", Regional: "HK", Class: "C", Size: "S", OM: "Hippo", Type: "L" },
         { Site: "HB41", Shop: "九龍城", Regional: "HK", Class: "D", Size: "M", OM: "Hippo", Type: "L" },
         { Site: "HB49", Shop: "新蒲崗", Regional: "HK", Class: "C", Size: "M", OM: "Hippo", Type: "L" },
-        { Site: "HB56", Shop: "旺角160", Regional: "HK", Class: "B", Size: "M", OM: "Hippo", Type: "T" },
         { Site: "HB72", Shop: "黃大仙", Regional: "HK", Class: "C", Size: "M", OM: "Hippo", Type: "M" },
         { Site: "HB77", Shop: "新樂富", Regional: "HK", Class: "C", Size: "XS", OM: "Hippo", Type: "L" },
         { Site: "HB87", Shop: "西九高鐵站", Regional: "HK", Class: "B", Size: "XS", OM: "Hippo", Type: "T" },
@@ -81,6 +81,7 @@ const STORES_CONFIG = {
 
         // Eva - 13間
         { Site: "HB24", Shop: "始創", Regional: "HK", Class: "B", Size: "M", OM: "Eva", Type: "M" },
+        { Site: "HB56", Shop: "旺角160 ", Regional: "HK", Class: "B", Size: "M", OM: "Eva", Type: "T" },
         { Site: "HB80", Shop: "新世紀Moko", Regional: "HK", Class: "C", Size: "M", OM: "Eva", Type: "M" },
         { Site: "HC02", Shop: "荃灣", Regional: "HK", Class: "B", Size: "M", OM: "Eva", Type: "L" },
         { Site: "HC15", Shop: "悅來坊", Regional: "HK", Class: "C", Size: "M", OM: "Eva", Type: "M" },
