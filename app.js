@@ -3295,8 +3295,8 @@ class SafetyStockCalculator {
     }
 
     downloadStoresCsvTemplate() {
-        // 使用當前店鋪名單生成 CSV 範本
-        const header = 'Site,Shop,Regional,Class,Size,OM';
+        // 使用當前店鋪名單生成 CSV 範本（包含 Class 1, Class 2, Type 欄位）
+        const header = 'Site,Shop,Regional,Class 1,Class 2,Size,OM,Type';
         
         // 按區域、代號排序店鋪
         const sortedStores = [...this.stores].sort((a, b) => {
@@ -3310,13 +3310,15 @@ class SafetyStockCalculator {
             const shop = store.Shop || '';
             const regional = store.Regional || '';
             const classVal = store.Class || '';
+            const class2 = store.Class2 || '';
             const size = store.Size || '';
             const om = store.OM || '';
+            const type = store.Type || 'M';
             
             // 處理可能包含逗號的店鋪名稱
             const escapedShop = shop.includes(',') ? `"${shop}"` : shop;
             
-            return `${site},${escapedShop},${regional},${classVal},${size},${om}`;
+            return `${site},${escapedShop},${regional},${classVal},${class2},${size},${om},${type}`;
         });
         
         // 組合 CSV 內容
@@ -3381,9 +3383,11 @@ class SafetyStockCalculator {
             Site: ['site', 'code', 'storecode', '代號', '代碼', '店舖代號', '店鋪代號'],
             Shop: ['shop', 'name', 'storename', '店舖', '店鋪', '店名', '店舖名稱', '店鋪名稱'],
             Regional: ['regional', 'region', 'area', 'hk/mo', '區域', '地區'],
-            Class: ['class', 'category', 'type', '舖類', '舖類別', '類別'],
+            Class: ['class', 'class 1', 'class1', 'category', '舖類', '舖類別', '類別'],
+            Class2: ['class 2', 'class2', 'sub class', '子類別', '舖類2'],
             Size: ['size', 'area size', '貨場面積', '面積'],
-            OM: ['om', 'manager', '營運經理', '經理']
+            OM: ['om', 'manager', '營運經理', '經理'],
+            Type: ['type', '客源類型', '客源', '店舖類型']
         };
 
         const headerRow = rows[0].map(v => v.trim());
@@ -3403,11 +3407,12 @@ class SafetyStockCalculator {
             .filter(field => columnIndexByField[field] !== undefined).length >= 3;
 
         const dataStartIndex = hasHeader ? 1 : 0;
-        const fixedIndex = { Site: 0, Shop: 1, Regional: 2, Class: 3, Size: 4, OM: 5 };
+        const fixedIndex = { Site: 0, Shop: 1, Regional: 2, Class: 3, Class2: 4, Size: 5, OM: 6, Type: 7 };
 
         const validRegions = ['HK', 'MO'];
         const validCategories = ['A', 'B', 'C', 'D'];
         const validSizes = Object.keys(SIZE_DEFINITIONS || {});
+        const validTypes = ['T', 'M', 'L'];
 
         for (let i = dataStartIndex; i < rows.length; i++) {
             const row = rows[i];
@@ -3422,8 +3427,10 @@ class SafetyStockCalculator {
             const Shop = getCell('Shop');
             const Regional = getCell('Regional').toUpperCase();
             const Class = getCell('Class').toUpperCase();
+            const Class2 = getCell('Class2').toUpperCase();
             const Size = getCell('Size').toUpperCase();
             const OM = getCell('OM');
+            const Type = getCell('Type').toUpperCase();
 
             const rowNumber = i + 1;
 
@@ -3447,14 +3454,22 @@ class SafetyStockCalculator {
                 continue;
             }
 
-            stores.push({
+            const storeObj = {
                 Site,
                 Shop,
                 Regional,
                 Class,
                 Size,
-                OM: OM || ''
-            });
+                OM: OM || '',
+                Type: validTypes.includes(Type) ? Type : 'M'
+            };
+
+            // 如果有 Class2 欄位則加入
+            if (Class2) {
+                storeObj.Class2 = Class2;
+            }
+
+            stores.push(storeObj);
         }
 
         if (stores.length === 0 && errors.length === 0) {
@@ -3590,6 +3605,7 @@ class SafetyStockCalculator {
             const configStoreCount = STORES_CONFIG.stores.length;
             let storeCountMismatch = false;
             let needsTypeUpdate = false;
+            let needsClass2Update = false;
 
             if (data && data.stores) {
                 const savedStoreCount = data.stores.length;
@@ -3606,6 +3622,25 @@ class SafetyStockCalculator {
                         needsTypeUpdate = true;
                     }
                 }
+
+                // 檢查是否缺少 Class2 屬性（數據版本檢查）
+                if (!storeCountMismatch && !needsTypeUpdate && data.stores.length > 0) {
+                    const hasClass2Property = data.stores.some(store => store.hasOwnProperty('Class2'));
+                    if (!hasClass2Property) {
+                        console.log('偵測到舊版本店鋪資料（缺少 Class2 屬性），正在更新...');
+                        needsClass2Update = true;
+                    }
+                }
+
+                // 檢查店鋪資料是否與 config.js 一致（比對 Site 代號列表）
+                if (!storeCountMismatch && !needsTypeUpdate && !needsClass2Update && data.stores.length > 0) {
+                    const savedSites = data.stores.map(s => s.Site).sort().join(',');
+                    const configSites = STORES_CONFIG.stores.map(s => s.Site).sort().join(',');
+                    if (savedSites !== configSites) {
+                        console.log('偵測到店鋪代號列表已變更，使用新的店鋪資料');
+                        storeCountMismatch = true;
+                    }
+                }
             }
 
             if (data) {
@@ -3613,10 +3648,15 @@ class SafetyStockCalculator {
                     this.setCalculationMode(data.calculationMode, { render: false, persist: false });
                 }
 
-                // 如果店鋪數量不匹配或需要更新 Type，使用 config.js 的新資料
-                if (storeCountMismatch || needsTypeUpdate) {
+                // 如果店鋪數量不匹配或需要更新 Type/Class2，使用 config.js 的新資料
+                if (storeCountMismatch || needsTypeUpdate || needsClass2Update) {
                     // 重置為 config.js 的店鋪資料
                     this.stores = JSON.parse(JSON.stringify(STORES_CONFIG.stores));
+                    // 重建店鋪索引 Map
+                    this.storeMap = new Map();
+                    this.stores.forEach(store => {
+                        this.storeMap.set(store.Site, store);
+                    });
                     this.renderStores();
                     this.selectedStores = this.stores.map((_, index) => index);
                     this.updateCheckboxes();
@@ -3624,7 +3664,9 @@ class SafetyStockCalculator {
                     this.updateStoreCount();
                     this.saveToLocalStorage();
                     
-                    if (needsTypeUpdate) {
+                    if (needsClass2Update) {
+                        this.showToast(`✅ 店鋪資料已更新（新增 Class2 分類），已預設全選`);
+                    } else if (needsTypeUpdate) {
                         this.showToast(`✅ 店鋪資料已更新（新增 Type 分類），已預設全選`);
                     } else {
                         this.showToast(`🔄 店鋪資料已更新（${configStoreCount} 間），已預設全選`);
