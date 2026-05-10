@@ -1,0 +1,21 @@
+{
+  "name": "safety-stock-calculator",
+  "version": "1.0.0",
+  "description": "一個現代化的網頁版Safety Stock計算工具",
+  "main": "app.js",
+  "scripts": {},
+  "keywords": [
+    "safety-stock",
+    "inventory-management",
+    "calculator",
+    "supply-chain",
+    "inventory",
+    "supply chain management"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/safety-stock-calculator"
+  }
+}

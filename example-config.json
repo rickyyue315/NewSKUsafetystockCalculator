@@ -1,0 +1,27 @@
+{
+  "name": "safety-stock-config-example-2026-01-31",
+  "description": "Safety Stock 計算器配置示例",
+  "exportDate": "2026-01-31T00:00:00Z",
+  "version": "1.0",
+  
+  "parameters": {
+    "lead_time": 14,
+    "demand_variability": 1.5,
+    "service_level": 1.65,
+    "average_daily_demand": 50,
+    "reorder_point": 0,
+    "economic_order_quantity": 100
+  },
+  
+  "selectedStores": [0, 1, 2, 3, 4],
+  
+  "stores": [
+    { "name": "旺角店", "size": "XS", "level": "A" },
+    { "name": "中環店", "size": "XS", "level": "A" },
+    { "name": "銅鑼灣店", "size": "XS", "level": "B" },
+    { "name": "時代廣場", "size": "XS", "level": "B" },
+    { "name": "北角店", "size": "S", "level": "A" }
+  ],
+  
+  "notes": "這是一個示例配置。你可以通過導入功能導入類似的配置文件。"
+}

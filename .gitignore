@@ -1,0 +1,54 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+npm-shrinkwrap.json
+
+# Optional npm cache directory
+.npm
+
+# Editor directories and files
+.vscode
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Build and dist
+dist/
+build/
+*.min.js
+*.min.css
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+~*
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Project specific
+*.xlsx
+*.xls
+*.csv
+node_modules/
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
