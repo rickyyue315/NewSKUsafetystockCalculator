@@ -3522,8 +3522,13 @@ class SafetyStockCalculator {
             }
 
             if (validSizes.length > 0 && !validSizes.includes(Size)) {
-                errors.push(`第 ${rowNumber} 行：Size 必須為 ${validSizes.join('/')}`);
-                continue;
+                if (Size === 'TBC') {
+                    console.warn(`第 ${rowNumber} 行（${Site} ${Shop}）：Size 為 TBC，預設為 M`);
+                    Size = 'M';
+                } else {
+                    errors.push(`第 ${rowNumber} 行：Size 必須為 ${validSizes.join('/')}`);
+                    continue;
+                }
             }
 
             const storeObj = {

@@ -64,7 +64,7 @@ const STORES_CONFIG = {
         { Site: "HB91", Shop: "南昌站V Walk", Regional: "HK", Class: "D", Class2: "D1", Size: "XS", OM: "Violet", Type: "L" },
         { Site: "HB93", Shop: "新好望角", Regional: "HK", Class: "A", Class2: "A3", Size: "M", OM: "Violet", Type: "T" },
         { Site: "HB95", Shop: "觀塘APM2", Regional: "HK", Class: "B", Class2: "B2", Size: "S", OM: "Violet", Type: "L" },
-        { Site: "HB97", Shop: "新旺角文華", Regional: "HK", Class: "A", Class2: "A2", Size: "M", OM: "Violet", Type: "T" },
+        { Site: "HB97", Shop: "新旺角文華", Regional: "HK", Class: "A", Class2: "A2", Size: "L", OM: "Violet", Type: "T" },
         { Site: "HBA5", Shop: "旺角中心", Regional: "HK", Class: "C", Class2: "C1", Size: "XS", OM: "Violet", Type: "T" },
 
         // Hippo - 15間
