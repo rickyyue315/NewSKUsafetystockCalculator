@@ -11,6 +11,9 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
+// 特別店鋪（須與 index.html 特別店鋪篩選按鈕保持一致）
+const SPECIAL_STORES = ['HA40', 'HB87', 'HB91', 'HC72'];
+
 class SafetyStockCalculator {
     constructor() {
         this.stores = [];
@@ -42,7 +45,9 @@ class SafetyStockCalculator {
         // 一屏 + 免確認：自動生效開關與防抖計時器
         this.autoCalc = true;
         this._weightDebounce = null;
+        this._pendingWeightApply = false;
         this._calcDebounce = null;
+        this._eventsBound = false;
         this._matrixEditBound = false;
         
         this.init();
@@ -360,7 +365,11 @@ class SafetyStockCalculator {
         if (!AVAILABLE_THEMES[themeKey]) return;
 
         this.applyTheme(themeKey);
-        localStorage.setItem('safetyStockTheme', themeKey);
+        try {
+            localStorage.setItem('safetyStockTheme', themeKey);
+        } catch (err) {
+            console.warn('無法保存主題設定:', err);
+        }
 
         // 顯示提示
         const themeName = AVAILABLE_THEMES[themeKey].name;
@@ -436,8 +445,9 @@ class SafetyStockCalculator {
         const sortedOms = Object.keys(omCounts).sort();
         let html = '';
         sortedOms.forEach(om => {
+            const activeClass = this.activeFilters.manager.includes(om) ? ' active' : '';
             html += `
-                <button class="filter-btn om-filter-btn" data-filter="manager" data-value="${escapeHtml(om)}" title="${escapeHtml(om)} 負責的店鋪">
+                <button class="filter-btn om-filter-btn${activeClass}" data-filter="manager" data-value="${escapeHtml(om)}" title="${escapeHtml(om)} 負責的店鋪">
                     <span class="om-name">${escapeHtml(om)}</span>
                     <span class="om-count">${omCounts[om]}間</span>
                 </button>
@@ -445,14 +455,16 @@ class SafetyStockCalculator {
         });
         container.innerHTML = html;
 
-        container.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => this.handleFilterClick(e));
-        });
+        // 篩選按鈕使用事件委派，由 setupEventListeners 統一綁定，
+        // 避免 OM 按鈕動態重建後被重複綁定而一次點擊被切換兩次。
     }
 
     // ==================== 事件監聽設置 ====================
 
     setupEventListeners() {
+        if (this._eventsBound) return;
+        this._eventsBound = true;
+
         // 店鋪選擇按鈕
         document.getElementById('selectAllBtn')?.addEventListener('click', () => this.selectAllStores());
         document.getElementById('deselectAllBtn')?.addEventListener('click', () => this.deselectAllStores());
@@ -463,10 +475,12 @@ class SafetyStockCalculator {
         // OM 店鋪清單面板關閉按鈕
         document.getElementById('closeOmPanel')?.addEventListener('click', () => this.closeOmStoresPanel());
 
-        // 分類篩選按鈕
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => this.handleFilterClick(e));
-        });
+        // 分類及動態 OM 篩選按鈕：使用事件委派，確保每個按鈕只觸發一次
+        const filterContainer = document.querySelector('.category-filters');
+        if (filterContainer && !this._filterEventsBound) {
+            filterContainer.addEventListener('click', (e) => this.handleFilterClick(e));
+            this._filterEventsBound = true;
+        }
 
         // 計算和導出
         document.getElementById('calculateBtn')?.addEventListener('click', () => this.calculate());
@@ -512,7 +526,7 @@ class SafetyStockCalculator {
         document.getElementById('autoCalcToggle')?.addEventListener('change', (e) => {
             this.autoCalc = e.target.checked;
             this.showToast(this.autoCalc ? '⚡ 已開啟自動計算' : '已關閉自動計算（需手動按計算）');
-            if (this.autoCalc) this.scheduleAutoCalculate();
+            this.scheduleAutoCalculate({ invalidate: false });
         });
 
         // 權重設定面板事件
@@ -593,6 +607,7 @@ class SafetyStockCalculator {
         this.updateStoresPreview();
         this.updateCockpitBar();
         this.scheduleAutoCalculate();
+        this.flushPendingWeightApply();
     }
 
     cancelStoreStockEdit(input) {
@@ -606,6 +621,7 @@ class SafetyStockCalculator {
             span.textContent = value;
             span.classList.remove('editing');
         }
+        this.flushPendingWeightApply();
     }
 
     getStoreBySite(site) {
@@ -714,11 +730,12 @@ class SafetyStockCalculator {
             const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
             const typeColor = typeColors[store.Type] || '#ccc';
             const typeLabel = typeLabels[store.Type] || '未分類';
+            const isSpecial = SPECIAL_STORES.includes(store.Site);
 
             div.innerHTML = `
                 <input type="checkbox" id="store-${originalIndex}" value="${originalIndex}">
                 <label for="store-${originalIndex}" class="store-name">${escapeHtml(store.Shop)}</label>
-                <span class="store-code">${escapeHtml(store.Site)}</span>
+                <span class="store-code${isSpecial ? ' store-code-special' : ''}"${isSpecial ? ' title="⭐ 特別店鋪"' : ''}>${escapeHtml(store.Site)}</span>
                 <span class="store-badge region-${store.Regional.toLowerCase()}">${escapeHtml(store.Regional)}</span>
                 <span class="store-badge category-${store.Class.toLowerCase()}">${escapeHtml(store.Class)}</span>
                 <span class="store-badge size-badge">${escapeHtml(store.Size)}</span>
@@ -737,8 +754,8 @@ class SafetyStockCalculator {
         });
         
         console.log('renderStores completed, selectedStores after:', this.selectedStores);
-        this.updateStoresPreview();
-        this.updateStoreCount();
+        // renderStores() 會重建所有 row；重建後必須重新套用目前篩選狀態
+        this.applyFilters();
     }
 
     handleStoreToggle(e) {
@@ -832,6 +849,7 @@ class SafetyStockCalculator {
         document.querySelectorAll('.filter-btn.active').forEach(btn => {
             btn.classList.remove('active');
         });
+        this.resetOmStoresPanel();
         this.applyFilters();
     }
 
@@ -961,28 +979,42 @@ class SafetyStockCalculator {
             return;
         }
 
-        const storeNames = this.selectedStores
-            .map(idx => this.stores[idx])
-            .map(s => `${s.Site} ${s.Shop}`)
+        // 只處理實際存在自訂值的店鋪；重複按「重設」時也能提供明確反饋
+        const customStoreStock = this.customStoreStock || (this.customStoreStock = {});
+        const storesToReset = [...new Set(this.selectedStores)]
+            .map(index => this.stores[index])
+            .filter(store => store && Object.prototype.hasOwnProperty.call(customStoreStock, store.Site));
+
+        if (storesToReset.length === 0) {
+            alert('ℹ️ 已選擇的店鋪目前沒有自訂 Safety Stock 值');
+            return;
+        }
+
+        const storeNames = storesToReset
+            .map(store => `${store.Site} ${store.Shop}`)
             .join('\n');
 
-        const confirmMsg = `確認要重設以下 ${this.selectedStores.length} 間店鋪的自訂 Safety Stock 值？\n\n${storeNames}\n\n系統將恢復使用對照表中的數值。`;
+        const confirmMsg = `確認要重設以下 ${storesToReset.length} 間店鋪的自訂 Safety Stock 值？\n\n${storeNames}\n\n系統將恢復使用對照表中的數值。`;
 
         if (!confirm(confirmMsg)) {
             return;
         }
 
         // 清除選中店鋪的自訂值
-        this.selectedStores.forEach(idx => {
-            const store = this.stores[idx];
-            delete this.customStoreStock[store.Site];
+        storesToReset.forEach(store => {
+            delete customStoreStock[store.Site];
         });
 
-        // 保存到 localStorage 並重新渲染
+        // 保存到 localStorage、重新渲染，並立即重算結果，避免表格仍顯示舊值
         this.saveToLocalStorage();
         this.renderStores();
-        
-        alert(`✅ 已成功重設 ${this.selectedStores.length} 間店鋪的自訂值`);
+        if (this._calcDebounce) {
+            clearTimeout(this._calcDebounce);
+            this._calcDebounce = null;
+        }
+        this.calculate({ silent: true });
+
+        alert(`✅ 已成功重設 ${storesToReset.length} 間店鋪的自訂值`);
     }
 
     handleFilterClick(e) {
@@ -1005,6 +1037,9 @@ class SafetyStockCalculator {
             }
         } else {
             this.activeFilters[filterType] = this.activeFilters[filterType].filter(v => v !== filterValue);
+            if (filterType === 'manager' && this.activeFilters.manager.length === 0) {
+                this.resetOmStoresPanel();
+            }
         }
         
         this.applyFilters();
@@ -1042,9 +1077,13 @@ class SafetyStockCalculator {
             let html = '<div class="om-stores-grid">';
             sortedStores.forEach(store => {
                 const regionColor = store.Regional === 'HK' ? 'var(--color-region-hk)' : 'var(--color-region-mo)';
+                const isSpecial = SPECIAL_STORES.includes(store.Site);
+                const codeBg = isSpecial
+                    ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                    : regionColor;
                 html += `
                     <div class="om-store-item">
-                        <span class="om-store-code" style="background:${regionColor};color:white">${escapeHtml(store.Site)}</span>
+                        <span class="om-store-code${isSpecial ? ' om-store-code-special' : ''}" style="background:${codeBg};color:white"${isSpecial ? ' title="⭐ 特別店鋪"' : ''}>${escapeHtml(store.Site)}</span>
                         <span class="om-store-name">${escapeHtml(store.Shop)}</span>
                         <div class="om-store-badges">
                             <span class="om-store-badge" style="background:${this.getCategoryColor(store.Class)};color:white">${escapeHtml(store.Class)}</span>
@@ -1079,6 +1118,27 @@ class SafetyStockCalculator {
         const panel = document.getElementById('omStoresPanel');
         if (panel) {
             panel.style.display = 'none';
+        }
+    }
+
+    // 清除 OM 篩選後，將右側面板恢復為初始提示狀態
+    resetOmStoresPanel() {
+        const panel = document.getElementById('omStoresPanel');
+        const title = document.getElementById('omStoresTitle');
+        const count = document.getElementById('omStoresCount');
+        const content = document.getElementById('omStoresContent');
+
+        if (panel) panel.style.display = 'flex';
+        if (title) title.textContent = '👤 請選擇營運經理查看店鋪';
+        if (count) count.textContent = '';
+        if (content) {
+            content.innerHTML = `
+                <div class="om-empty-state">
+                    <div class="om-empty-icon">🏪</div>
+                    <p>點擊左側營運經理按鈕</p>
+                    <p class="om-empty-hint">查看該經理負責的店鋪清單</p>
+                </div>
+            `;
         }
     }
 
@@ -1655,6 +1715,7 @@ class SafetyStockCalculator {
         cell.classList.remove('editing');
         display.style.display = 'inline-block';
         input.style.display = 'none';
+        this.flushPendingWeightApply();
     }
 
     saveSingleMatrixCell(cell) {
@@ -1696,6 +1757,7 @@ class SafetyStockCalculator {
         try { this.renderMatrixSummary(); } catch (e) {}
         try { this.updateCockpitBar(); } catch (e) {}
         this.scheduleAutoCalculate();
+        this.flushPendingWeightApply();
     }
 
     // 計算並渲染對照表統計摘要
@@ -1984,9 +2046,37 @@ class SafetyStockCalculator {
     }
 
     // ==================== 計算函數 ====================
-    
+
+    clearCalculationResults() {
+        this.results = [];
+        this.summaryResults = [];
+
+        const resultBody = document.getElementById('resultTableBody');
+        if (resultBody) {
+            resultBody.innerHTML = '<tr><td colspan="9" class="empty-message">請選擇店鋪後點擊「計算」按鈕</td></tr>';
+        }
+
+        const detailBody = document.getElementById('detailTableBody');
+        if (detailBody) {
+            detailBody.innerHTML = '<tr><td colspan="10" class="empty-message">請選擇店鋪後點擊「計算」按鈕</td></tr>';
+        }
+
+        const omSummaryBody = document.getElementById('omSummaryTableBody');
+        if (omSummaryBody) {
+            omSummaryBody.innerHTML = '<tr><td colspan="7" class="empty-message">請選擇店鋪後點擊「計算」按鈕</td></tr>';
+        }
+
+        const statsContainer = document.getElementById('statsContainer');
+        if (statsContainer) statsContainer.style.display = 'none';
+        this.updateStats(0, 0, 0);
+
+        try { this.updateCockpitBar(); } catch (e) {}
+        try { this.refreshQuickReportForMode(); } catch (e) {}
+    }
+
     calculate(options = {}) {
         if (this.selectedStores.length === 0) {
+            this.clearCalculationResults();
             if (!options.silent) alert('請至少選擇一間店鋪');
             return;
         }
@@ -2080,13 +2170,36 @@ class SafetyStockCalculator {
     }
 
     // 防抖自動重算：勾選 / 改參數後免手動按計算
-    scheduleAutoCalculate() {
+    scheduleAutoCalculate(options = {}) {
+        // 選取或參數改變後，先使上一輪結果失效，避免匯出舊資料
+        if (options.invalidate !== false && (this.results.length > 0 || this.summaryResults.length > 0)) {
+            this.clearCalculationResults();
+        }
+
+        // 沒有選中店鋪時，立即清除上一輪結果並取消待處理的重算
+        if (this.selectedStores.length === 0) {
+            this.clearCalculationResults();
+            if (this._calcDebounce) {
+                clearTimeout(this._calcDebounce);
+                this._calcDebounce = null;
+            }
+            return;
+        }
+
         if (!this.autoCalc) {
+            // 關閉自動計算時，也要取消之前已排程的計算
+            if (this._calcDebounce) {
+                clearTimeout(this._calcDebounce);
+                this._calcDebounce = null;
+            }
             try { this.updateCockpitBar(); } catch (e) {}
             return;
         }
         if (this._calcDebounce) clearTimeout(this._calcDebounce);
         this._calcDebounce = setTimeout(() => {
+            this._calcDebounce = null;
+            // 使用者可能在上次排程後關閉自動計算
+            if (!this.autoCalc) return;
             if (this.selectedStores.length === 0) {
                 try { this.updateCockpitBar(); } catch (e) {}
                 return;
@@ -3289,9 +3402,18 @@ class SafetyStockCalculator {
         if (!this._adminVerified) { this.showToast('❌ 請先解鎖管理區域'); return; }
         const file = e.target.files[0];
         if (!file) return;
-        
+
+        const importToken = (this._configImportToken || 0) + 1;
+        this._configImportToken = importToken;
+        if (this._configReader && this._configReader.readyState === 1) {
+            this._configReader.abort();
+        }
+
         const reader = new FileReader();
+        this._configReader = reader;
         reader.onload = (event) => {
+            if (importToken !== this._configImportToken) return;
+            this._configReader = null;
             try {
                 const config = JSON.parse(event.target.result);
                 
@@ -3338,30 +3460,39 @@ class SafetyStockCalculator {
                     this.stores.forEach(store => {
                         this.storeMap.set(store.Site, store);
                     });
-                    this.renderStores();
                 }
 
                 if (config.calculationMode) {
                     this.setCalculationMode(config.calculationMode, { render: false, persist: false });
                 }
                 
-                if (config.selectedStores) {
-                    const validStores = config.selectedStores.filter(idx => {
-                        return idx >= 0 && idx < this.stores.length && this.stores[idx] !== undefined;
-                    });
-                    this.selectedStores = validStores;
-                    this.updateCheckboxes();
-                    this.updateStoresPreview();
-                    this.updateStoreCount();
+                if (Array.isArray(config.selectedStores)) {
+                    this.selectedStores = [...new Set(config.selectedStores)]
+                        .filter(idx => Number.isInteger(idx) && idx >= 0 && idx < this.stores.length && this.stores[idx] !== undefined);
                 }
 
+                // 匯入後一次重建所有依賴狀態，避免沿用舊結果 / 舊店鋪列表
+                this.clearFilters();
+                this.renderOmFilterButtons();
+                this.qrPopulateOmFilter();
+                this.renderStores();
                 this.renderSafetyStockMatrix();
-                
+                this.scheduleAutoCalculate();
+
                 this.saveToLocalStorage();
                 alert('配置導入成功！');
             } catch (err) {
                 alert('配置導入失敗：' + err.message);
             }
+        };
+        reader.onerror = () => {
+            if (importToken === this._configImportToken) {
+                this._configReader = null;
+                alert('配置導入失敗：無法讀取檔案');
+            }
+        };
+        reader.onabort = () => {
+            if (importToken === this._configImportToken) this._configReader = null;
         };
         reader.readAsText(file);
         e.target.value = ''; // 重置 input
@@ -3559,8 +3690,17 @@ class SafetyStockCalculator {
         const file = e.target.files[0];
         if (!file) return;
 
+        const importToken = (this._storesImportToken || 0) + 1;
+        this._storesImportToken = importToken;
+        if (this._storesReader && this._storesReader.readyState === 1) {
+            this._storesReader.abort();
+        }
+
         const reader = new FileReader();
+        this._storesReader = reader;
         reader.onload = (event) => {
+            if (importToken !== this._storesImportToken) return;
+            this._storesReader = null;
             try {
                 const text = event.target.result || '';
                 const parsed = this.parseStoresCsv(text);
@@ -3577,12 +3717,25 @@ class SafetyStockCalculator {
                     this.storeMap.set(store.Site, store);
                 });
                 this.selectedStores = [];
+                this.clearFilters();
+                this.renderOmFilterButtons();
+                this.qrPopulateOmFilter();
                 this.renderStores();
+                this.scheduleAutoCalculate();
                 this.saveToLocalStorage();
                 alert(`店鋪名單更新成功！共 ${parsed.stores.length} 間店鋪。`);
             } catch (err) {
                 alert('CSV 導入失敗：' + err.message);
             }
+        };
+        reader.onerror = () => {
+            if (importToken === this._storesImportToken) {
+                this._storesReader = null;
+                alert('CSV 導入失敗：無法讀取檔案');
+            }
+        };
+        reader.onabort = () => {
+            if (importToken === this._storesImportToken) this._storesReader = null;
         };
         reader.readAsText(file, 'utf-8');
         e.target.value = '';
@@ -3825,10 +3978,18 @@ class SafetyStockCalculator {
             matrixDraftMode3: this.matrixDraftMode3,
             calculationMode: this.calculationMode
         };
-        localStorage.setItem('safetyStockCalculatorV2', JSON.stringify(data));
+        try {
+            localStorage.setItem('safetyStockCalculatorV2', JSON.stringify(data));
+            return true;
+        } catch (err) {
+            // 私隱模式／配額錯誤不應中斷店鋪選擇及重算流程
+            console.warn('無法保存至 localStorage:', err);
+            return false;
+        }
     }
 
     loadFromLocalStorage() {
+        let hasSavedSelection = false;
         try {
             const data = JSON.parse(localStorage.getItem('safetyStockCalculatorV2'));
             // 檢查是否需要更新店鋪資料（如果 localStorage 中的店鋪數量與 config.js 不同）
@@ -3884,13 +4045,21 @@ class SafetyStockCalculator {
                     this.stores.forEach(store => {
                         this.storeMap.set(store.Site, store);
                     });
-                    this.renderStores();
-                    this.selectedStores = this.stores.map((_, index) => index);
-                    this.updateCheckboxes();
-                    this.updateStoresPreview();
-                    this.updateStoreCount();
-                    this.saveToLocalStorage();
-                    
+                    const hasSavedSelectionData = Object.prototype.hasOwnProperty.call(data, 'selectedStores') && Array.isArray(data.selectedStores);
+                    if (hasSavedSelectionData) {
+                        hasSavedSelection = true;
+                        const savedSelectedSites = new Set(
+                            data.selectedStores
+                                .map(index => data.stores?.[index]?.Site)
+                                .filter(Boolean)
+                        );
+                        this.selectedStores = this.stores
+                            .map((store, index) => savedSelectedSites.has(store.Site) ? index : -1)
+                            .filter(index => index >= 0);
+                    } else {
+                        this.selectedStores = this.stores.map((_, index) => index);
+                    }
+
                     if (needsClass2Update) {
                         this.showToast(`✅ 店鋪資料已更新（新增 Class2 分類），已預設全選`);
                     } else if (needsTypeUpdate) {
@@ -3908,16 +4077,11 @@ class SafetyStockCalculator {
                         });
                     }
 
-                    if (data.selectedStores) {
-                        const validStores = data.selectedStores.filter(idx => {
-                            return idx >= 0 && idx < this.stores.length && this.stores[idx] !== undefined;
-                        });
-                        this.selectedStores = validStores;
+                    if (Object.prototype.hasOwnProperty.call(data, 'selectedStores') && Array.isArray(data.selectedStores)) {
+                        hasSavedSelection = true;
+                        this.selectedStores = [...new Set(data.selectedStores)]
+                            .filter(idx => Number.isInteger(idx) && idx >= 0 && idx < this.stores.length && this.stores[idx] !== undefined);
                     }
-
-                    this.renderStores();
-                    this.updateCheckboxes();
-                    this.updateStoresPreview();
                 }
 
                 // 載入其他設定（與店鋪數量無關）
@@ -3984,13 +4148,14 @@ class SafetyStockCalculator {
             console.log('無法從本地存儲加載數據');
         }
 
-        if (!this.selectedStores || this.selectedStores.length === 0) {
+        if (!this.selectedStores || (!hasSavedSelection && this.selectedStores.length === 0)) {
             this.selectedStores = this.stores.map((_, index) => index);
-            this.updateCheckboxes();
-            this.updateStoresPreview();
-            this.updateStoreCount();
-            this.saveToLocalStorage();
         }
+
+        // 所有狀態 hydration 完成後只渲染一次，確保店鋪列使用已載入的 custom values
+        this.renderStores();
+        this.updateCheckboxes();
+        this.saveToLocalStorage();
     }
 
     // ==================== 權重快速設定功能 ====================
@@ -4038,10 +4203,30 @@ class SafetyStockCalculator {
         });
     }
 
+    hasActiveSafetyEditor() {
+        return !!document.querySelector('#storesContainer .store-stock-input.editing, #matrixContainer .matrix-cell.editing .edit-value');
+    }
+
+    flushPendingWeightApply() {
+        if (!this._pendingWeightApply) return;
+        this._pendingWeightApply = false;
+        try { this.autoApplyWeightsSilent(); } catch (e) { console.warn('autoApplyWeightsSilent failed', e); }
+    }
+
     // 防抖：權重輸入後 450ms 自動走完 預覽→套用→同步→重算
     scheduleAutoWeightApply() {
+        // 參數一改動就使舊結果失效，避免防抖等待期間匯出舊值
+        if (this.results.length > 0 || this.summaryResults.length > 0) {
+            this.clearCalculationResults();
+        }
         if (this._weightDebounce) clearTimeout(this._weightDebounce);
         this._weightDebounce = setTimeout(() => {
+            this._weightDebounce = null;
+            if (this.hasActiveSafetyEditor()) {
+                // 不可在 inline editor 仍focus時重建 DOM，先等儲存/取消
+                this._pendingWeightApply = true;
+                return;
+            }
             try { this.updateTargetSafetyStock(); } catch (e) {}
             try { this.autoApplyWeightsSilent(); } catch (e) { console.warn('autoApplyWeightsSilent failed', e); }
         }, 450);
@@ -4049,6 +4234,11 @@ class SafetyStockCalculator {
 
     // 靜默自動套用：不彈 confirm、不打斷輸入焦點
     autoApplyWeightsSilent() {
+        if (this.hasActiveSafetyEditor()) {
+            this._pendingWeightApply = true;
+            return;
+        }
+
         const weights = this.readWeightsFromUI();
         let newMatrix = this.buildWeightMatrixByType(weights);
         const targetTotal = Math.round(weights.targetTotal || 0);
@@ -4708,6 +4898,8 @@ class SafetyStockCalculator {
     qrPopulateOmFilter() {
         const select = document.getElementById('qrOmFilter');
         if (!select) return;
+        const currentValue = select.value;
+        select.innerHTML = '';
         const oms = [...new Set(this.stores.map(s => s.OM).filter(Boolean))].sort();
         oms.forEach(om => {
             const opt = document.createElement('option');
@@ -4715,6 +4907,7 @@ class SafetyStockCalculator {
             opt.textContent = om;
             select.appendChild(opt);
         });
+        if (oms.includes(currentValue)) select.value = currentValue;
     }
 
     /** 渲染快速報表主表格（全部店鋪，含勾選） */
@@ -4797,6 +4990,7 @@ class SafetyStockCalculator {
         this.updateStoresPreview();
         this.updateStoreCount();
         this.qrUpdateSummary();
+        this.scheduleAutoCalculate();
     }
 
     /** 套用篩選（區域 + OM） */
@@ -5143,6 +5337,8 @@ class SafetyStockCalculator {
 
 // 頁面加載時初始化應用
 document.addEventListener('DOMContentLoaded', () => {
+    // 正常頁面只允許一個 calculator instance，避免按鈕被重複綁定
+    if (window.calculator) return;
     window.calculator = new SafetyStockCalculator();
     
     // 在控制台輸出診斷命令提示

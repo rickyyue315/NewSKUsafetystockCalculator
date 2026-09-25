@@ -20,11 +20,13 @@
 
 ### 3. 確認重設
 - 系統會顯示確認對話框，列出要重設的店鋪清單
+- 只會列出目前已選擇、且確實有自訂值的店鋪
 - 用户點擊「確定」後，系統會：
   - 清除這些店鋪的自訂 Safety Stock 值
   - 恢復使用對照表（Safety Stock Matrix）中的預設值
   - 自動保存到 localStorage
-  - 重新渲染店鋪清單以顯示更新
+  - 重新渲染店鋪清單並立即重算結果
+- 如果已選擇的店鋪沒有自訂值，系統會明確提示，不會重複彈出成功訊息
 
 ### 4. 完成
 系統會顯示成功訊息，確認已重設的店鋪數量。
@@ -33,8 +35,8 @@
 
 ### 前端 HTML （index.html）
 ```html
-<button id="resetCustomStockBtn" class="btn btn-warning" 
-        title="重設所有店鋪的自訂 Safety Stock 值">
+<button type="button" id="resetCustomStockBtn" class="btn btn-warning"
+        title="重設已選擇店鋪的自訂 Safety Stock 值">
     🔄 重設自訂值
 </button>
 ```
@@ -50,35 +52,31 @@ document.getElementById('resetCustomStockBtn')?.addEventListener('click',
 #### 2. 重設函數 (resetCustomStoreStock)
 ```javascript
 resetCustomStoreStock() {
-    // 檢查是否有選擇店鋪
     if (this.selectedStores.length === 0) {
         alert('⚠️ 請先選擇要重設的店鋪');
         return;
     }
 
-    // 建立店鋪清單並顯示確認訊息
-    const storeNames = this.selectedStores
-        .map(idx => this.stores[idx])
-        .map(s => `${s.Site} ${s.Shop}`)
-        .join('\n');
+    // 只處理已選擇且實際有自訂值的店鋪
+    const storesToReset = [...new Set(this.selectedStores)]
+        .map(index => this.stores[index])
+        .filter(store => store && Object.prototype.hasOwnProperty.call(this.customStoreStock, store.Site));
 
-    const confirmMsg = `確認要重設以下 ${this.selectedStores.length} 間店鋪的自訂 Safety Stock 值？\n\n${storeNames}\n\n系統將恢復使用對照表中的數值。`;
-
-    if (!confirm(confirmMsg)) {
+    if (storesToReset.length === 0) {
+        alert('ℹ️ 已選擇的店鋪目前沒有自訂 Safety Stock 值');
         return;
     }
 
-    // 清除選中店鋪的自訂值
-    this.selectedStores.forEach(idx => {
-        const store = this.stores[idx];
-        delete this.customStoreStock[store.Site];
-    });
+    const storeNames = storesToReset.map(store => `${store.Site} ${store.Shop}`).join('\n');
+    if (!confirm(`確認要重設以下 ${storesToReset.length} 間店鋪的自訂 Safety Stock 值？\n\n${storeNames}`)) {
+        return;
+    }
 
-    // 保存到 localStorage 並重新渲染
+    storesToReset.forEach(store => delete this.customStoreStock[store.Site]);
     this.saveToLocalStorage();
     this.renderStores();
-    
-    alert(`✅ 已成功重設 ${this.selectedStores.length} 間店鋪的自訂值`);
+    this.calculate({ silent: true }); // 立即更新表格，不留舊 Safety Stock
+    alert(`✅ 已成功重設 ${storesToReset.length} 間店鋪的自訂值`);
 }
 ```
 

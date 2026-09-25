@@ -3170,3 +3170,205 @@ header h1 { font-size: 1.6em; }
     .cockpit-bar { position: static; }
 }
 
+/* ==================== 高密度緊湊佈局：一屏顯示更多 ==================== */
+body {
+    font-size: 16px;
+    line-height: 1.45;
+    padding: 10px;
+}
+
+main { padding: 10px 16px; }
+.mode-switcher { margin: 0 16px 8px 16px; }
+.cockpit-bar { margin: 0 16px 8px 16px; }
+.tab-navigation { padding: 0 16px; }
+
+header { padding: 10px 14px; }
+header h1 { font-size: 1.25em; margin-bottom: 2px; }
+.subtitle { font-size: 0.85em; }
+footer { padding: 6px; font-size: 0.72em; }
+
+.warning-banner { padding: 8px 12px !important; margin-bottom: 10px !important; }
+
+.section { margin-bottom: 10px; padding: 10px 12px; }
+.section h2 { font-size: 1em; margin-bottom: 8px; }
+.section h3 { font-size: 0.95em; margin: 12px 0 6px 0; }
+.hint { font-size: 0.78em; margin: 3px 0 8px 0; }
+
+/* 按鈕整體縮小 */
+.btn { padding: 5px 10px; font-size: 0.82em; }
+.btn-large { padding: 7px 14px; font-size: 0.88em; }
+.btn-sm { padding: 4px 10px; font-size: 0.78em; }
+.tab-btn { padding: 8px 16px; font-size: 0.85em; }
+.mode-btn { padding: 5px 9px; font-size: 0.78em; }
+.mode-title { font-size: 0.85em; }
+.mode-hint { font-size: 0.75em; }
+.cockpit-stats { font-size: 0.82em; gap: 8px; }
+.cockpit-bar { padding: 6px 10px; gap: 8px; }
+.cockpit-stat strong { font-size: 1.1em; }
+.cockpit-auto { font-size: 0.72em; padding: 1px 8px; }
+
+/* 駕駛艙統計與開關 */
+.auto-apply-badge { font-size: 0.72em; padding: 4px 10px; }
+.auto-calc-toggle { font-size: 0.78em; padding: 5px 10px; }
+
+/* 權重面板 */
+.weight-content { padding: 10px; }
+#weightContent { gap: 8px; }
+.weight-group { padding: 8px 10px; }
+.weight-group h4 { margin-bottom: 6px; font-size: 0.8em; }
+.weight-inputs { gap: 5px; }
+.weight-input { padding: 4px 3px; font-size: 0.85em; }
+.weight-hint, .weight-hint-small { font-size: 0.7em; margin-top: 4px; }
+.formula-toggle-btn { padding: 8px 12px; font-size: 0.85em; }
+.formula-code { font-size: 0.82em; padding: 8px 10px; }
+.param-item { padding: 6px 8px; }
+.param-name { font-size: 0.8em; }
+.param-desc { font-size: 0.75em; }
+.template-btn { padding: 3px 8px; font-size: 0.72em; }
+.weight-preview { padding: 8px; }
+
+/* 對照表 */
+.matrix-container { gap: 10px; }
+.matrix-region { padding: 8px; }
+.region-title { font-size: 0.85em; padding: 4px 8px; margin-bottom: 6px; }
+.matrix-table th, .matrix-table td { padding: 3px 5px; font-size: 0.78em; }
+.matrix-cell .display-value { font-size: 0.95em; }
+.matrix-controls { margin-bottom: 8px; gap: 8px; }
+.matrix-summary-box { padding: 8px 10px; }
+.matrix-summary-box h4 { margin-bottom: 8px; font-size: 0.85em; }
+.summary-content { gap: 8px; }
+.summary-item { padding: 6px 10px; }
+.summary-label { font-size: 0.75em; }
+.summary-value { font-size: 0.85em; }
+
+/* 店鋪篩選與清單 */
+.stores-selector-layout { gap: 10px; margin-bottom: 12px; }
+.selector-left-panel { padding: 10px; }
+.category-filters { gap: 6px; }
+.filter-group { padding: 8px 10px; gap: 6px; }
+.filter-label { font-size: 0.8em; }
+.filter-btn { padding: 4px 10px; font-size: 0.75em; }
+.om-filter-btn { padding: 8px 12px; min-width: 70px; }
+.om-filter-btn .om-name { font-size: 0.85em; }
+.om-filter-btn .om-count { font-size: 0.7em; }
+.special-store-btn { padding: 6px 12px; font-size: 0.78em; }
+.store-group-btn { padding: 6px 12px; min-width: 44px; }
+.filter-controls { margin-bottom: 10px; }
+.filter-controls .button-group { padding: 8px 12px; gap: 8px; margin-bottom: 10px; }
+.store-count { font-size: 0.78em; padding: 6px 10px; }
+.stores-layout { gap: 12px; }
+.stores-container { gap: 6px; padding: 10px; }
+.store-item { padding: 6px 8px; gap: 6px; font-size: 0.85em; }
+.store-item .store-name { font-size: 0.9em; }
+.store-item .store-code { font-size: 0.72em; padding: 2px 6px; }
+.store-badge { font-size: 0.68em; padding: 2px 6px; }
+.store-safety-stock { font-size: 0.85em; padding: 2px 6px; min-width: 26px; }
+.stores-preview { padding: 10px; }
+.preview-summary { padding: 8px 10px; margin-bottom: 10px; font-size: 0.85em; }
+.preview-table { font-size: 0.78em; }
+.preview-table th, .preview-table td { padding: 5px 8px; }
+.om-stores-content { padding: 12px; }
+.om-stores-header { padding: 10px 14px; }
+.om-stores-header h4 { font-size: 0.95em; }
+.om-store-item { padding: 8px 10px; gap: 8px; }
+.om-store-name { font-size: 0.85em; }
+.om-stores-summary { padding: 10px 14px; margin-top: 12px; font-size: 0.82em; }
+
+/* 結果表格 */
+.results-controls { gap: 8px; margin-bottom: 6px; }
+.results-container, .detail-container { padding: 10px; margin-bottom: 12px; }
+.results-table th, .results-table td,
+.detail-table th, .detail-table td { padding: 5px 6px; font-size: 0.8em; }
+.stats-container { gap: 10px; margin-bottom: 12px; }
+.stat-item { padding: 8px 10px; }
+.stat-item label { font-size: 0.82em; }
+.stat-value { font-size: 1.2em; }
+.om-summary-container { margin-top: 16px; padding-top: 12px; }
+.percentage-bar { height: 18px; }
+.percentage-bar span { font-size: 11px; }
+.category-tags { padding: 6px 10px; }
+.om-badge { font-size: 10px; padding: 2px 8px; }
+
+/* 店鋪管理 */
+.password-lock { padding: 1.2rem; }
+.lock-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.stores-format-hint { padding: 10px; }
+.stores-format-hint pre { padding: 10px; font-size: 0.78em; }
+
+/* 快速報表 */
+.qr-section { padding: 14px 16px; }
+.qr-toolbar { padding: 8px 12px; margin-bottom: 10px; gap: 8px; }
+.qr-filter-btn { padding: 4px 10px; font-size: 12px; }
+.qr-select { padding: 4px 8px; font-size: 12px; }
+.qr-selected-count { font-size: 12px; }
+.qr-table { font-size: 12px; }
+.qr-table thead th { padding: 6px 10px; font-size: 11.5px; }
+.qr-table tbody td { padding: 4px 8px; }
+.qr-table tfoot td { padding: 6px 10px; font-size: 13px; }
+.qr-table-wrapper { margin-bottom: 12px; }
+.qr-summary-grid { gap: 10px; margin-bottom: 12px; }
+.qr-stat-card { padding: 10px 14px; }
+.qr-stat-label { font-size: 11px; }
+.qr-stat-value { font-size: 22px; }
+.qr-details summary { padding: 7px 12px; font-size: 13px; }
+.qr-sub-table { font-size: 12px; }
+.qr-sub-table thead th { padding: 5px 8px; font-size: 11px; }
+.qr-sub-table tbody td { padding: 4px 8px; }
+
+/* ==================== 彙總表左右並排 ==================== */
+.summary-side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+    margin-bottom: 12px;
+}
+.summary-side-by-side .results-container,
+.summary-side-by-side .detail-container {
+    margin-bottom: 0;
+    min-width: 0;
+}
+.summary-side-by-side .om-summary-container {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+@media (max-width: 1100px) {
+    .summary-side-by-side { grid-template-columns: 1fr; }
+}
+
+/* OM 彙總級別分佈列：保持表格儲存格佈局，徽章單行置中 */
+.category-detail-row .category-tags {
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    padding: 3px 8px;
+}
+.category-detail-row .om-badge {
+    margin: 0 3px;
+    white-space: nowrap;
+}
+
+/* OM 與 OM 之間的分組分隔線 */
+#omSummaryTable .category-detail-row td {
+    border-bottom: 3px solid var(--color-primary);
+    padding-bottom: 10px;
+}
+
+/* 特別店鋪 Site Code 特別色（金色星標，與篩選按鈕呼應） */
+.store-item .store-code-special {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff;
+    font-weight: 800;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.45);
+}
+.store-item .store-code-special::before,
+.om-store-code-special::before {
+    content: "★ ";
+}
+.om-store-code-special {
+    font-weight: 800;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.45);
+}
+
