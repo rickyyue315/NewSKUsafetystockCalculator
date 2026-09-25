@@ -1793,7 +1793,20 @@ class SafetyStockCalculator {
         if (!summaryContainer) return;
         
         const summary = this.calculateMatrixSummary();
-        
+
+        // 目標總量行（原預覽摘要的增量資訊，二合一後併入此處）
+        let targetHtml = '';
+        const targetTotal = Math.round(this.weightConfig?.targetTotal || 0);
+        if (targetTotal > 0) {
+            const diff = targetTotal - summary.totalAll;
+            const diffText = diff === 0 ? '✅ 已對齊' : `（差 ${diff}）`;
+            targetHtml = `
+                    <div class="summary-item highlight">
+                        <span class="summary-label">🎯 目標總量:</span>
+                        <span class="summary-value">${targetTotal} / 實際 ${summary.totalAll} ${diffText}</span>
+                    </div>`;
+        }
+
         const html = `
             <div class="matrix-summary-box">
                 <h4>📈 統計摘要</h4>
@@ -1813,7 +1826,7 @@ class SafetyStockCalculator {
                     <div class="summary-item">
                         <span class="summary-label">🧮 ${summary.totalLabel}:</span>
                         <span class="summary-value">${summary.totalAll} (HK ${summary.totalHK} / MO ${summary.totalMO})</span>
-                    </div>
+                    </div>${targetHtml}
                 </div>
             </div>
         `;
@@ -3993,9 +4006,6 @@ class SafetyStockCalculator {
         // 套用權重（手動備用，免確認直接生效）
         document.getElementById('applyWeightsBtn')?.addEventListener('click', () => this.applyWeights({ skipConfirm: true }));
 
-        // 預覽權重（舊按鈕已隱藏，保留兼容）
-        document.getElementById('previewWeightsBtn')?.addEventListener('click', () => this.previewWeights());
-
         // 銷售目標數量變化事件（含自動生效）
         document.getElementById('salesTarget')?.addEventListener('change', () => { this.updateTargetSafetyStock(); this.scheduleAutoWeightApply(); });
         document.getElementById('salesTarget')?.addEventListener('input', () => { this.updateTargetSafetyStock(); this.scheduleAutoWeightApply(); });
@@ -4353,203 +4363,15 @@ class SafetyStockCalculator {
         try { this.autoApplyWeightsSilent(); } catch (e) {}
     }
 
-    // 預覽權重計算結果
+    // 預覽權重計算結果（二合一後：不再渲染重複表格，直接更新下方對照表 + 統計摘要）
     previewWeights(options = {}) {
         const weights = this.readWeightsFromUI();
-        let previewMatrix = this.buildWeightMatrixByType(weights);
-        const targetTotal = Math.round(weights.targetTotal || 0);
-        let targetInfo = null;
-        const mode = this.calculationMode;
-
-        if (targetTotal > 0) {
-            targetInfo = this.scaleMatrixToTarget(previewMatrix, targetTotal);
-            previewMatrix = targetInfo.matrix;
-        }
-
-        let html = '';
-        const regions = ['HK', 'MO'];
-        const categories = ['A', 'B', 'C', 'D'];
-        const sizes = ['XL', 'L', 'M', 'S', 'XS'];
-        const types = ['T', 'M', 'L'];
-        const typeLabels = { T: '遊客', M: '混合', L: '本地' };
-
-        regions.forEach(region => {
-            html += `
-                <div class="preview-region">
-                    <table class="weight-preview-table">
-                        <thead>
-                            <tr>
-                                <th class="region-header region-header-${region.toLowerCase()}" colspan="6">${region === 'HK' ? '🇭🇰 香港' : '🇲🇴 澳門'} (${region})</th>
-                            </tr>
-            `;
-
-            if (mode === 'mode2') {
-                html += `
-                            <tr class="size-header">
-                                <th>級別 \\ 面積</th>
-                                <th>XL</th>
-                                <th>L</th>
-                                <th>M</th>
-                                <th>S</th>
-                                <th>XS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                categories.forEach(category => {
-                    html += `<tr><td class="category-cell category-${category.toLowerCase()}">${category}級</td>`;
-                    sizes.forEach(size => {
-                        const value = previewMatrix?.[region]?.[category]?.M?.[size] ?? 0;
-                        html += `<td class="value-cell">${value}</td>`;
-                    });
-                    html += '</tr>';
-                });
-            } else if (mode === 'mode3') {
-                html += `
-                            <tr class="size-header">
-                                <th>級別 \\ 類別</th>
-                                <th>遊客</th>
-                                <th>混合</th>
-                                <th>本地</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                categories.forEach(category => {
-                    html += `<tr><td class="category-cell category-${category.toLowerCase()}">${category}級</td>`;
-                    types.forEach(type => {
-                        const value = previewMatrix?.[region]?.[category]?.[type]?.M ?? 0;
-                        html += `<td class="value-cell">${value}</td>`;
-                    });
-                    html += '</tr>';
-                });
-            } else {
-                html += `
-                            <tr class="size-header">
-                                <th>級別 \\ 類別 \\ 面積</th>
-                                <th>XL</th>
-                                <th>L</th>
-                                <th>M</th>
-                                <th>S</th>
-                                <th>XS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                categories.forEach(category => {
-                    types.forEach(type => {
-                        html += `<tr><td class="category-cell category-${category.toLowerCase()}">${category}級(${typeLabels[type]})</td>`;
-                        sizes.forEach(size => {
-                            const value = previewMatrix?.[region]?.[category]?.[type]?.[size] ?? 0;
-                            html += `<td class="value-cell">${value}</td>`;
-                        });
-                        html += '</tr>';
-                    });
-                });
-            }
-
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        });
-
-        document.getElementById('weightPreviewContent').innerHTML = html;
-        const previewBox = document.getElementById('weightPreview');
-        if (previewBox) previewBox.style.display = 'block';
-
-        // 計算並顯示摘要
-        const summary = this.calculateWeightSummary(previewMatrix, targetTotal, targetInfo, mode);
-        const summaryEl = document.getElementById('weightPreviewSummary');
-        if (summaryEl) summaryEl.innerHTML = summary;
 
         // 保存權重配置
         this.weightConfig = weights;
         this.saveToLocalStorage();
+        try { this.renderMatrixSummary(); } catch (e) {}
         try { this.updateCockpitBar(); } catch (e) {}
-    }
-
-    // 計算權重預覽摘要
-    calculateWeightSummary(matrix, targetTotal = 0, targetInfo = null, mode = this.calculationMode) {
-        let totalHK = 0;
-        let totalMO = 0;
-        let countHK = 0;
-        let countMO = 0;
-
-        const regions = ['HK', 'MO'];
-        const categories = ['A', 'B', 'C', 'D'];
-        const sizes = ['XL', 'L', 'M', 'S', 'XS'];
-        const types = ['T', 'M', 'L'];
-
-        regions.forEach(region => {
-            if (mode === 'mode2') {
-                categories.forEach(category => {
-                    sizes.forEach(size => {
-                        const value = matrix?.[region]?.[category]?.M?.[size] ?? 0;
-                        if (region === 'HK') {
-                            totalHK += value;
-                            countHK++;
-                        } else {
-                            totalMO += value;
-                            countMO++;
-                        }
-                    });
-                });
-            } else if (mode === 'mode3') {
-                categories.forEach(category => {
-                    types.forEach(type => {
-                        const value = matrix?.[region]?.[category]?.[type]?.M ?? 0;
-                        if (region === 'HK') {
-                            totalHK += value;
-                            countHK++;
-                        } else {
-                            totalMO += value;
-                            countMO++;
-                        }
-                    });
-                });
-            } else {
-                categories.forEach(category => {
-                    types.forEach(type => {
-                        sizes.forEach(size => {
-                            const value = matrix?.[region]?.[category]?.[type]?.[size] ?? 0;
-                            if (region === 'HK') {
-                                totalHK += value;
-                                countHK++;
-                            } else {
-                                totalMO += value;
-                                countMO++;
-                            }
-                        });
-                    });
-                });
-            }
-        });
-
-        const storeTotals = this.calculateStoreTotals(matrix, mode);
-        const totalLine = `🧮 依現有店舖數量估算總量: ${storeTotals.totalAll} (HK ${storeTotals.totalHK} / MO ${storeTotals.totalMO})`;
-
-        let targetLine = '';
-        if (targetTotal > 0) {
-            const diff = targetTotal - storeTotals.totalAll;
-            const diffText = diff === 0 ? '✅ 已對齊' : `（差 ${diff}）`;
-            targetLine = `<br>🎯 目標總量: ${targetTotal} / 實際分配總量: ${storeTotals.totalAll} ${diffText}`;
-            if (targetInfo && targetInfo.remaining > 0) {
-                targetLine += `<br>⚠️ 因整數分配尚有 ${targetInfo.remaining} 未分配`;
-            }
-        }
-
-        return `
-            <strong>📊 統計摘要:</strong><br>
-            🇭🇰 香港 (HK): 平均 ${(totalHK / countHK).toFixed(1)} (總計 ${totalHK})<br>
-            🇲🇴 澳門 (MO): 平均 ${(totalMO / countMO).toFixed(1)} (總計 ${totalMO})<br>
-            📈 整體平均: ${((totalHK + totalMO) / (countHK + countMO)).toFixed(1)}<br>
-            ${totalLine}${targetLine}
-        `;
     }
 
     // 依店舖數量計算矩陣總量
