@@ -39,6 +39,11 @@ class SafetyStockCalculator {
         this.calculationMode = 'mode1';
         this.storeMap = new Map();
         this._adminVerified = false;
+        // 一屏 + 免確認：自動生效開關與防抖計時器
+        this.autoCalc = true;
+        this._weightDebounce = null;
+        this._calcDebounce = null;
+        this._matrixEditBound = false;
         
         this.init();
     }
@@ -62,6 +67,15 @@ class SafetyStockCalculator {
         setTimeout(() => this.updateTargetSafetyStock(), 100);
         // 初始化分頁切換與快速報表
         this.initTabNavigation();
+        // 一屏優化：預設自動預覽一次 + 綁定駕駛艙 + 對照表直接編輯
+        setTimeout(() => {
+            try { this.previewWeights({ silent: true }); } catch (e) {}
+            try { this.updateCockpitBar(); } catch (e) {}
+            if (this.selectedStores.length > 0 && this.autoCalc) {
+                try { this.calculate({ silent: true }); } catch (e) {}
+                try { this.updateCockpitBar(); } catch (e) {}
+            }
+        }, 300);
     }
 
     // ==================== 模式切換 ====================
@@ -95,10 +109,12 @@ class SafetyStockCalculator {
             this.updateStoresPreview();
             this.updateStoreCount();
             this.refreshQuickReportForMode();
+            try { this.previewWeights({ silent: true }); } catch (e) {}
+            try { this.updateCockpitBar(); } catch (e) {}
         }
 
         if (options.recalculate !== false && this.summaryResults.length > 0) {
-            this.calculate();
+            this.calculate({ silent: true });
         }
 
         if (options.persist !== false) {
@@ -479,12 +495,25 @@ class SafetyStockCalculator {
         // 鎖定管理區域
         document.getElementById('lockManagementBtn')?.addEventListener('click', () => this.lockManagement());
 
-        // Safety Stock Matrix 編輯
+        // Safety Stock Matrix 編輯（已改為直接點擊自動生效，舊按鈕保留兼容）
         document.getElementById('editMatrixBtn')?.addEventListener('click', () => this.enableMatrixEdit());
         document.getElementById('saveMatrixBtn')?.addEventListener('click', () => this.saveMatrixEdit());
         document.getElementById('cancelMatrixBtn')?.addEventListener('click', () => this.cancelMatrixEdit());
         document.getElementById('resetMatrixBtn')?.addEventListener('click', () => this.resetMatrix());
         document.getElementById('applyMatrixBtn')?.addEventListener('click', () => this.applyMatrixToStores());
+        // 駕駛艙一鍵操作
+        document.getElementById('cockpitCalcBtn')?.addEventListener('click', () => this.calculate());
+        document.getElementById('cockpitExportBtn')?.addEventListener('click', () => {
+            if (this.summaryResults.length === 0) this.calculate({ silent: true });
+            this.exportToExcel();
+        });
+        document.getElementById('cockpitTopBtn')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        // 自動計算開關
+        document.getElementById('autoCalcToggle')?.addEventListener('change', (e) => {
+            this.autoCalc = e.target.checked;
+            this.showToast(this.autoCalc ? '⚡ 已開啟自動計算' : '已關閉自動計算（需手動按計算）');
+            if (this.autoCalc) this.scheduleAutoCalculate();
+        });
 
         // 權重設定面板事件
         this.setupWeightPanelListeners();
@@ -562,6 +591,8 @@ class SafetyStockCalculator {
         
         this.saveToLocalStorage();
         this.updateStoresPreview();
+        this.updateCockpitBar();
+        this.scheduleAutoCalculate();
     }
 
     cancelStoreStockEdit(input) {
@@ -722,6 +753,8 @@ class SafetyStockCalculator {
         this.saveToLocalStorage();
         this.updateStoresPreview();
         this.updateStoreCount();
+        this.updateCockpitBar();
+        this.scheduleAutoCalculate();
     }
 
     selectAllStores(includeHidden = false) {
@@ -742,6 +775,8 @@ class SafetyStockCalculator {
         this.saveToLocalStorage();
         this.updateStoresPreview();
         this.updateStoreCount();
+        this.updateCockpitBar();
+        this.scheduleAutoCalculate();
     }
 
     deselectAllStores() {
@@ -757,6 +792,8 @@ class SafetyStockCalculator {
         this.saveToLocalStorage();
         this.updateStoresPreview();
         this.updateStoreCount();
+        this.updateCockpitBar();
+        this.scheduleAutoCalculate();
     }
 
     invertSelection() {
@@ -778,6 +815,8 @@ class SafetyStockCalculator {
         this.saveToLocalStorage();
         this.updateStoresPreview();
         this.updateStoreCount();
+        this.updateCockpitBar();
+        this.scheduleAutoCalculate();
     }
 
     clearFilters() {
@@ -1134,6 +1173,7 @@ class SafetyStockCalculator {
                     <p class="hint">請勾選左側店鋪或使用篩選功能</p>
                 </div>
             `;
+            try { this.updateCockpitBar(); } catch (e) {}
             return;
         }
         
@@ -1238,6 +1278,7 @@ class SafetyStockCalculator {
         `;
         
         preview.innerHTML = html;
+        try { this.updateCockpitBar(); } catch (e) {}
     }
 
     updateStoreCount() {
@@ -1547,8 +1588,114 @@ class SafetyStockCalculator {
         
         container.innerHTML = html;
         
-        // 渲染矩陣摘要
+        // 渲染矩陣摘要 + 綁定直接點擊編輯（免去編輯/保存兩步）
         this.renderMatrixSummary();
+        this.setupMatrixInlineEdit();
+        try { this.updateCockpitBar(); } catch (e) {}
+    }
+
+    // 對照表直接編輯：點擊數字即改，失焦/Enter 自動保存並同步全鏈路
+    setupMatrixInlineEdit() {
+        const container = document.getElementById('matrixContainer');
+        if (!container || this._matrixEditBound) return;
+        this._matrixEditBound = true;
+
+        container.addEventListener('click', (e) => {
+            const cell = e.target.closest('.matrix-cell');
+            if (!cell || cell.classList.contains('editing')) return;
+            // 若點到 input 本身則忽略
+            if (e.target.tagName === 'INPUT') return;
+            this.enableSingleMatrixCell(cell);
+        });
+
+        container.addEventListener('focusout', (e) => {
+            const input = e.target.closest?.('.matrix-cell .edit-value');
+            if (!input) return;
+            const cell = input.closest('.matrix-cell');
+            if (cell && cell.classList.contains('editing')) {
+                setTimeout(() => {
+                    if (!cell.contains(document.activeElement)) this.saveSingleMatrixCell(cell);
+                }, 120);
+            }
+        }, true);
+
+        container.addEventListener('keydown', (e) => {
+            const input = e.target.closest?.('.matrix-cell .edit-value');
+            if (!input) return;
+            const cell = input.closest('.matrix-cell');
+            if (!cell || !cell.classList.contains('editing')) return;
+            if (e.key === 'Enter') { e.preventDefault(); this.saveSingleMatrixCell(cell); }
+            else if (e.key === 'Escape') { e.preventDefault(); this.cancelSingleMatrixCell(cell); }
+        }, true);
+
+        container.addEventListener('input', (e) => {
+            if (e.target.closest?.('.matrix-cell .edit-value')) {
+                try { this.renderMatrixSummary(); } catch (err) {}
+            }
+        });
+    }
+
+    enableSingleMatrixCell(cell) {
+        if (cell.classList.contains('editing')) return;
+        const display = cell.querySelector('.display-value');
+        const input = cell.querySelector('.edit-value');
+        if (!display || !input) return;
+        cell.classList.add('editing');
+        display.style.display = 'none';
+        input.style.display = 'inline-block';
+        input.focus();
+        input.select();
+    }
+
+    cancelSingleMatrixCell(cell) {
+        const display = cell.querySelector('.display-value');
+        const input = cell.querySelector('.edit-value');
+        if (!display || !input) return;
+        input.value = display.textContent;
+        cell.classList.remove('editing');
+        display.style.display = 'inline-block';
+        input.style.display = 'none';
+    }
+
+    saveSingleMatrixCell(cell) {
+        if (!cell.classList.contains('editing')) return;
+        const key = cell.dataset.key;
+        const input = cell.querySelector('.edit-value');
+        const display = cell.querySelector('.display-value');
+        if (!key || !input || !display) return;
+        const value = Math.max(0, parseInt(input.value) || 0);
+        const parts = key.split('-');
+        const mode = this.calculationMode;
+        try {
+            if (mode === 'mode2' && parts.length === 3) {
+                const [region, category, size] = parts;
+                if (!this.matrixDraftMode2[region]) this.matrixDraftMode2[region] = {};
+                if (!this.matrixDraftMode2[region][category]) this.matrixDraftMode2[region][category] = {};
+                this.matrixDraftMode2[region][category][size] = value;
+            } else if (mode === 'mode3' && parts.length === 3) {
+                const [region, category, type] = parts;
+                if (!this.matrixDraftMode3[region]) this.matrixDraftMode3[region] = {};
+                if (!this.matrixDraftMode3[region][category]) this.matrixDraftMode3[region][category] = {};
+                this.matrixDraftMode3[region][category][type] = value;
+            } else if (parts.length === 4) {
+                const [region, category, type, size] = parts;
+                if (!this.matrixDraft[region]) this.matrixDraft[region] = {};
+                if (!this.matrixDraft[region][category]) this.matrixDraft[region][category] = {};
+                if (!this.matrixDraft[region][category][type]) this.matrixDraft[region][category][type] = {};
+                this.matrixDraft[region][category][type][size] = value;
+            }
+        } catch (err) { console.warn('saveSingleMatrixCell failed', err); }
+        display.textContent = value;
+        cell.classList.remove('editing');
+        display.style.display = 'inline-block';
+        input.style.display = 'none';
+        // 全鏈路自動同步：草稿→生效→店鋪→重算，不彈 confirm
+        this.saveToLocalStorage();
+        try { this.syncDraftToApplied({ silent: true }); } catch (e) {}
+        try { this.renderStores(); } catch (e) {}
+        try { this.renderMatrixSummary(); } catch (e) {}
+        try { this.updateCockpitBar(); } catch (e) {}
+        this.scheduleAutoCalculate();
     }
 
     // 計算並渲染對照表統計摘要
@@ -1672,6 +1819,7 @@ class SafetyStockCalculator {
         `;
         
         summaryContainer.innerHTML = html;
+        try { this.updateCockpitBar(); } catch (e) {}
     }
 
     enableMatrixEdit() {
@@ -1762,7 +1910,11 @@ class SafetyStockCalculator {
             
             this.saveToLocalStorage();
             this.renderMatrixSummary(); // 更新統計摘要
-            this.showToast(`✅ 對照表已保存 (${savedCount} 個值)，請按「套用到選擇店鋪」更新店鋪 Safety`);
+            this.showToast(`✅ 對照表已保存 (${savedCount} 個值)，已自動同步店鋪`);
+            try { this.syncDraftToApplied({ silent: true }); } catch (e) {}
+            try { this.renderStores(); } catch (e) {}
+            try { this.updateCockpitBar(); } catch (e) {}
+            this.scheduleAutoCalculate();
         } catch (err) {
             console.error('保存矩陣編輯時出錯:', err);
             this.showToast('❌ 保存失敗，請檢查瀏覽器控制台查看錯誤信息');
@@ -1795,11 +1947,8 @@ class SafetyStockCalculator {
         }
     }
 
-    applyMatrixToStores() {
-        const confirmed = confirm('確定要套用目前對照表到「選擇店鋪」嗎？此操作會即時影響店鋪 Safety Stock。');
-        if (!confirmed) return;
-
-        // 只清空選擇店鋪的自訂值，避免影響未選店鋪
+    applyMatrixToStores(options = {}) {
+        // 免確認：直接同步（保留舊行為：清除已選店鋪的個別自訂值，讓對照表生效）
         const selectedSites = new Set(
             this.selectedStores
                 .map(index => this.stores[index])
@@ -1812,85 +1961,20 @@ class SafetyStockCalculator {
             });
         }
 
-        if (this.calculationMode === 'mode2') {
-            this.customSafetyStockMode2 = {};
-            if (this.matrixDraftMode2) {
-                Object.keys(this.matrixDraftMode2).forEach(region => {
-                    Object.keys(this.matrixDraftMode2[region] || {}).forEach(category => {
-                        Object.keys(this.matrixDraftMode2[region][category] || {}).forEach(size => {
-                            const draftValue = this.matrixDraftMode2[region][category][size];
-                            const originalValue = getSafetyStockValue(region, category, size, 'M');
+        this.syncDraftToApplied({ silent: true });
 
-                            if (draftValue !== originalValue) {
-                                const key = `${region}-${category}-${size}`;
-                                this.customSafetyStockMode2[key] = draftValue;
-                            }
-                        });
-                    });
-                });
-            }
-        } else if (this.calculationMode === 'mode3') {
-            this.customSafetyStockMode3 = {};
-            if (this.matrixDraftMode3) {
-                Object.keys(this.matrixDraftMode3).forEach(region => {
-                    Object.keys(this.matrixDraftMode3[region] || {}).forEach(category => {
-                        Object.keys(this.matrixDraftMode3[region][category] || {}).forEach(type => {
-                            const draftValue = this.matrixDraftMode3[region][category][type];
-                            const originalValue = getSafetyStockValue(region, category, 'M', type);
-
-                            if (draftValue !== originalValue) {
-                                const key = `${region}-${category}-${type}`;
-                                this.customSafetyStockMode3[key] = draftValue;
-                            }
-                        });
-                    });
-                });
-            }
-        } else {
-            const selectedKeys = new Set();
-            this.selectedStores.forEach(idx => {
-                const store = this.stores[idx];
-                if (store) {
-                    const key = `${store.Regional}-${store.Class}-${store.Type || 'M'}-${store.Size}`;
-                    selectedKeys.add(key);
-                }
-            });
-
-            const newCustom = {};
-            Object.keys(this.customSafetyStock).forEach(key => {
-                if (!selectedKeys.has(key)) {
-                    newCustom[key] = this.customSafetyStock[key];
-                }
-            });
-            this.customSafetyStock = newCustom;
-
-            if (this.matrixDraft) {
-                selectedKeys.forEach(key => {
-                    const parts = key.split('-');
-                    if (parts.length !== 4) return;
-                    const [region, category, type, size] = parts;
-                    const draftValue = this.matrixDraft?.[region]?.[category]?.[type]?.[size];
-                    if (draftValue === undefined) return;
-                    const originalValue = getSafetyStockValue(region, category, size, type);
-
-                    if (draftValue !== originalValue) {
-                        this.customSafetyStock[key] = draftValue;
-                    }
-                });
-            }
-        }
-
-        this.saveToLocalStorage();
         this.renderStores();
         this.updateStoresPreview();
-        this.showToast('✅ 對照表已套用到選擇店鋪');
+        this.updateCockpitBar();
+        this.scheduleAutoCalculate();
+        if (!options.silent) this.showToast('✅ 對照表已套用到選擇店鋪');
     }
 
     // ==================== 計算函數 ====================
     
-    calculate() {
+    calculate(options = {}) {
         if (this.selectedStores.length === 0) {
-            alert('請至少選擇一間店鋪');
+            if (!options.silent) alert('請至少選擇一間店鋪');
             return;
         }
         
@@ -1978,6 +2062,53 @@ class SafetyStockCalculator {
         this.displayResults();
         this.displayOmSummary(); // 新增 OM 彙總顯示
         this.saveToLocalStorage();
+        try { this.updateCockpitBar(); } catch (e) {}
+        try { this.refreshQuickReportForMode(); } catch (e) {}
+    }
+
+    // 防抖自動重算：勾選 / 改參數後免手動按計算
+    scheduleAutoCalculate() {
+        if (!this.autoCalc) {
+            try { this.updateCockpitBar(); } catch (e) {}
+            return;
+        }
+        if (this._calcDebounce) clearTimeout(this._calcDebounce);
+        this._calcDebounce = setTimeout(() => {
+            if (this.selectedStores.length === 0) {
+                try { this.updateCockpitBar(); } catch (e) {}
+                return;
+            }
+            this.calculate({ silent: true });
+        }, 350);
+    }
+
+    // 駕駛艙總覽：已選數 / 預估總量 / 目標，不用捲動也看得到
+    updateCockpitBar() {
+        const selEl = document.getElementById('cockpitSelected');
+        const totalEl = document.getElementById('cockpitTotal');
+        const targetEl = document.getElementById('cockpitTarget');
+        if (!selEl && !totalEl && !targetEl) return;
+        const mode = this.calculationMode;
+        let total = 0;
+        this.selectedStores.forEach(idx => {
+            const s = this.stores[idx];
+            if (!s) return;
+            let ss;
+            if (this.customStoreStock[s.Site] !== undefined) ss = this.customStoreStock[s.Site];
+            else ss = this.getMatrixDraftValue(s.Regional, s.Class, s.Size, s.Type || 'M', mode);
+            total += (ss || 0);
+        });
+        // 若已有計算結果，優先用結果總量（與表格一致）
+        if (this.summaryResults && this.summaryResults.length > 0) {
+            total = this.summaryResults.reduce((a, r) => a + (r.allShopQty || 0), 0);
+        }
+        if (selEl) selEl.textContent = this.selectedStores.length;
+        if (totalEl) totalEl.textContent = total;
+        if (targetEl) {
+            const t = document.getElementById('targetTotal');
+            const v = t ? parseFloat(t.value) : NaN;
+            targetEl.textContent = (!isNaN(v) && v > 0) ? v : '—';
+        }
     }
 
     displayResults() {
@@ -2072,6 +2203,7 @@ class SafetyStockCalculator {
         
         // 顯示詳細清單
         this.displayDetailedResults();
+        try { this.updateCockpitBar(); } catch (e) {}
     }
 
     displayDetailedResults() {
@@ -2377,6 +2509,7 @@ class SafetyStockCalculator {
         // 重新顯示結果以更新總計
         this.displayResults();
         this.saveToLocalStorage();
+        try { this.updateCockpitBar(); } catch (e) {}
     }
 
     cancelCellEdit(cell) {
@@ -3849,7 +3982,7 @@ class SafetyStockCalculator {
 
     // ==================== 權重快速設定功能 ====================
 
-    // 設置權重面板事件監聽
+    // 設置權重面板事件監聽（輸入即自動生效，免去預覽→套用兩步）
     setupWeightPanelListeners() {
         // 切換面板顯示/隱藏
         document.getElementById('toggleWeightPanel')?.addEventListener('click', () => this.toggleWeightPanel());
@@ -3857,23 +3990,33 @@ class SafetyStockCalculator {
         // 算式簡介摺疊/展開
         document.getElementById('formulaToggleBtn')?.addEventListener('click', () => this.toggleFormulaIntro());
 
-        // 套用權重
-        document.getElementById('applyWeightsBtn')?.addEventListener('click', () => this.applyWeights());
+        // 套用權重（手動備用，免確認直接生效）
+        document.getElementById('applyWeightsBtn')?.addEventListener('click', () => this.applyWeights({ skipConfirm: true }));
 
-        // 預覽權重
+        // 預覽權重（舊按鈕已隱藏，保留兼容）
         document.getElementById('previewWeightsBtn')?.addEventListener('click', () => this.previewWeights());
 
-        // 銷售目標數量變化事件
-        document.getElementById('salesTarget')?.addEventListener('change', () => this.updateTargetSafetyStock());
-        document.getElementById('salesTarget')?.addEventListener('input', () => this.updateTargetSafetyStock());
+        // 銷售目標數量變化事件（含自動生效）
+        document.getElementById('salesTarget')?.addEventListener('change', () => { this.updateTargetSafetyStock(); this.scheduleAutoWeightApply(); });
+        document.getElementById('salesTarget')?.addEventListener('input', () => { this.updateTargetSafetyStock(); this.scheduleAutoWeightApply(); });
+        document.getElementById('targetTotal')?.addEventListener('input', () => this.scheduleAutoWeightApply());
 
-        // Safety Stock Days 滑塊變化事件
+        // Safety Stock Days 滑塊變化事件（含自動生效）
         document.getElementById('safetyStockDays')?.addEventListener('input', (e) => {
             const display = document.querySelector('.days-display');
             if (display) {
                 display.textContent = e.target.value;
             }
             this.updateTargetSafetyStock();
+            this.scheduleAutoWeightApply();
+        });
+        document.getElementById('safetyStockDays')?.addEventListener('change', () => this.scheduleAutoWeightApply());
+
+        // 所有權重數字輸入：輸入即自動預覽 + 套用（防抖）
+        const weightIds = ['weightClassA','weightClassB','weightClassC','weightClassD','weightSizeXL','weightSizeL','weightSizeM','weightSizeS','weightSizeXS','weightTypeT','weightTypeM','weightTypeL','baseValue','hkFactor','moFactor'];
+        weightIds.forEach(id => {
+            document.getElementById(id)?.addEventListener('input', () => this.scheduleAutoWeightApply());
+            document.getElementById(id)?.addEventListener('change', () => this.scheduleAutoWeightApply());
         });
 
         // 模板按鈕
@@ -3883,6 +4026,118 @@ class SafetyStockCalculator {
                 this.applyWeightTemplate(templateName);
             });
         });
+    }
+
+    // 防抖：權重輸入後 450ms 自動走完 預覽→套用→同步→重算
+    scheduleAutoWeightApply() {
+        if (this._weightDebounce) clearTimeout(this._weightDebounce);
+        this._weightDebounce = setTimeout(() => {
+            try { this.updateTargetSafetyStock(); } catch (e) {}
+            try { this.autoApplyWeightsSilent(); } catch (e) { console.warn('autoApplyWeightsSilent failed', e); }
+        }, 450);
+    }
+
+    // 靜默自動套用：不彈 confirm、不打斷輸入焦點
+    autoApplyWeightsSilent() {
+        const weights = this.readWeightsFromUI();
+        let newMatrix = this.buildWeightMatrixByType(weights);
+        const targetTotal = Math.round(weights.targetTotal || 0);
+        const mode = this.calculationMode;
+        if (targetTotal > 0) {
+            const targetInfo = this.scaleMatrixToTarget(newMatrix, targetTotal);
+            newMatrix = targetInfo.matrix;
+        }
+        this.syncWeightMatrixToDraft(newMatrix, weights, mode);
+        this.renderSafetyStockMatrix();
+        this.saveToLocalStorage();
+        try { this.previewWeights({ silent: true }); } catch (e) {}
+        try { this.syncDraftToApplied({ silent: true }); } catch (e) {}
+        try { this.renderStores(); } catch (e) {}
+        try { this.updateCockpitBar(); } catch (e) {}
+        this.scheduleAutoCalculate();
+    }
+
+    // 共用：把權重矩陣寫入對照表草稿 + 保存權重配置
+    syncWeightMatrixToDraft(newMatrix, weights, mode) {
+        if (mode === 'mode2') {
+            Object.keys(this.matrixDraftMode2).forEach(region => {
+                Object.keys(this.matrixDraftMode2[region]).forEach(category => {
+                    Object.keys(this.matrixDraftMode2[region][category]).forEach(size => {
+                        this.matrixDraftMode2[region][category][size] = newMatrix?.[region]?.[category]?.M?.[size] ?? 0;
+                    });
+                });
+            });
+        } else if (mode === 'mode3') {
+            Object.keys(this.matrixDraftMode3).forEach(region => {
+                Object.keys(this.matrixDraftMode3[region]).forEach(category => {
+                    Object.keys(this.matrixDraftMode3[region][category]).forEach(type => {
+                        this.matrixDraftMode3[region][category][type] = newMatrix?.[region]?.[category]?.[type]?.M ?? 0;
+                    });
+                });
+            });
+        } else {
+            this.matrixDraft = JSON.parse(JSON.stringify(newMatrix));
+        }
+        this.weightConfig = weights;
+    }
+
+    // 共用：把草稿同步為生效值（原 applyMatrixToStores 的核心，不彈 confirm）
+    syncDraftToApplied(options = {}) {
+        if (this.calculationMode === 'mode2') {
+            this.customSafetyStockMode2 = {};
+            if (this.matrixDraftMode2) {
+                Object.keys(this.matrixDraftMode2).forEach(region => {
+                    Object.keys(this.matrixDraftMode2[region] || {}).forEach(category => {
+                        Object.keys(this.matrixDraftMode2[region][category] || {}).forEach(size => {
+                            const draftValue = this.matrixDraftMode2[region][category][size];
+                            const originalValue = getSafetyStockValue(region, category, size, 'M');
+                            if (draftValue !== originalValue) {
+                                const key = `${region}-${category}-${size}`;
+                                this.customSafetyStockMode2[key] = draftValue;
+                            }
+                        });
+                    });
+                });
+            }
+        } else if (this.calculationMode === 'mode3') {
+            this.customSafetyStockMode3 = {};
+            if (this.matrixDraftMode3) {
+                Object.keys(this.matrixDraftMode3).forEach(region => {
+                    Object.keys(this.matrixDraftMode3[region] || {}).forEach(category => {
+                        Object.keys(this.matrixDraftMode3[region][category] || {}).forEach(type => {
+                            const draftValue = this.matrixDraftMode3[region][category][type];
+                            const originalValue = getSafetyStockValue(region, category, 'M', type);
+                            if (draftValue !== originalValue) {
+                                const key = `${region}-${category}-${type}`;
+                                this.customSafetyStockMode3[key] = draftValue;
+                            }
+                        });
+                    });
+                });
+            }
+        } else {
+            // 模式1：全量同步（自動模式下不再只限已選店鋪，避免混淆）
+            const newCustom = {};
+            if (this.matrixDraft) {
+                Object.keys(this.matrixDraft).forEach(region => {
+                    Object.keys(this.matrixDraft[region] || {}).forEach(category => {
+                        Object.keys(this.matrixDraft[region][category] || {}).forEach(type => {
+                            Object.keys(this.matrixDraft[region][category][type] || {}).forEach(size => {
+                                const draftValue = this.matrixDraft[region][category][type][size];
+                                const originalValue = getSafetyStockValue(region, category, size, type);
+                                if (draftValue !== originalValue) {
+                                    const key = `${region}-${category}-${type}-${size}`;
+                                    newCustom[key] = draftValue;
+                                }
+                            });
+                        });
+                    });
+                });
+            }
+            this.customSafetyStock = newCustom;
+        }
+        this.saveToLocalStorage();
+        if (!options.silent) this.showToast('✅ 對照表已自動同步到店鋪');
     }
 
     // 更新目標安全庫存數量
@@ -3927,12 +4182,14 @@ class SafetyStockCalculator {
         const panel = document.getElementById('weightContent');
         const btn = document.getElementById('toggleWeightPanel');
 
-        if (panel.style.display === 'none') {
-            panel.style.display = 'block';
-            btn.classList.add('active');
+        if (!panel) return;
+        const hidden = panel.style.display === 'none' || getComputedStyle(panel).display === 'none';
+        if (hidden) {
+            panel.style.display = '';
+            btn?.classList.add('active');
         } else {
             panel.style.display = 'none';
-            btn.classList.remove('active');
+            btn?.classList.remove('active');
         }
     }
 
@@ -4091,12 +4348,13 @@ class SafetyStockCalculator {
 
         this.showToast(`已套用「${templateName}」模板 ${modeNote}`.trim());
 
-        // 自動預覽
-        this.previewWeights();
+        // 模板即時生效：預覽 + 同步 + 重算（免確認）
+        try { this.previewWeights({ silent: true }); } catch (e) {}
+        try { this.autoApplyWeightsSilent(); } catch (e) {}
     }
 
     // 預覽權重計算結果
-    previewWeights() {
+    previewWeights(options = {}) {
         const weights = this.readWeightsFromUI();
         let previewMatrix = this.buildWeightMatrixByType(weights);
         const targetTotal = Math.round(weights.targetTotal || 0);
@@ -4201,15 +4459,18 @@ class SafetyStockCalculator {
         });
 
         document.getElementById('weightPreviewContent').innerHTML = html;
-        document.getElementById('weightPreview').style.display = 'block';
+        const previewBox = document.getElementById('weightPreview');
+        if (previewBox) previewBox.style.display = 'block';
 
         // 計算並顯示摘要
         const summary = this.calculateWeightSummary(previewMatrix, targetTotal, targetInfo, mode);
-        document.getElementById('weightPreviewSummary').innerHTML = summary;
+        const summaryEl = document.getElementById('weightPreviewSummary');
+        if (summaryEl) summaryEl.innerHTML = summary;
 
         // 保存權重配置
         this.weightConfig = weights;
         this.saveToLocalStorage();
+        try { this.updateCockpitBar(); } catch (e) {}
     }
 
     // 計算權重預覽摘要
@@ -4528,8 +4789,8 @@ class SafetyStockCalculator {
         return totalFreed;
     }
 
-    // 套用權重到對照表
-    applyWeights() {
+    // 套用權重到對照表（免確認：預設直接生效；手動按鈕亦不再彈 confirm）
+    applyWeights(options = {}) {
         const weights = this.readWeightsFromUI();
         let newMatrix = this.buildWeightMatrixByType(weights);
         const targetTotal = Math.round(weights.targetTotal || 0);
@@ -4541,50 +4802,21 @@ class SafetyStockCalculator {
             newMatrix = targetInfo.matrix;
         }
 
-        const confirmMessage = targetTotal > 0
-            ? `確定要依目標總量 ${targetTotal} 套用權重計算結果嗎？這將覆蓋目前的 Safety Stock 對照表。\n\n提示：套用後您仍可手動調整個別數值。`
-            : '確定要套用權重計算結果嗎？這將覆蓋目前的 Safety Stock 對照表。\n\n提示：套用後您仍可手動調整個別數值。';
+        // 直接生效（不再 confirm）
+        this.syncWeightMatrixToDraft(newMatrix, weights, mode);
+        this.renderSafetyStockMatrix();
+        this.saveToLocalStorage();
+        try { this.previewWeights({ silent: true }); } catch (e) {}
+        try { this.syncDraftToApplied({ silent: true }); } catch (e) {}
+        try { this.renderStores(); } catch (e) {}
+        try { this.updateCockpitBar(); } catch (e) {}
+        this.scheduleAutoCalculate();
 
-        if (confirm(confirmMessage)) {
-            // 更新對照表草稿（不直接影響店鋪）
-            if (mode === 'mode2') {
-                this.matrixDraftMode2 = this.buildMatrixDraftMode2();
-                Object.keys(this.matrixDraftMode2).forEach(region => {
-                    Object.keys(this.matrixDraftMode2[region]).forEach(category => {
-                        Object.keys(this.matrixDraftMode2[region][category]).forEach(size => {
-                            this.matrixDraftMode2[region][category][size] = newMatrix?.[region]?.[category]?.M?.[size] ?? 0;
-                        });
-                    });
-                });
-            } else if (mode === 'mode3') {
-                this.matrixDraftMode3 = this.buildMatrixDraftMode3();
-                Object.keys(this.matrixDraftMode3).forEach(region => {
-                    Object.keys(this.matrixDraftMode3[region]).forEach(category => {
-                        Object.keys(this.matrixDraftMode3[region][category]).forEach(type => {
-                            this.matrixDraftMode3[region][category][type] = newMatrix?.[region]?.[category]?.[type]?.M ?? 0;
-                        });
-                    });
-                });
-            } else {
-                this.matrixDraft = JSON.parse(JSON.stringify(newMatrix));
-            }
-
-            // 保存權重配置
-            this.weightConfig = weights;
-
-            // 重新渲染對照表
-            this.renderSafetyStockMatrix();
-            this.saveToLocalStorage();
-
-            const totals = this.calculateStoreTotals(newMatrix, mode);
-            if (targetTotal > 0 && targetInfo && targetInfo.remaining > 0) {
-                this.showToast(`✅ 權重已套用到對照表！實際總量 ${totals.totalAll}（尚有 ${targetInfo.remaining} 未分配）`);
-            } else {
-                this.showToast(`✅ 權重已套用到對照表！總量 ${totals.totalAll}`);
-            }
-
-            // 關閉預覽面板
-            document.getElementById('weightPreview').style.display = 'none';
+        const totals = this.calculateStoreTotals(newMatrix, mode);
+        if (targetTotal > 0 && targetInfo && targetInfo.remaining > 0) {
+            this.showToast(`✅ 權重已套用！實際總量 ${totals.totalAll}（尚有 ${targetInfo.remaining} 未分配）`);
+        } else {
+            this.showToast(`✅ 權重已套用！總量 ${totals.totalAll}`);
         }
     }
 

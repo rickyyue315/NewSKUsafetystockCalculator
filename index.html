@@ -47,6 +47,23 @@
             <div class="mode-hint" id="modeHint">模式 1：級別 / 類別 / 面積</div>
         </div>
 
+        <!-- 一屏駕駛艙：常駐總覽 + 一鍵操作，無需拉上拉下 -->
+        <div class="cockpit-bar" id="cockpitBar">
+            <div class="cockpit-stats">
+                <span class="cockpit-stat">已選 <strong id="cockpitSelected">0</strong> 間</span>
+                <span class="cockpit-divider">|</span>
+                <span class="cockpit-stat">預估總量 <strong id="cockpitTotal">0</strong></span>
+                <span class="cockpit-divider">|</span>
+                <span class="cockpit-stat">目標 <strong id="cockpitTarget">—</strong></span>
+                <span class="cockpit-auto">⚡ 自動生效中</span>
+            </div>
+            <div class="cockpit-actions">
+                <button id="cockpitCalcBtn" class="btn btn-apply btn-sm">🔢 計算</button>
+                <button id="cockpitExportBtn" class="btn btn-info btn-sm">📊 匯出 Excel</button>
+                <button id="cockpitTopBtn" class="btn btn-secondary btn-sm" title="回到頂部">↑</button>
+            </div>
+        </div>
+
         <!-- 分頁切換導航 -->
         <nav class="tab-navigation">
             <button class="tab-btn active" data-tab="calculator">🧮 計算器</button>
@@ -68,13 +85,13 @@
                     </button>
 
                     <div class="weight-content" id="weightContent">
-                        <!-- 算式簡介說明 (摺疊式) -->
+                        <!-- 算式簡介說明 (摺疊式，預設收起以節省版面) -->
                         <div class="weight-formula-intro">
-                            <button type="button" class="formula-toggle-btn" id="formulaToggleBtn">
+                            <button type="button" class="formula-toggle-btn collapsed" id="formulaToggleBtn">
                                 <span>📐 算式簡介</span>
                                 <span class="toggle-icon">▼</span>
                             </button>
-                            <div class="formula-content" id="formulaContent">
+                            <div class="formula-content collapsed" id="formulaContent">
                                 <div class="formula-box">
                                     <div class="formula-title">計算公式：</div>
                                     <code class="formula-code" id="formulaCode">Safety Stock = 基礎值 + (Class權重 × Size權重 × Type權重 × 區域係數)</code>
@@ -257,18 +274,13 @@
                             <p class="weight-hint-small" id="templateModeHint">模板會依目前模式套用</p>
                         </div>
 
-                        <!-- 操作按鈕 -->
+                        <!-- 操作按鈕：輸入即自動生效，按鈕僅為手動備用 -->
                         <div class="weight-actions">
+                            <span class="auto-apply-badge">⚡ 輸入即自動預覽 + 自動套用到對照表 + 自動同步店鋪，無需按鈕</span>
                             <div class="apply-buttons">
-                                <button type="button" id="previewWeightsBtn" class="btn btn-info">
-                                    👁️ 預覽結果
-                                </button>
                                 <button type="button" id="applyWeightsBtn" class="btn btn-apply btn-large">
                                     🚀 套用權重計算
                                 </button>
-                            </div>
-                            <div class="next-step-hint">
-                                <small>💡 提示：點擊「套用權重計算」後，請點擊「套用到選擇店鋪」以應用到店鋪</small>
                             </div>
                         </div>
 
@@ -282,14 +294,12 @@
                 </div>
 
                 <div class="matrix-controls">
-                    <button type="button" id="editMatrixBtn" class="btn btn-warning">編輯對照表</button>
+                    <span class="auto-apply-badge">⚡ 對照表數字可直接點擊修改，自動生效並同步店鋪 + 重算</span>
+                    <button type="button" id="editMatrixBtn" class="btn btn-warning" style="display:none">編輯對照表</button>
                     <button type="button" id="saveMatrixBtn" class="btn btn-success" style="display:none">保存</button>
                     <button type="button" id="cancelMatrixBtn" class="btn btn-secondary" style="display:none">取消</button>
                     <button type="button" id="resetMatrixBtn" class="btn btn-danger" style="display:none">重置為預設</button>
-                    <button type="button" id="applyMatrixBtn" class="btn btn-apply">套用到選擇店鋪</button>
-                </div>
-                <div class="next-step-hint">
-                    <small>💡 提示：完成權重設定後，請點擊「套用到選擇店鋪」以更新店鋪 Safety Stock</small>
+                    <button type="button" id="applyMatrixBtn" class="btn btn-apply" style="display:none">套用到選擇店鋪</button>
                 </div>
                 
                 <div id="matrixContainer" class="matrix-container">
@@ -443,6 +453,7 @@
                 </div>
                 
                 <div class="results-controls">
+                    <label class="auto-calc-toggle" title="勾選店鋪 / 改參數後自動重算，無需手動按計算"><input type="checkbox" id="autoCalcToggle" checked> ⚡ 自動計算</label>
                     <button id="calculateBtn" class="btn btn-apply btn-large">🔢 計算 Safety Stock</button>
                     <button id="exportBtn" class="btn btn-info">📥 匯出 CSV</button>
                     <button id="exportExcelBtn" class="btn btn-info">📊 匯出 Excel</button>
@@ -451,9 +462,6 @@
                     <button id="importBtn" class="btn btn-info">📤 匯入配置</button>
                     <button id="printBtn" class="btn btn-info">🖨️ 打印</button>
                     <input type="file" id="importFile" accept=".json" style="display: none;">
-                </div>
-                <div class="next-step-hint">
-                    <small>💡 提示：完成店鋪選擇後，請點擊「計算 Safety Stock」以獲得結果</small>
                 </div>
 
                 <!-- 統計信息 -->
