@@ -435,6 +435,7 @@ footer {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
     gap: 10px;
+    min-width: 0;
 }
 
 .weight-inputs label {
@@ -444,6 +445,7 @@ footer {
     font-size: 0.85em;
     color: var(--color-text-secondary);
     text-align: center;
+    min-width: 0;
 }
 
 .weight-inputs label.slider-label {
@@ -465,6 +467,9 @@ footer {
 .weight-label-l .weight-label-text { color: #45b7d1; }  /* 本地型 - 淡藍 */
 
 .weight-input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     padding: 8px;
     border: 1px solid var(--color-border-light);
     border-radius: 4px;
@@ -537,14 +542,39 @@ footer {
 }
 
 .template-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    align-items: start;
+}
+
+.template-item {
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    min-width: 0;
 }
 
 .template-btn {
     font-size: 0.85em;
     padding: 6px 12px;
+    width: 100%;
+    white-space: nowrap;
+}
+
+.template-desc {
+    font-size: 0.75em;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: break-word;
+}
+
+/* 快速模板獨佔一行，避免在 3 欄網格窄格內換行錯位 */
+#weightContent .weight-group:has(.template-buttons) {
+    grid-column: 1 / -1;
 }
 
 .weight-actions {
@@ -1029,6 +1059,29 @@ footer {
     border-left-color: var(--color-primary);
 }
 
+/* 頂部列：左側操作按鈕 + 右側 OM 標題同一水平 */
+.stores-top-row {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: stretch;
+}
+
+.stores-top-row .filter-controls {
+    margin-bottom: 0;
+}
+
+.stores-top-row .filter-controls .button-group {
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.stores-top-row .om-stores-header {
+    border-radius: 12px;
+    border: 1px solid var(--color-border-light);
+}
+
 /* 控制欄樣式 - 更現代的設計 */
 .filter-controls {
     margin-bottom: 20px;
@@ -1107,6 +1160,25 @@ footer {
     grid-template-columns: auto 1fr;
     gap: 16px;
     align-items: stretch;
+}
+
+/* 四欄篩選列（舖類 / 貨場面積 / 客源類型 / 店鋪組別同一水平） */
+.filter-row-quad {
+    grid-template-columns: 0.9fr 1fr 1.2fr 0.9fr;
+}
+
+.filter-row-quad .filter-group {
+    padding: 10px 12px;
+    min-width: 0;
+}
+
+.filter-row-quad .filter-buttons {
+    gap: 6px;
+}
+
+.filter-row-quad .filter-btn {
+    padding: 6px 12px;
+    font-size: 0.8em;
 }
 
 @media (max-width: 768px) {
@@ -1274,8 +1346,9 @@ footer {
     flex: none;
     display: block;
     overflow-y: auto;
-    padding: 16px;
-    max-height: 520px;
+    padding: 12px 16px;
+    max-height: 362px;
+    scrollbar-gutter: stable;
 }
 
 /* 右側窄面板：店鋪清單單欄填滿寬度，完全使用全部範圍 */
@@ -2057,6 +2130,10 @@ footer {
 }
 
 @media (max-width: 1100px) {
+    .stores-top-row {
+        grid-template-columns: 1fr;
+    }
+
     .stores-selector-layout {
         grid-template-columns: 1fr;
     }
@@ -3116,12 +3193,41 @@ header h1 { font-size: 1.6em; }
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
-    align-items: start;
+    align-items: stretch;
 }
 #weightContent .weight-formula-intro { grid-column: 1 / -1; margin-bottom: 0; }
 #weightContent .weight-actions { grid-column: 1 / -1; margin-top: 0; }
 #weightContent .weight-preview { grid-column: 1 / -1; margin-top: 0; }
-.weight-group { margin-bottom: 0; padding: 10px 12px; }
+
+/* 第二行：基礎設定佔 1 欄、目標總量佔 2 欄，填滿整行不留空 */
+#weightContent .weight-group:has(#salesTarget) {
+    grid-column: span 2;
+}
+
+/* 各組輸入欄固定單行排滿：Class 4 欄、Size 5 欄、Type 3 欄、基礎 3 欄 */
+.weight-group:has(#weightClassA) .weight-inputs {
+    grid-template-columns: repeat(4, 1fr);
+}
+.weight-group:has(#weightSizeXL) .weight-inputs {
+    grid-template-columns: repeat(5, 1fr);
+}
+.weight-group:has(#weightTypeT) .weight-inputs {
+    grid-template-columns: repeat(3, 1fr);
+}
+.weight-group:has(#baseValue) .weight-inputs {
+    grid-template-columns: repeat(3, 1fr);
+}
+.weight-group:has(#salesTarget) .weight-inputs {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 500px) {
+    /* 極窄螢幕才允許換行，避免輸入框擠到看不見 */
+    .weight-group:has(#weightSizeXL) .weight-inputs {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+.weight-group { margin-bottom: 0; padding: 10px 12px; min-width: 0; }
 .weight-group h4 { margin-bottom: 8px; font-size: 0.85em; }
 .weight-inputs { gap: 6px; }
 .weight-input { padding: 5px 4px; font-size: 0.9em; }
@@ -3185,6 +3291,8 @@ header h1 { font-size: 1.6em; }
 }
 @media (max-width: 700px) {
     #weightContent { grid-template-columns: 1fr; }
+    /* 單欄時跨欄改為整行，避免 span 2 撐出隱形欄 */
+    #weightContent .weight-group:has(#salesTarget) { grid-column: 1 / -1; }
     .weight-actions { flex-direction: column; align-items: stretch; }
     .cockpit-bar { position: static; }
 }
@@ -3389,5 +3497,227 @@ footer { padding: 6px; font-size: 0.72em; }
 .om-store-code-special {
     font-weight: 800;
     box-shadow: 0 2px 6px rgba(245, 158, 11, 0.45);
+}
+
+/* ==================== 深色模式撞色修復 ==================== */
+/* 成因：多處寫死的淺色背景（白 / 淺灰漸變 / 淺黃）在深色模式下配上淺色文字導致看不見。
+   以下覆寫只在 data-theme="dark" 時生效，將淺底改為深底；亮黃高亮底則強制用深色字。 */
+
+[data-theme="dark"] .mode-switcher {
+    background: linear-gradient(135deg, #32364a 0%, #2a2e3f 100%);
+}
+
+[data-theme="dark"] .mode-btn {
+    background: #353b54;
+    border-color: var(--color-border-medium);
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .mode-btn:hover {
+    background: #454d73;
+    border-color: var(--color-primary);
+    color: #ffffff;
+}
+
+[data-theme="dark"] .selector-left-panel {
+    background: linear-gradient(135deg, #2a2e3f 0%, #32364a 100%);
+    border-color: var(--color-border-light);
+}
+
+[data-theme="dark"] .filter-group {
+    border-color: var(--color-border-light);
+}
+
+[data-theme="dark"] .filter-btn,
+[data-theme="dark"] .om-filter-btn {
+    background: #353b54;
+    border-color: #4b5563;
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .filter-btn:hover,
+[data-theme="dark"] .om-filter-btn:hover {
+    background: #454d73;
+    border-color: var(--color-primary);
+    color: #ffffff;
+}
+
+[data-theme="dark"] .om-filter-btn .om-count {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .om-group {
+    background: linear-gradient(135deg, #312e81 0%, #3b2d5a 100%);
+    border-color: #4c3a86;
+}
+
+[data-theme="dark"] .store-item,
+[data-theme="dark"] .om-store-item {
+    background: linear-gradient(135deg, #353b54 0%, #2e3348 100%);
+    border-color: #3d4451;
+}
+
+[data-theme="dark"] .store-item:hover,
+[data-theme="dark"] .om-store-item:hover {
+    background: #454d73;
+    border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .store-item .store-code {
+    background: #4b5563;
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .om-store-code {
+    background: #475569;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .stores-preview,
+[data-theme="dark"] .om-stores-summary {
+    background: linear-gradient(135deg, #2a2e3f 0%, #32364a 100%);
+    border-color: var(--color-border-light);
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .preview-table th {
+    background: linear-gradient(135deg, #353b54 0%, #3b4261 100%);
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .preview-table tbody tr:hover {
+    background: rgba(92, 124, 250, 0.15);
+}
+
+[data-theme="dark"] .preview-table tfoot .total-row {
+    background: linear-gradient(135deg, #1e3a2f 0%, #265040 100%);
+}
+
+[data-theme="dark"] .weight-formula-intro {
+    background: linear-gradient(135deg, #312e81 0%, #1e3a2f 100%);
+    border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .formula-code {
+    background: #1a1b26;
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .formula-example {
+    background: linear-gradient(135deg, #422006 0%, #573209 100%);
+    border-left-color: var(--color-warning);
+}
+
+[data-theme="dark"] .example-content {
+    color: #fde68a;
+}
+
+[data-theme="dark"] .example-content strong {
+    color: #fde047;
+}
+
+[data-theme="dark"] .example-note {
+    color: #d6a94c;
+    border-top-color: rgba(251, 146, 60, 0.35);
+}
+
+[data-theme="dark"] .example-title {
+    color: #fbbf24;
+}
+
+[data-theme="dark"] .formula-example-item:nth-child(2) {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.18) 0%, rgba(251, 146, 60, 0.08) 100%);
+    border-color: rgba(251, 146, 60, 0.45);
+}
+
+[data-theme="dark"] .weight-preview-table .size-header th {
+    background: #353b54;
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .template-desc {
+    color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .selector-right-panel,
+[data-theme="dark"] .stores-container,
+[data-theme="dark"] .stores-preview {
+    border-color: var(--color-border-light);
+}
+
+/* 亮黃高亮底一律用深色字，避免淺字撞淺黃底 */
+[data-theme="dark"] .qr-table tfoot td,
+[data-theme="dark"] .qr-sub-table tbody tr.qr-sub-total,
+[data-theme="dark"] .qr-sub-table tbody tr.qr-sub-total td,
+[data-theme="dark"] .qr-stat-card.qr-stat-highlight,
+[data-theme="dark"] .qr-stat-card.qr-stat-highlight .qr-stat-label,
+[data-theme="dark"] .qr-stat-card.qr-stat-highlight .qr-stat-value,
+[data-theme="dark"] .stat-highlight,
+[data-theme="dark"] .stat-highlight .stat-value,
+[data-theme="dark"] .stat-highlight label,
+[data-theme="dark"] .matrix-cell.editing,
+[data-theme="dark"] .matrix-cell.editing .display-value,
+[data-theme="dark"] .editable-cell:hover,
+[data-theme="dark"] .editable-cell.editing,
+[data-theme="dark"] .editable-cell:hover .display-value,
+[data-theme="dark"] .editable-cell.editing .display-value,
+[data-theme="dark"] .editable-store-stock:hover,
+[data-theme="dark"] .editable-store-stock.editing,
+[data-theme="dark"] .summary-item.highlight,
+[data-theme="dark"] .summary-item.highlight .summary-label,
+[data-theme="dark"] .summary-item.highlight .summary-value {
+    color: #1a1b26;
+}
+
+[data-theme="dark"] .qr-stat-card.qr-stat-highlight {
+    background: #fde047;
+    border-color: #eab308;
+}
+
+[data-theme="dark"] .summary-item {
+    background: #353b54;
+    border-color: var(--color-border-light);
+}
+
+[data-theme="dark"] .summary-item.highlight {
+    background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
+    border-color: #eab308;
+}
+
+[data-theme="dark"] .summary-item.highlight .summary-value {
+    color: #713f12;
+}
+
+[data-theme="dark"] .percentage-bar span {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* 深色模式：亮色徽章改用深色字，避免白字撞亮底 */
+[data-theme="dark"] .qr-badge-a,
+[data-theme="dark"] .qr-badge-c,
+[data-theme="dark"] .store-badge.category-a,
+[data-theme="dark"] .store-badge.category-c,
+[data-theme="dark"] .badge.category-a,
+[data-theme="dark"] .badge.category-c {
+    color: #1a1b26;
+}
+
+/* 深色模式：主色文字在深底上提亮，保證可讀性 */
+[data-theme="dark"] .qr-table tbody td.qr-cell-ss,
+[data-theme="dark"] .qr-selected-count,
+[data-theme="dark"] .days-display,
+[data-theme="dark"] .om-stores-summary .total-count {
+    color: #a5b4fc;
+}
+
+/* 深色模式：對照表區域標題改回實色底 + 白字，避免淺透底撞色 */
+[data-theme="dark"] .region-title.region-hk {
+    background: var(--color-region-hk);
+    color: #ffffff;
+}
+
+[data-theme="dark"] .region-title.region-mo {
+    background: var(--color-region-mo);
+    color: #ffffff;
 }
 

@@ -265,11 +265,26 @@
                         <div class="weight-group">
                             <h4>📋 快速模板</h4>
                             <div class="template-buttons">
-                                <button type="button" class="btn btn-secondary template-btn" data-template="current">目前設定</button>
-                                <button type="button" class="btn btn-secondary template-btn" data-template="default">預設權重</button>
-                                <button type="button" class="btn btn-secondary template-btn" data-template="balanced">平衡權重</button>
-                                <button type="button" class="btn btn-secondary template-btn" data-template="conservative">保守型</button>
-                                <button type="button" class="btn btn-secondary template-btn" data-template="aggressive">積極型</button>
+                                <div class="template-item">
+                                    <button type="button" class="btn btn-secondary template-btn" data-template="current" title="沿用標準組合">目前設定</button>
+                                    <span class="template-desc">沿用標準組合</span>
+                                </div>
+                                <div class="template-item">
+                                    <button type="button" class="btn btn-secondary template-btn" data-template="default" title="一般新品適用">預設權重</button>
+                                    <span class="template-desc">一般新品適用</span>
+                                </div>
+                                <div class="template-item">
+                                    <button type="button" class="btn btn-secondary template-btn" data-template="balanced" title="大細舖分貨平均啲">平衡權重</button>
+                                    <span class="template-desc">大細舖分貨平均啲</span>
+                                </div>
+                                <div class="template-item">
+                                    <button type="button" class="btn btn-secondary template-btn" data-template="conservative" title="每間分少啲，慳庫存">保守型</button>
+                                    <span class="template-desc">每間分少啲，慳庫存</span>
+                                </div>
+                                <div class="template-item">
+                                    <button type="button" class="btn btn-secondary template-btn" data-template="aggressive" title="每間分多啲，防缺貨">積極型</button>
+                                    <span class="template-desc">每間分多啲，防缺貨</span>
+                                </div>
                             </div>
                             <p class="weight-hint-small" id="templateModeHint">模板會依目前模式套用</p>
                         </div>
@@ -309,14 +324,20 @@
             <section class="section stores-section">
                 <h2>📍 選擇店鋪</h2>
                 
-                <div class="filter-controls">
-                    <div class="button-group">
-                        <button type="button" id="selectAllBtn" class="btn btn-primary" title="選擇目前顯示的店鋪">全選</button>
-                        <button type="button" id="deselectAllBtn" class="btn btn-secondary" title="取消選擇目前顯示的店鋪">取消全選</button>
-                        <button type="button" id="invertSelectionBtn" class="btn btn-secondary" title="反轉目前顯示店鋪的選擇狀態">反向選擇</button>
-                        <button type="button" id="clearFiltersBtn" class="btn btn-secondary" title="清除所有篩選條件">取消篩選</button>
-                        <button type="button" id="resetCustomStockBtn" class="btn btn-warning" title="重設已選擇店鋪的自訂 Safety Stock 值">🔄 重設自訂值</button>
-                        <span id="storeCount" class="store-count">顯示 0 間 / 已選 0 間</span>
+                <div class="stores-top-row">
+                    <div class="filter-controls">
+                        <div class="button-group">
+                            <button type="button" id="selectAllBtn" class="btn btn-primary" title="選擇目前顯示的店鋪">全選</button>
+                            <button type="button" id="deselectAllBtn" class="btn btn-secondary" title="取消選擇目前顯示的店鋪">取消全選</button>
+                            <button type="button" id="invertSelectionBtn" class="btn btn-secondary" title="反轉目前顯示店鋪的選擇狀態">反向選擇</button>
+                            <button type="button" id="clearFiltersBtn" class="btn btn-secondary" title="清除所有篩選條件">取消篩選</button>
+                            <button type="button" id="resetCustomStockBtn" class="btn btn-warning" title="重設已選擇店鋪的自訂 Safety Stock 值">🔄 重設自訂值</button>
+                            <span id="storeCount" class="store-count">顯示 0 間 / 已選 0 間</span>
+                        </div>
+                    </div>
+                    <div class="om-stores-header">
+                        <h4 id="omStoresTitle">👤 請選擇營運經理查看店鋪</h4>
+                        <span class="om-stores-count" id="omStoresCount"></span>
                     </div>
                 </div>
 
@@ -331,8 +352,8 @@
                                 <div class="filter-group region-filter">
                                     <label class="filter-label">按區域</label>
                                     <div class="filter-buttons">
-                                        <button class="filter-btn" data-filter="region" data-value="HK">🇭🇰 HK</button>
-                                        <button class="filter-btn" data-filter="region" data-value="MO">🇲🇴 MO</button>
+                                        <button class="filter-btn" data-filter="region" data-value="HK">HK</button>
+                                        <button class="filter-btn" data-filter="region" data-value="MO">MO</button>
                                     </div>
                                 </div>
                                 <!-- 特別店鋪 -->
@@ -347,47 +368,50 @@
                                 </div>
                             </div>
 
-                            <!-- 舖類 -->
-                            <div class="filter-group">
-                                <label class="filter-label">按舖類</label>
-                                <div class="filter-buttons">
-                                    <button class="filter-btn" data-filter="category" data-value="A">A級</button>
-                                    <button class="filter-btn" data-filter="category" data-value="B">B級</button>
-                                    <button class="filter-btn" data-filter="category" data-value="C">C級</button>
-                                    <button class="filter-btn" data-filter="category" data-value="D">D級</button>
+                            <!-- 舖類 / 貨場面積 / 客源類型 / 店鋪組別（同一水平並排，縮短版面） -->
+                            <div class="filter-row filter-row-quad">
+                                <!-- 舖類 -->
+                                <div class="filter-group">
+                                    <label class="filter-label">按舖類</label>
+                                    <div class="filter-buttons">
+                                        <button class="filter-btn" data-filter="category" data-value="A">A級</button>
+                                        <button class="filter-btn" data-filter="category" data-value="B">B級</button>
+                                        <button class="filter-btn" data-filter="category" data-value="C">C級</button>
+                                        <button class="filter-btn" data-filter="category" data-value="D">D級</button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- 貨場面積 -->
-                            <div class="filter-group">
-                                <label class="filter-label">按貨場面積</label>
-                                <div class="filter-buttons">
-                                    <button class="filter-btn" data-filter="size" data-value="XL">XL</button>
-                                    <button class="filter-btn" data-filter="size" data-value="L">L</button>
-                                    <button class="filter-btn" data-filter="size" data-value="M">M</button>
-                                    <button class="filter-btn" data-filter="size" data-value="S">S</button>
-                                    <button class="filter-btn" data-filter="size" data-value="XS">XS</button>
+                                <!-- 貨場面積 -->
+                                <div class="filter-group">
+                                    <label class="filter-label">按貨場面積</label>
+                                    <div class="filter-buttons">
+                                        <button class="filter-btn" data-filter="size" data-value="XL">XL</button>
+                                        <button class="filter-btn" data-filter="size" data-value="L">L</button>
+                                        <button class="filter-btn" data-filter="size" data-value="M">M</button>
+                                        <button class="filter-btn" data-filter="size" data-value="S">S</button>
+                                        <button class="filter-btn" data-filter="size" data-value="XS">XS</button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- 客源類型 Type -->
-                            <div class="filter-group">
-                                <label class="filter-label">按客源類型</label>
-                                <div class="filter-buttons">
-                                    <button class="filter-btn" data-filter="type" data-value="T">遊客 (T)</button>
-                                    <button class="filter-btn" data-filter="type" data-value="M">混合 (M)</button>
-                                    <button class="filter-btn" data-filter="type" data-value="L">本地 (L)</button>
+                                <!-- 客源類型 Type -->
+                                <div class="filter-group">
+                                    <label class="filter-label">按客源類型</label>
+                                    <div class="filter-buttons">
+                                        <button class="filter-btn" data-filter="type" data-value="T">遊客 (T)</button>
+                                        <button class="filter-btn" data-filter="type" data-value="M">混合 (M)</button>
+                                        <button class="filter-btn" data-filter="type" data-value="L">本地 (L)</button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- 店鋪組別 -->
-                            <div class="filter-group">
-                                <label class="filter-label">按店鋪組別</label>
-                                <div class="filter-buttons store-group-buttons">
-                                    <button class="filter-btn store-group-btn" data-filter="storeGroup" data-value="HA">HA</button>
-                                    <button class="filter-btn store-group-btn" data-filter="storeGroup" data-value="HB">HB</button>
-                                    <button class="filter-btn store-group-btn" data-filter="storeGroup" data-value="HC">HC</button>
-                                    <button class="filter-btn store-group-btn" data-filter="storeGroup" data-value="HD">HD</button>
+                                <!-- 店鋪組別 -->
+                                <div class="filter-group">
+                                    <label class="filter-label">按店鋪組別</label>
+                                    <div class="filter-buttons store-group-buttons">
+                                        <button class="filter-btn store-group-btn" data-filter="storeGroup" data-value="HA">HA</button>
+                                        <button class="filter-btn store-group-btn" data-filter="storeGroup" data-value="HB">HB</button>
+                                        <button class="filter-btn store-group-btn" data-filter="storeGroup" data-value="HC">HC</button>
+                                        <button class="filter-btn store-group-btn" data-filter="storeGroup" data-value="HD">HD</button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -404,10 +428,6 @@
                     <!-- 右側：OM 店鋪清單面板 -->
                     <div class="selector-right-panel">
                         <div id="omStoresPanel" class="om-stores-panel">
-                            <div class="om-stores-header">
-                                <h4 id="omStoresTitle">👤 請選擇營運經理查看店鋪</h4>
-                                <span class="om-stores-count" id="omStoresCount"></span>
-                            </div>
                             <div id="omStoresContent" class="om-stores-content">
                                 <div class="om-empty-state">
                                     <div class="om-empty-icon">🏪</div>

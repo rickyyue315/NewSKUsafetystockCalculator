@@ -425,9 +425,9 @@ const THEME_DARK = {
         headerBg: "linear-gradient(135deg, #3b4261 0%, #2d3142 100%)",
         footerBg: "#1a1b26",
         
-        textPrimary: "#e2e8f0",
-        textSecondary: "#94a3b8",
-        textMuted: "#64748b",
+        textPrimary: "#f1f5f9",
+        textSecondary: "#cbd5e1",
+        textMuted: "#94a3b8",
         textLight: "#f1f5f9",
         
         borderLight: "#3d4451",
@@ -448,9 +448,9 @@ const THEME_DARK = {
         highlight: "#fde047",
         
         tableHeaderBg: "#3b4261",
-        tableHeaderText: "#e2e8f0",
-        tableRowEven: "#2a2e3f",
-        tableRowHover: "#374151",
+        tableHeaderText: "#f1f5f9",
+        tableRowEven: "#353b54",
+        tableRowHover: "#454d73",
         tableTotalBg: "#1e3a2f",
         tableCarryBg: "#3d2f1e",
         

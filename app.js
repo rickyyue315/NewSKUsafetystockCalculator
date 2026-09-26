@@ -295,6 +295,10 @@ class SafetyStockCalculator {
         root.style.setProperty('--color-scrollbar-thumb', colors.scrollbarThumb);
         root.style.setProperty('--color-scrollbar-thumb-hover', colors.scrollbarThumbHover);
 
+        // 標記當前主題，供 CSS 深色模式覆寫規則使用
+        root.setAttribute('data-theme', themeKey);
+        if (document.body) document.body.setAttribute('data-theme', themeKey);
+
         this.currentTheme = themeKey;
         this.updateThemeSelectorUI();
     }
@@ -4546,7 +4550,10 @@ class SafetyStockCalculator {
                 ? '（模式 3：Size 固定為 M）'
                 : '';
 
-        this.showToast(`已套用「${templateName}」模板 ${modeNote}`.trim());
+        const templateLabels = { current: '目前設定', default: '預設權重', balanced: '平衡權重', conservative: '保守型', aggressive: '積極型' };
+        const templateLabel = templateLabels[templateName] || templateName;
+
+        this.showToast(`已套用「${templateLabel}」模板 ${modeNote}`.trim());
 
         // 模板即時生效：預覽 + 同步 + 重算（免確認）
         try { this.previewWeights({ silent: true }); } catch (e) {}
