@@ -5,6 +5,13 @@
 格式基於 [Keep a Changelog](https://keepachangelog.com/)，
 項目遵循 [語義化版本](https://semver.org/)。
 
+## [1.2.1] - 2026-09-26
+
+### 新增
+
+- 網頁底部加入版本序號（`v1.2.1 | 2026-09-26`），方便確認線上是否已更新到最新 push。
+- 版本單一來源為 `config.js` 的 `APP_VERSION` / `APP_BUILD_DATE`，由 `app.js` 渲染到頁尾，另有內聯兜底腳本。
+
 ## [1.2.0] - 2026-02-13
 
 ### 變更

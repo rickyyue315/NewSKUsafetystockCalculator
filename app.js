@@ -55,6 +55,7 @@ class SafetyStockCalculator {
 
     // 初始化應用
     init() {
+        this.renderAppVersion();
         this.loadStoresFromConfig();
         this.loadSafetyStockMatrix();
         this.renderOmFilterButtons();
@@ -81,6 +82,18 @@ class SafetyStockCalculator {
                 try { this.updateCockpitBar(); } catch (e) {}
             }
         }, 300);
+    }
+
+    // 頁尾版本號：單一來源為 config.js 的 APP_VERSION / APP_BUILD_DATE
+    renderAppVersion() {
+        try {
+            const version = (typeof APP_VERSION !== 'undefined' && APP_VERSION) ? APP_VERSION : 'v1.2.1';
+            const buildDate = (typeof APP_BUILD_DATE !== 'undefined' && APP_BUILD_DATE) ? APP_BUILD_DATE : '2026-09-26';
+            const versionEl = document.getElementById('appVersion');
+            const dateEl = document.getElementById('appBuildDate');
+            if (versionEl) versionEl.textContent = version;
+            if (dateEl) dateEl.textContent = buildDate;
+        } catch (e) { /* 頁尾版本顯示失敗不影響主流程 */ }
     }
 
     // ==================== 模式切換 ====================

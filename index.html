@@ -732,11 +732,27 @@ MA01,澳門廣場,MO,B,,M,,
 
         <footer>
             <p>New SKU Safety (Replenishment) Stock Calculator (2026) – RP Team (Based on a concept by CMPD-Natalie Wong)</p>
+            <p class="app-version"><span id="appVersion">v1.2.1</span><span class="version-sep"> | </span><span id="appBuildDate">2026-09-26</span></p>
         </footer>
     </div>
 
     <script src="config.js"></script>
     <script src="app.js"></script>
+    <script>
+        // 頁尾版本號兜底：即使主程式初始化失敗，也能顯示 config.js 的版本
+        (function () {
+            try {
+                if (typeof APP_VERSION !== 'undefined') {
+                    var v = document.getElementById('appVersion');
+                    if (v) v.textContent = APP_VERSION;
+                }
+                if (typeof APP_BUILD_DATE !== 'undefined') {
+                    var d = document.getElementById('appBuildDate');
+                    if (d) d.textContent = APP_BUILD_DATE;
+                }
+            } catch (e) {}
+        })();
+    </script>
     <!-- SheetJS for Excel export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </body>

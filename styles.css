@@ -200,6 +200,20 @@ footer {
     transition: background 0.3s ease, color 0.3s ease;
 }
 
+footer p {
+    margin: 4px 0;
+}
+
+.app-version {
+    font-size: 0.8em;
+    opacity: 0.75;
+    font-family: monospace;
+}
+
+.version-sep {
+    margin: 0 6px;
+}
+
 /* ==================== 區域樣式 ==================== */
 .section {
     margin-bottom: 30px;

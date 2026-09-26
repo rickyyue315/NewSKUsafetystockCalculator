@@ -1,3 +1,9 @@
+// ==================== 應用版本：頁尾顯示用 ====================
+// 每次 push / 發佈前請手動遞增，方便確認線上是否已更新。
+// 單一來源：index.html 頁尾由 app.js 讀取此處渲染。
+const APP_VERSION = 'v1.2.1';
+const APP_BUILD_DATE = '2026-09-26';
+
 // ==================== 配置文件：店鋪和Safety Stock參數 ====================
 // 此文件存儲所有的店鋪名單和Safety Stock參數配置
 // 根據 Safety Stocks Calculation 1.xlsx 重新設計
@@ -806,6 +812,8 @@ const DEFAULT_THEME = "minimal";
 // 導出配置
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        APP_VERSION,
+        APP_BUILD_DATE,
         STORES_CONFIG,
         SAFETY_STOCK_MATRIX,
         CATEGORY_DEFINITIONS,
