@@ -143,6 +143,9 @@ const SAFETY_STOCK_MATRIX = {
         }
     },
     "MO": {
+        // 註記（2026-09）：MO A組 XL/L（32/30）與 M（19）存在斷崖（HK 同組為平滑遞減），
+        // 已查舊版 Safety Stocks Calculation 1.xlsx 屬不同世代設計、無法交叉考證。
+        // 此處視為業務核定值，程式不得逕行平滑；權重模型擬合此格殘差約 -6，屬已知模型極限。
         "A": {
             "T": { "XL": 32, "L": 30, "M": 19, "S": 16, "XS": 14 },
             "M": { "XL": 27, "L": 25, "M": 16, "S": 13, "XS": 12 },
@@ -167,6 +170,8 @@ const SAFETY_STOCK_MATRIX = {
 };
 
 // 計算組合代碼（如 HKAL, HKBM 等）
+// 注意：此函數忽略 Type 維度，同 Region+Class+Size 但不同 Type 的店鋪會併為一組。
+// App 主流程請用 buildModeTypeCode（含 Type），此函數僅保留作向下相容。
 function getStoreTypeCode(region, category, size) {
     return `${region}${category}${size}`;
 }
@@ -244,12 +249,17 @@ const DEFAULT_CALCULATION_CONFIG = {
 // 用於快速計算 Safety Stock 對照表
 
 // 預設權重配置 - 包含 Type（店舖類型）權重
+// 校準說明（2026-09）：此組預設值以 log-linear 最小平方擬合 SAFETY_STOCK_MATRIX
+// （固定 base=2、HK=1、M-Type=1），RMSE ≈ 1.4，全店總量約 1129（對照表 1173）。
+// 目的：按「套用權重」時保持原有庫存規模，只調形狀，不砍總量。
+// 已知殘差：MO A組 XL/L（32/30）與 M（19）的斷崖無法被乘法模型擬合，
+// 該格預測約 26（-6），屬模型極限，非參數錯誤，詳見矩陣處註記。
 const WEIGHT_CONFIG = {
-    class: { A: 2.2, B: 1.7, C: 1.3, D: 1.1 },
-    size: { XL: 2.8, L: 2.2, M: 1.6, S: 1.2, XS: 0.9 },
-    type: { T: 1.2, M: 1.0, L: 0.9 },
+    class: { A: 2.2, B: 1.75, C: 1.52, D: 1.35 },
+    size: { XL: 7.22, L: 6.55, M: 5.3, S: 4.6, XS: 4.03 },
+    type: { T: 1.23, M: 1.0, L: 0.88 },
     baseValue: 2,
-    regionFactor: { HK: 1.0, MO: 1.33 },
+    regionFactor: { HK: 1.0, MO: 1.22 },
     salesTarget: 0,
     safetyStockDays: 7,
     targetTotal: 0
@@ -257,22 +267,22 @@ const WEIGHT_CONFIG = {
 
 // 預設模板 - 提供多種權重設定選項（已整合 Type 權重）
 const WEIGHT_TEMPLATES = {
-    // 目前設定（標準型權重配置）
+    // 目前設定（標準型權重配置，與 WEIGHT_CONFIG 同步，擬合對照表）
     current: {
-        class: { A: 2.2, B: 1.7, C: 1.3, D: 1.1 },
-        size: { XL: 2.8, L: 2.2, M: 1.6, S: 1.2, XS: 0.9 },
-        type: { T: 1.2, M: 1.0, L: 0.9 },
+        class: { A: 2.2, B: 1.75, C: 1.52, D: 1.35 },
+        size: { XL: 7.22, L: 6.55, M: 5.3, S: 4.6, XS: 4.03 },
+        type: { T: 1.23, M: 1.0, L: 0.88 },
         baseValue: 2,
-        regionFactor: { HK: 1.0, MO: 1.33 }
+        regionFactor: { HK: 1.0, MO: 1.22 }
     },
 
     // 預設權重（與目前設定相同）
     default: {
-        class: { A: 2.2, B: 1.7, C: 1.3, D: 1.1 },
-        size: { XL: 2.8, L: 2.2, M: 1.6, S: 1.2, XS: 0.9 },
-        type: { T: 1.2, M: 1.0, L: 0.9 },
+        class: { A: 2.2, B: 1.75, C: 1.52, D: 1.35 },
+        size: { XL: 7.22, L: 6.55, M: 5.3, S: 4.6, XS: 4.03 },
+        type: { T: 1.23, M: 1.0, L: 0.88 },
         baseValue: 2,
-        regionFactor: { HK: 1.0, MO: 1.33 }
+        regionFactor: { HK: 1.0, MO: 1.22 }
     },
 
     // 平衡權重（中等庫存配置，Type 權重適中）
@@ -331,7 +341,7 @@ function calculateSafetyStockWithWeights(region, category, size, type, weights) 
     // 確保最小值為 0
     if (result < 0) result = 0;
     
-    // 四捨五入為整數
+    // 四捨五入為整數（矩陣域統一用 Math.round；advanced.js 的理論公式用 Math.ceil 屬保守取整，兩者刻意不同）
     return Math.round(result);
 }
 

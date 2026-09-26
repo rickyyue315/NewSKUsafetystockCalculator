@@ -117,7 +117,7 @@
                                     </div>
                                     <div class="param-item">
                                         <span class="param-name">🌍 區域係數：</span>
-                                        <span class="param-desc">香港(HK)通常為 1.0，澳門(MO)通常較高（如 1.33）以反映不同市場需求</span>
+                                        <span class="param-desc">香港(HK)通常為 1.0，澳門(MO)通常較高（如 1.22）以反映不同市場需求</span>
                                     </div>
                                 </div>
 
@@ -127,23 +127,23 @@
                                         <!-- 範例1：正常情況 -->
                                         <div class="formula-example-item">
                                             <strong>✅ 範例1 - 遊客區大型A級店舖：</strong>
-                                            <p><strong>條件：</strong>A級店舖 (Class權重=2.2) + 大型貨場 (Size權重=2.2) + 遊客區 (Type權重=1.2) + 澳門 (區域係數=1.33)</p>
-                                            <p><strong>計算：</strong>2 + (2.2 × 2.2 × 1.2 × 1.33) = 2 + 7.7 ≈ <strong>10</strong> ✓</p>
+                                            <p><strong>條件：</strong>A級店舖 (Class權重=2.2) + 大型貨場 (Size權重=6.55) + 遊客區 (Type權重=1.23) + 澳門 (區域係數=1.22)</p>
+                                            <p><strong>計算：</strong>2 + (2.2 × 6.55 × 1.23 × 1.22) = 2 + 21.6 ≈ <strong>24</strong> ✓</p>
                                             <p class="example-note">💡 遊客區店舖 (Type=T) 庫存需求較高（權重1.2）</p>
                                         </div>
 
                                         <!-- 範例2：本地客源 -->
                                         <div class="formula-example-item">
                                             <strong>✅ 範例2 - 本地客源小型C級店舖：</strong>
-                                            <p><strong>條件：</strong>C級店舖 (Class權重=1.3) + 小型貨場 (Size權重=1.2) + 本地客源 (Type權重=0.9) + 香港 (區域係數=1.0)</p>
-                                            <p><strong>計算：</strong>2 + (1.3 × 1.2 × 0.9 × 1.0) = 2 + 1.4 ≈ <strong>3</strong> ✓</p>
+                                            <p><strong>條件：</strong>C級店舖 (Class權重=1.52) + 小型貨場 (Size權重=4.6) + 本地客源 (Type權重=0.88) + 香港 (區域係數=1.0)</p>
+                                            <p><strong>計算：</strong>2 + (1.52 × 4.6 × 0.88 × 1.0) = 2 + 6.2 ≈ <strong>8</strong> ✓</p>
                                             <p class="example-note">💡 本地客源店舖 (Type=L) 庫存需求較低（權重0.9）</p>
                                         </div>
 
                                         <!-- 範例3：區域係數為0的情況 -->
                                         <div class="formula-example-item">
                                             <strong>⚠️ 範例3 - 區域係數為0（不需要庫存）：</strong>
-                                            <p><strong>條件：</strong>B級店舖 (Class權重=1.4) + 中型貨場 (Size權重=1.2) + 混合型 (Type權重=1.0) + 某區域 (區域係數=0)</p>
+                                            <p><strong>條件：</strong>B級店舖 (Class權重=1.75) + 中型貨場 (Size權重=5.3) + 混合型 (Type權重=1.0) + 某區域 (區域係數=0)</p>
                                             <p><strong>計算：</strong>只要區域係數為0，Safety Stock直接為 <strong>0</strong> ✓</p>
                                             <p class="example-note">⚠️ 當任何權重參數為0時，整個計算結果為0，表示該區域不需要庫存</p>
                                         </div>
@@ -162,15 +162,15 @@
                                 </label>
                                 <label class="weight-label-b">
                                     <span class="weight-label-text">B級</span>
-                                    <input type="number" id="weightClassB" value="1.7" min="0" step="0.1" class="weight-input">
+                                    <input type="number" id="weightClassB" value="1.75" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label class="weight-label-c">
                                     <span class="weight-label-text">C級</span>
-                                    <input type="number" id="weightClassC" value="1.3" min="0" step="0.1" class="weight-input">
+                                    <input type="number" id="weightClassC" value="1.52" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label class="weight-label-d">
                                     <span class="weight-label-text">D級</span>
-                                    <input type="number" id="weightClassD" value="1.1" min="0" step="0.1" class="weight-input">
+                                    <input type="number" id="weightClassD" value="1.35" min="0" step="0.1" class="weight-input">
                                 </label>
                             </div>
                         </div>
@@ -181,23 +181,23 @@
                             <div class="weight-inputs">
                                 <label>
                                     <span class="weight-label-text">XL</span>
-                                    <input type="number" id="weightSizeXL" value="2.8" min="0" step="0.1" class="weight-input">
+                                    <input type="number" id="weightSizeXL" value="7.22" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label>
                                     <span class="weight-label-text">L</span>
-                                    <input type="number" id="weightSizeL" value="2.2" min="0" step="0.1" class="weight-input">
+                                    <input type="number" id="weightSizeL" value="6.55" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label>
                                     <span class="weight-label-text">M</span>
-                                    <input type="number" id="weightSizeM" value="1.6" min="0" step="0.1" class="weight-input">
+                                    <input type="number" id="weightSizeM" value="5.3" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label>
                                     <span class="weight-label-text">S</span>
-                                    <input type="number" id="weightSizeS" value="1.2" min="0" step="0.1" class="weight-input">
+                                    <input type="number" id="weightSizeS" value="4.6" min="0" step="0.1" class="weight-input">
                                 </label>
                                 <label>
                                     <span class="weight-label-text">XS</span>
-                                    <input type="number" id="weightSizeXS" value="0.9" min="0" step="0.1" class="weight-input">
+                                    <input type="number" id="weightSizeXS" value="4.03" min="0" step="0.1" class="weight-input">
                                 </label>
                             </div>
                         </div>
@@ -209,7 +209,7 @@
                             <div class="weight-inputs">
                                 <label class="weight-label-t">
                                     <span class="weight-label-text">T - 遊客區</span>
-                                    <input type="number" id="weightTypeT" value="1.2" min="0" step="0.05" class="weight-input">
+                                    <input type="number" id="weightTypeT" value="1.23" min="0" step="0.05" class="weight-input">
                                 </label>
                                 <label class="weight-label-m">
                                     <span class="weight-label-text">M - 混合型</span>
@@ -217,7 +217,7 @@
                                 </label>
                                 <label class="weight-label-l">
                                     <span class="weight-label-text">L - 本地客源</span>
-                                    <input type="number" id="weightTypeL" value="0.9" min="0" step="0.05" class="weight-input">
+                                    <input type="number" id="weightTypeL" value="0.88" min="0" step="0.05" class="weight-input">
                                 </label>
                             </div>
                         </div>
@@ -236,7 +236,7 @@
                                 </label>
                                 <label>
                                     <span class="weight-label-text">MO 係數</span>
-                                    <input type="number" id="moFactor" value="1.33" min="0" step="0.01" class="weight-input">
+                                    <input type="number" id="moFactor" value="1.22" min="0" step="0.01" class="weight-input">
                                 </label>
                             </div>
                         </div>
@@ -247,7 +247,7 @@
                             <div class="weight-inputs">
                                 <label>
                                     <span class="weight-label-text">銷售目標數量</span>
-                                    <input type="number" id="salesTarget" value="" min="0" step="1" class="weight-input" placeholder="例如 36000">
+                                    <input type="number" id="salesTarget" value="" min="0" step="1" class="weight-input" placeholder="單一 SKU 月銷量，例如 300" title="請輸入「單一 SKU」的月銷售目標（件），不是全公司總銷量">
                                 </label>
                                 <label class="slider-label">
                                     <span class="weight-label-text">Safety Stock Days<br><span class="days-display">7</span> 天</span>
@@ -258,7 +258,7 @@
                                     <input type="number" id="targetTotal" value="" min="0" step="1" class="weight-input" placeholder="自動計算" readonly>
                                 </label>
                             </div>
-                            <p class="weight-hint">💡 目標總 Safety = 銷售目標數量 ÷ 30 × Safety Stock Days (若未填寫銷售目標數量則維持手動輸入)</p>
+                            <p class="weight-hint">💡 目標總 Safety = 單一 SKU 銷售目標數量 ÷ 30 × Safety Stock Days（請填單一 SKU 月銷量，而非全公司總銷量；若未填則維持手動輸入）</p>
                         </div>
 
                         <!-- 快速模板 -->

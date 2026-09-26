@@ -1437,7 +1437,8 @@ class SafetyStockCalculator {
             categories.forEach(category => {
                 matrix[region][category] = {};
                 sizes.forEach(size => {
-                    matrix[region][category][size] = getSafetyStockValue(region, category, size, 'M');
+                    // 用 getSafetyStock（含該模式自訂值），避免草稿重建時顯示值與實際計算值脫鉤
+                    matrix[region][category][size] = this.getSafetyStock(region, category, size, 'M', 'mode2');
                 });
             });
         });
@@ -1456,7 +1457,8 @@ class SafetyStockCalculator {
             categories.forEach(category => {
                 matrix[region][category] = {};
                 types.forEach(type => {
-                    matrix[region][category][type] = getSafetyStockValue(region, category, 'M', type);
+                    // 用 getSafetyStock（含該模式自訂值），避免草稿重建時顯示值與實際計算值脫鉤
+                    matrix[region][category][type] = this.getSafetyStock(region, category, 'M', type, 'mode3');
                 });
             });
         });
@@ -2013,10 +2015,13 @@ class SafetyStockCalculator {
         if (!this._adminVerified) { this.showToast('❌ 請先解鎖管理區域'); return; }
         if (confirm('確定要重置 Safety Stock 對照表為預設值嗎？')) {
             if (this.calculationMode === 'mode2') {
+                this.customSafetyStockMode2 = {};
                 this.matrixDraftMode2 = this.buildMatrixDraftMode2();
             } else if (this.calculationMode === 'mode3') {
+                this.customSafetyStockMode3 = {};
                 this.matrixDraftMode3 = this.buildMatrixDraftMode3();
             } else {
+                this.customSafetyStock = {};
                 this.matrixDraft = this.buildDefaultMatrix();
             }
             this.renderSafetyStockMatrix();
@@ -2034,9 +2039,13 @@ class SafetyStockCalculator {
                 .filter(store => store && store.Site)
                 .map(store => store.Site)
         );
+        let clearedStoreCustom = 0;
         if (selectedSites.size > 0) {
             selectedSites.forEach(site => {
-                delete this.customStoreStock[site];
+                if (this.customStoreStock[site] !== undefined) {
+                    delete this.customStoreStock[site];
+                    clearedStoreCustom++;
+                }
             });
         }
 
@@ -2046,7 +2055,11 @@ class SafetyStockCalculator {
         this.updateStoresPreview();
         this.updateCockpitBar();
         this.scheduleAutoCalculate();
-        if (!options.silent) this.showToast('✅ 對照表已套用到選擇店鋪');
+        if (!options.silent) {
+            this.showToast(clearedStoreCustom > 0
+                ? `✅ 對照表已套用到選擇店鋪（已清除 ${clearedStoreCustom} 間個別自訂值）`
+                : '✅ 對照表已套用到選擇店鋪');
+        }
     }
 
     // ==================== 計算函數 ====================
@@ -2125,7 +2138,7 @@ class SafetyStockCalculator {
             });
         });
         
-        // 按類型彙總
+        // 按類型彙總（群內若含不同個別自訂值，顯示平均；與預覽/快速報表一致）
         const typeSummary = {};
         this.results.forEach(result => {
             if (!typeSummary[result.typeCode]) {
@@ -2138,6 +2151,9 @@ class SafetyStockCalculator {
                     displaySize: result.displaySize,
                     displayType: result.displayType,
                     safetyStock: result.safetyStock,
+                    ssMin: result.safetyStock,
+                    ssMax: result.safetyStock,
+                    displaySs: result.safetyStock,
                     storeCount: 0,
                     allShopQty: 0,
                     stores: []
@@ -2146,6 +2162,18 @@ class SafetyStockCalculator {
             typeSummary[result.typeCode].storeCount++;
             typeSummary[result.typeCode].allShopQty += result.safetyStock;
             typeSummary[result.typeCode].stores.push(result.name);
+            if (result.safetyStock < typeSummary[result.typeCode].ssMin) {
+                typeSummary[result.typeCode].ssMin = result.safetyStock;
+            }
+            if (result.safetyStock > typeSummary[result.typeCode].ssMax) {
+                typeSummary[result.typeCode].ssMax = result.safetyStock;
+            }
+        });
+
+        Object.values(typeSummary).forEach(g => {
+            g.displaySs = g.ssMax !== g.ssMin && g.storeCount > 0
+                ? Math.round(g.allShopQty / g.storeCount)
+                : g.safetyStock;
         });
         
         // 轉換為陣列並排序
@@ -2223,9 +2251,11 @@ class SafetyStockCalculator {
         this.selectedStores.forEach(idx => {
             const s = this.stores[idx];
             if (!s) return;
+            // 真相來源與 calculate() 一致：個別自訂值 > 已生效對照表值。
+            // 刻意不用 getMatrixDraftValue（草稿），避免草稿未同步時駕駛艙與計算結果脫鉤。
             let ss;
             if (this.customStoreStock[s.Site] !== undefined) ss = this.customStoreStock[s.Site];
-            else ss = this.getMatrixDraftValue(s.Regional, s.Class, s.Size, s.Type || 'M', mode);
+            else ss = this.getSafetyStock(s.Regional, s.Class, s.Size, s.Type || 'M', mode);
             total += (ss || 0);
         });
         // 若已有計算結果，優先用結果總量（與表格一致）
@@ -2269,9 +2299,12 @@ class SafetyStockCalculator {
                 const tr = document.createElement('tr');
                 tr.className = 'data-row';
                 tr.dataset.typeCode = result.typeCode;
-                
-                const carryStatus = result.safetyStock > 0 ? 'Y' : 'FALSE';
-                if (result.safetyStock > 0) carryCount += result.storeCount;
+
+                const displaySs = result.displaySs ?? result.safetyStock;
+                const isMixed = (result.ssMax ?? displaySs) !== (result.ssMin ?? displaySs);
+                const ssTitle = isMixed ? '此群組含不同自訂值，顯示平均值' : '';
+                const carryStatus = result.allShopQty > 0 ? 'Y' : 'FALSE';
+                if (result.allShopQty > 0) carryCount += result.storeCount;
                 
                 // Type 標籤樣式
                 const typeColors = { 'T': '#ff6b6b', 'M': '#4ecdc4', 'L': '#45b7d1', '全部': '#9e9e9e' };
@@ -2286,9 +2319,9 @@ class SafetyStockCalculator {
                     <td><span class="badge" style="background:${typeColor}; color:white;">${typeDisplay}</span></td>
                     <td><strong>${result.typeCode}</strong></td>
                     <td style="text-align:center">${result.storeCount}</td>
-                    <td style="text-align:center" class="editable-cell" data-field="safetyStock">
-                        <span class="display-value">${result.safetyStock}</span>
-                        <input type="number" class="edit-value" value="${result.safetyStock}" min="0" style="display:none">
+                    <td style="text-align:center" class="editable-cell" data-field="safetyStock" title="${ssTitle}">
+                        <span class="display-value">${displaySs}</span>
+                        <input type="number" class="edit-value" value="${displaySs}" min="0" style="display:none">
                     </td>
                     <td style="text-align:center;font-weight:bold">${result.allShopQty}</td>
                     <td class="carry-status ${carryStatus === 'Y' ? 'carry-yes' : 'carry-no'}">${carryStatus}</td>
@@ -2594,6 +2627,7 @@ class SafetyStockCalculator {
         
         // 更新 summaryResults
         const result = this.summaryResults.find(r => r.typeCode === typeCode);
+        let clearedStoreCustom = 0;
         if (result) {
             result.safetyStock = newValue;
 
@@ -2603,7 +2637,20 @@ class SafetyStockCalculator {
                 }
             });
 
+            // 該群組成員若留有個別店鋪自訂值，下次 calculate() 會優先採用、蓋過剛設的群組值；
+            // 一併清除，否則這次群組編輯對這些店形同無效
+            this.results.forEach(r => {
+                if (r.typeCode === typeCode && this.customStoreStock[r.code] !== undefined) {
+                    delete this.customStoreStock[r.code];
+                    clearedStoreCustom++;
+                }
+            });
+
             result.allShopQty = result.storeCount * newValue;
+            // 群組已統一為單一值（個別自訂值已清除），同步 min/max/顯示值
+            result.ssMin = newValue;
+            result.ssMax = newValue;
+            result.displaySs = newValue;
 
             if (mode === 'mode2') {
                 const key = `${result.region}-${result.category}-${result.size}`;
@@ -2639,7 +2686,11 @@ class SafetyStockCalculator {
         // 重新顯示結果以更新總計
         this.displayResults();
         this.saveToLocalStorage();
+        try { this.renderStores(); } catch (e) {}
         try { this.updateCockpitBar(); } catch (e) {}
+        if (clearedStoreCustom > 0) {
+            this.showToast(`✅ 群組值已更新（已清除 ${clearedStoreCustom} 間個別自訂值，統一使用群組值）`);
+        }
     }
 
     cancelCellEdit(cell) {
@@ -2726,14 +2777,15 @@ class SafetyStockCalculator {
         let totalSS = 0;
         
         this.summaryResults.forEach(result => {
-            const carry = result.safetyStock > 0 ? 'Y' : 'FALSE';
+            const carry = result.allShopQty > 0 ? 'Y' : 'FALSE';
             const sizeDisplay = result.displaySize || result.size;
-            csv += `${result.region},${result.category},${sizeDisplay},${result.typeCode},${result.storeCount},${result.safetyStock},${result.allShopQty},${carry}\n`;
+            const displaySs = result.displaySs ?? result.safetyStock;
+            csv += `${result.region},${result.category},${sizeDisplay},${result.typeCode},${result.storeCount},${displaySs},${result.allShopQty},${carry}\n`;
             totalStores += result.storeCount;
             totalSS += result.allShopQty;
         });
         
-        csv += `\nTOTAL:,,,${totalStores},,${totalSS},,\n`;
+        csv += `\nTOTAL:,,,,${totalStores},,${totalSS},\n`;
         
         // ========== 第四頁：按 OM 彙總 ==========
         csv += '\n\n\n\n\n\n\n\n\n\n';
@@ -2841,15 +2893,16 @@ class SafetyStockCalculator {
         ];
 
         this.summaryResults.forEach(result => {
-            const carry = result.safetyStock > 0 ? 'Y' : 'FALSE';
+            const carry = result.allShopQty > 0 ? 'Y' : 'FALSE';
             const sizeDisplay = result.displaySize || result.size;
+            const displaySs = result.displaySs ?? result.safetyStock;
             summaryData.push([
                 result.region,
                 result.category,
                 sizeDisplay,
                 result.typeCode,
                 result.storeCount,
-                result.safetyStock,
+                displaySs,
                 result.allShopQty,
                 carry
             ]);
@@ -3002,24 +3055,30 @@ class SafetyStockCalculator {
         const matrixSheetRef = '對照表';
         
         this.results.forEach((result, index) => {
-            const carry = result.safetyStock > 0 ? 'Y' : 'FALSE';
             const store = this.storeMap.get(result.code);
             const om = store ? store.OM : '';
             const storeSize = store?.Size || result.size;
             const typeForFormula = mode === 'mode2' ? 'M' : (store?.Type || result.type || 'M');
             const sizeForFormula = mode === 'mode3' ? 'M' : storeSize;
-            
-            // 建構公式：查詢對照表
-            const rowNum = 5 + index; // Excel列號（1-based，加上標題和空行）
-            const safetyStockFormula = this.buildSafetyStockFormula(
-                result.region,
-                result.category,
-                sizeForFormula,
-                typeForFormula,
-                matrixSheetRef,
-                mode
-            );
-            
+
+            // Excel列號（1-based，加上標題和空行）
+            const rowNum = 5 + index;
+            // Carry 用活公式跟隨 G 欄，避免改對照表後 Carry 過期
+            const carryFormula = `IF(G${rowNum}>0,"Y","FALSE")`;
+            // 個別店鋪自訂值不在對照表裡，VLOOKUP 查不到，必須輸出靜態數才與網頁一致；
+            // 其餘用公式查詢對照表，保持改表即連動
+            const hasStoreCustom = this.customStoreStock[result.code] !== undefined;
+            const safetyStockCell = hasStoreCustom
+                ? result.safetyStock
+                : this.buildSafetyStockFormula(
+                    result.region,
+                    result.category,
+                    sizeForFormula,
+                    typeForFormula,
+                    matrixSheetRef,
+                    mode
+                );
+
             detailData.push([
                 result.region,
                 result.code,
@@ -3027,8 +3086,8 @@ class SafetyStockCalculator {
                 result.typeCode,
                 result.category,
                 storeSize,
-                safetyStockFormula, // 使用公式而非值
-                carry,
+                safetyStockCell,
+                carryFormula,
                 om
             ]);
         });
@@ -3048,13 +3107,24 @@ class SafetyStockCalculator {
             { wch: 12 }   // OM
         ];
 
-        // 設置公式屬性，使其被識別為公式
+        // 設置公式屬性，使其被識別為公式（靜態數值欄保留原快取值，與網頁一致）
         detailData.forEach((row, idx) => {
-            if (idx >= 4 && row[6]) { // 跳過標題行，檢查Safety Stock列
-                const cellRef = XLSX.utils.encode_cell({ r: idx, c: 6 });
-                if (wsDetail[cellRef]) {
-                    wsDetail[cellRef].f = row[6]; // 設置為公式
-                    wsDetail[cellRef].v = 0; // 暫時設置值為0（打開時會計算）
+            if (idx >= 4) { // 跳過標題行
+                // Safety Stock列：字串才是公式；數字是個別店鋪自訂靜態值，不設公式
+                if (typeof row[6] === 'string' && row[6]) {
+                    const cellRef = XLSX.utils.encode_cell({ r: idx, c: 6 });
+                    if (wsDetail[cellRef]) {
+                        wsDetail[cellRef].f = row[6]; // 設置為公式
+                        wsDetail[cellRef].v = 0; // 暫時設置值為0（打開時會計算）
+                    }
+                }
+                // Carry列：一律為活公式
+                if (typeof row[7] === 'string' && row[7]) {
+                    const carryRef = XLSX.utils.encode_cell({ r: idx, c: 7 });
+                    if (wsDetail[carryRef]) {
+                        wsDetail[carryRef].f = row[7];
+                        wsDetail[carryRef].v = '';
+                    }
                 }
             }
         });
@@ -3073,17 +3143,19 @@ class SafetyStockCalculator {
             // 使用類型代碼做彙總，適用所有模式
             const storeCountFormula = `COUNTIF('店舖詳細清單'!D:D,"${result.typeCode}")`;
             const safetyStockSumFormula = `SUMIF('店舖詳細清單'!D:D,"${result.typeCode}",'店舖詳細清單'!G:G)`;
+            // Safety Stock 欄為單店值（總和÷店數），ALL SHOP QTY 欄為群組總和，兩者語義不同
+            const safetyStockPerStoreFormula = `IF(${storeCountFormula}=0,0,ROUND(${safetyStockSumFormula}/${storeCountFormula},0))`;
             const carryFormula = `IF(${safetyStockSumFormula}>0,"Y","FALSE")`;
             const sizeDisplay = result.displaySize || result.size;
-            
+
             summaryDataFormulas.push([
                 result.region,
                 result.category,
                 sizeDisplay,
                 result.typeCode,
                 storeCountFormula,
-                safetyStockSumFormula,
-                safetyStockSumFormula, // ALL SHOP QTY 和 Safety Stock 相同
+                safetyStockPerStoreFormula,
+                safetyStockSumFormula, // ALL SHOP QTY 為群組總和
                 carryFormula
             ]);
         });
@@ -3095,7 +3167,7 @@ class SafetyStockCalculator {
             '',
             '',
             '',
-            `COUNTA('店舖詳細清單'!B:B)-4`, // 計算店舖總數（排除標題）
+            `COUNTA('店舖詳細清單'!B:B)-1`, // B 欄非空 = 表頭 1 格 + N 筆資料，故減 1
             '',
             `SUM('彙總表'!G5:G${4 + this.summaryResults.length})`, // 彙總所有Safety Stock
             ''
@@ -3179,8 +3251,8 @@ class SafetyStockCalculator {
             // 使用公式計算OM下的SS總計
             const omTotalSSFormula = `SUMIF('店舖詳細清單'!I:I,"${om.omName}",'店舖詳細清單'!G:G)`;
             
-            // 平均SS = SS總計 / 店舖數量
-            const omAvgSSFormula = `IF(${omStoreCountFormula}=0,0,${omTotalSSFormula}/${omStoreCountFormula})`;
+            // 平均SS = SS總計 / 店舖數量（ROUND 取整，與網頁 Math.round 一致）
+            const omAvgSSFormula = `IF(${omStoreCountFormula}=0,0,ROUND(${omTotalSSFormula}/${omStoreCountFormula},0))`;
             
             // 佔比 = SS總計 / 全部SS總計 * 100
             const omPercentageFormula = `IF(SUM('OM彙總'!E:E)=0,0,ROUND(${omTotalSSFormula}/SUM('OM彙總'!E5:E${4 + omSummary.length})*100,1))`;
@@ -3475,6 +3547,9 @@ class SafetyStockCalculator {
                         .filter(idx => Number.isInteger(idx) && idx >= 0 && idx < this.stores.length && this.stores[idx] !== undefined);
                 }
 
+                // 匯入的草稿必須同步為生效值，否則 calculate() 讀的是舊生效值，匯入等於無效
+                try { this.syncDraftToApplied({ silent: true }); } catch (e) {}
+
                 // 匯入後一次重建所有依賴狀態，避免沿用舊結果 / 舊店鋪列表
                 this.clearFilters();
                 this.renderOmFilterButtons();
@@ -3518,12 +3593,13 @@ class SafetyStockCalculator {
         
         let summaryHTML = '';
         this.summaryResults.forEach(result => {
-            const carry = result.safetyStock > 0 ? 'Y' : 'FALSE';
-            if (result.safetyStock > 0) carryCount += result.storeCount;
+            const carry = result.allShopQty > 0 ? 'Y' : 'FALSE';
+            if (result.allShopQty > 0) carryCount += result.storeCount;
             totalStores += result.storeCount;
             totalSS += result.allShopQty;
             const sizeDisplay = result.displaySize || result.size;
-            
+            const displaySs = result.displaySs ?? result.safetyStock;
+
             summaryHTML += `
                 <tr>
                     <td>${result.region}</td>
@@ -3531,7 +3607,7 @@ class SafetyStockCalculator {
                     <td>${sizeDisplay}</td>
                     <td><strong>${result.typeCode}</strong></td>
                     <td style="text-align:center">${result.storeCount}</td>
-                    <td style="text-align:center">${result.safetyStock}</td>
+                    <td style="text-align:center">${displaySs}</td>
                     <td style="text-align:center"><strong>${result.allShopQty}</strong></td>
                     <td style="text-align:center">${carry}</td>
                 </tr>
@@ -3803,7 +3879,7 @@ class SafetyStockCalculator {
             const Regional = getCell('Regional').toUpperCase();
             const Class = getCell('Class').toUpperCase();
             const Class2 = getCell('Class2').toUpperCase();
-            const Size = getCell('Size').toUpperCase();
+            let Size = getCell('Size').toUpperCase();
             const OM = getCell('OM');
             const Type = getCell('Type').toUpperCase();
 
@@ -4248,7 +4324,7 @@ class SafetyStockCalculator {
         const targetTotal = Math.round(weights.targetTotal || 0);
         const mode = this.calculationMode;
         if (targetTotal > 0) {
-            const targetInfo = this.scaleMatrixToTarget(newMatrix, targetTotal);
+            const targetInfo = this.scaleMatrixToTarget(newMatrix, targetTotal, mode);
             newMatrix = targetInfo.matrix;
         }
         this.syncWeightMatrixToDraft(newMatrix, weights, mode);
@@ -4421,27 +4497,27 @@ class SafetyStockCalculator {
 
         return {
             class: {
-                A: getValue('weightClassA', 1.8),
-                B: getValue('weightClassB', 1.4),
-                C: getValue('weightClassC', 1),
-                D: getValue('weightClassD', 1)
+                A: getValue('weightClassA', 2.2),
+                B: getValue('weightClassB', 1.75),
+                C: getValue('weightClassC', 1.52),
+                D: getValue('weightClassD', 1.35)
             },
             size: {
-                XL: getValue('weightSizeXL', 2.0),
-                L: getValue('weightSizeL', 1.6),
-                M: getValue('weightSizeM', 1.2),
-                S: getValue('weightSizeS', 0.8),
-                XS: getValue('weightSizeXS', 0.8)
+                XL: getValue('weightSizeXL', 7.22),
+                L: getValue('weightSizeL', 6.55),
+                M: getValue('weightSizeM', 5.3),
+                S: getValue('weightSizeS', 4.6),
+                XS: getValue('weightSizeXS', 4.03)
             },
             type: {
-                T: getValue('weightTypeT', 1.2),
+                T: getValue('weightTypeT', 1.23),
                 M: getValue('weightTypeM', 1.0),
-                L: getValue('weightTypeL', 0.9)
+                L: getValue('weightTypeL', 0.88)
             },
-            baseValue: getValue('baseValue', 4),
+            baseValue: getValue('baseValue', 2),
             regionFactor: {
                 HK: getValue('hkFactor', 1.0),
-                MO: getValue('moFactor', 1.33)
+                MO: getValue('moFactor', 1.22)
             },
             salesTarget: salesTarget,
             safetyStockDays: safetyStockDays,
@@ -4639,12 +4715,25 @@ class SafetyStockCalculator {
     }
 
     // 依目標總量縮放矩陣
-    scaleMatrixToTarget(matrix, targetTotal) {
+    // 基準與顯示一致：有選店時只按已選店鋪縮放，否則按全店（與 calculateMatrixSummary 同基準）
+    scaleMatrixToTarget(matrix, targetTotal, mode = this.calculationMode) {
         const regions = ['HK', 'MO'];
         const categories = ['A', 'B', 'C', 'D'];
         const types = ['T', 'M', 'L'];
         const sizes = ['XL', 'L', 'M', 'S', 'XS'];
-        const counts = this.getStoreTypeCounts();
+        const basisStores = this.selectedStores.length > 0
+            ? this.selectedStores.map(idx => this.stores[idx]).filter(Boolean)
+            : this.stores;
+        // 各模式實際生效的切片不同（mode2 取 Type=M，mode3 取 Size=M），
+        // 計數必須映射到生效切片，否則縮放分母與實際套用的分子口徑不一，目標永遠對不準
+        const counts = {};
+        basisStores.forEach(store => {
+            if (!store) return;
+            const effType = mode === 'mode2' ? 'M' : (store.Type || 'M');
+            const effSize = mode === 'mode3' ? 'M' : store.Size;
+            const key = `${store.Regional}-${store.Class}-${effType}-${effSize}`;
+            counts[key] = (counts[key] || 0) + 1;
+        });
 
         let currentTotal = 0;
         const cells = [];
@@ -4685,7 +4774,14 @@ class SafetyStockCalculator {
 
         let remaining = targetTotal - appliedTotal;
         if (remaining > 0) {
-            const sorted = [...cells].filter(c => c.count > 0).sort((a, b) => {
+            // 只把餘量分配給該模式實際會生效的切片，
+            // 否則 +1 會漏到被丟棄的維度（mode2 丟 T/L、mode3 丟非 M 尺寸），目標永遠欠配
+            const sliceOK = (c) => {
+                if (mode === 'mode2') return c.type === 'M';
+                if (mode === 'mode3') return c.size === 'M';
+                return true;
+            };
+            const sorted = [...cells].filter(c => c.count > 0 && sliceOK(c)).sort((a, b) => {
                 if (b.frac !== a.frac) return b.frac - a.frac;
                 return b.count - a.count;
             });
@@ -4727,12 +4823,21 @@ class SafetyStockCalculator {
         });
 
         // 強制單調性：確保每個 (region, class) 中 XL >= L >= M >= S >= XS
-        this.enforceMonotonicity(scaledMatrix, counts);
+        // （mode2 僅 M-Type 切片會生效，mode3 的 Size 已收斂為 M，均在函數內處理）
+        this.enforceMonotonicity(scaledMatrix, counts, mode);
+
+        // 單調性修正會改變總量，重算實際已分配總量，否則 toast/提示用的 remaining 是修正前舊值
+        let finalTotal = 0;
+        cells.forEach(cell => {
+            const v = scaledMatrix?.[cell.region]?.[cell.category]?.[cell.type]?.[cell.size] ?? 0;
+            finalTotal += cell.count * v;
+        });
+        remaining = Math.max(0, targetTotal - finalTotal);
 
         return {
             matrix: scaledMatrix,
             currentTotal,
-            appliedTotal: targetTotal - remaining,
+            appliedTotal: finalTotal,
             remaining,
             scale
         };
@@ -4747,7 +4852,9 @@ class SafetyStockCalculator {
      * 2. 將釋放的配額以「從大到小每輪各 +1」的方式平均回填，
      *    保證不違反順序且盡量貼近目標總量
      */
-    enforceMonotonicity(scaledMatrix, counts) {
+    enforceMonotonicity(scaledMatrix, counts, mode = this.calculationMode) {
+        // mode3 的 Size 已收斂為 M，跨尺寸單調性無意義且會扭曲 M 值，直接跳過
+        if (mode === 'mode3') return 0;
         const regions = ['HK', 'MO'];
         const categories = ['A', 'B', 'C', 'D'];
         const types = ['T', 'M', 'L'];
@@ -4757,6 +4864,8 @@ class SafetyStockCalculator {
         regions.forEach(region => {
             categories.forEach(category => {
                 types.forEach(type => {
+                    // mode2 僅 M-Type 切片會生效，T/L 組的修正與回填會被丟棄，直接跳過以免配額洩漏
+                    if (mode === 'mode2' && type !== 'M') return;
                     let groupFreed = 0;
 
                     // Step 1: 將較小尺寸 cap 到不超過較大尺寸
@@ -4815,9 +4924,10 @@ class SafetyStockCalculator {
         const targetTotal = Math.round(weights.targetTotal || 0);
         let targetInfo = null;
         const mode = this.calculationMode;
+        const naturalTotals = this.calculateStoreTotals(newMatrix, mode);
 
         if (targetTotal > 0) {
-            targetInfo = this.scaleMatrixToTarget(newMatrix, targetTotal);
+            targetInfo = this.scaleMatrixToTarget(newMatrix, targetTotal, mode);
             newMatrix = targetInfo.matrix;
         }
 
@@ -4832,10 +4942,16 @@ class SafetyStockCalculator {
         this.scheduleAutoCalculate();
 
         const totals = this.calculateStoreTotals(newMatrix, mode);
+        // 合理性提示：目標若遠超權重自然總量，多半是把全公司銷量當成單一 SKU 輸入
+        let sanityWarn = '';
+        if (targetTotal > 0 && naturalTotals.totalAll > 0 && targetTotal > 3 * naturalTotals.totalAll) {
+            const ratio = (targetTotal / naturalTotals.totalAll).toFixed(1);
+            sanityWarn = ` ⚠️ 目標約為自然總量 ${ratio} 倍，請確認銷售目標是否為「單一 SKU」月銷量`;
+        }
         if (targetTotal > 0 && targetInfo && targetInfo.remaining > 0) {
-            this.showToast(`✅ 權重已套用！實際總量 ${totals.totalAll}（尚有 ${targetInfo.remaining} 未分配）`);
+            this.showToast(`✅ 權重已套用！實際總量 ${totals.totalAll}（尚有 ${targetInfo.remaining} 未分配）${sanityWarn}`);
         } else {
-            this.showToast(`✅ 權重已套用！總量 ${totals.totalAll}`);
+            this.showToast(`✅ 權重已套用！總量 ${totals.totalAll}${sanityWarn}`);
         }
     }
 
@@ -5073,12 +5189,16 @@ class SafetyStockCalculator {
                     dimension: dimensionValue,
                     type: store.Type || 'M',
                     count: 0,
-                    ss: ss,
+                    ssFirst: ss,
+                    ssMin: ss,
+                    ssMax: ss,
                     total: 0
                 };
             }
             typeSummary[tc].count++;
             typeSummary[tc].total += ss;
+            if (ss < typeSummary[tc].ssMin) typeSummary[tc].ssMin = ss;
+            if (ss > typeSummary[tc].ssMax) typeSummary[tc].ssMax = ss;
 
             // OM 彙總
             const om = store.OM || '未分配';
@@ -5125,7 +5245,11 @@ class SafetyStockCalculator {
             });
             let h = '';
             types.forEach(t => {
-                    h += `<tr><td>${t.typeCode}</td><td>${t.region}</td><td>${t.category}</td><td>${t.dimension}</td><td>${t.count}</td><td>${t.ss}</td><td>${t.total}</td></tr>`;
+                    // 群內含不同個別自訂值時顯示平均（與主預覽一致），否則顯示單一值
+                    const mixed = t.ssMax !== t.ssMin;
+                    const displaySs = mixed ? Math.round(t.total / t.count) : t.ssFirst;
+                    const ssTitle = mixed ? '此群組含不同自訂值，顯示平均值' : '';
+                    h += `<tr><td>${t.typeCode}</td><td>${t.region}</td><td>${t.category}</td><td>${t.dimension}</td><td>${t.count}</td><td title="${ssTitle}">${displaySs}</td><td>${t.total}</td></tr>`;
             });
             h += `<tr class="qr-sub-total"><td colspan="4">合計</td><td>${storeCount}</td><td></td><td>${totalSS}</td></tr>`;
             typeBody.innerHTML = h;
@@ -5198,13 +5322,15 @@ class SafetyStockCalculator {
             });
 
             if (!typeBucket[tc]) {
-                typeBucket[tc] = { '類型代碼': tc, '區域': store.Regional, '舖類': store.Class, [dimensionKey]: dimensionValue, '店鋪數': 0, 'Safety Stock': ss, '小計': 0 };
+                typeBucket[tc] = { '類型代碼': tc, '區域': store.Regional, '舖類': store.Class, [dimensionKey]: dimensionValue, '店鋪數': 0, 'Safety Stock': ss, '小計': 0, _ssMin: ss, _ssMax: ss };
             }
             if (!typeLookup[tc]) {
                 typeLookup[tc] = store.Type || 'M';
             }
             typeBucket[tc]['店鋪數']++;
             typeBucket[tc]['小計'] += ss;
+            if (ss < typeBucket[tc]._ssMin) typeBucket[tc]._ssMin = ss;
+            if (ss > typeBucket[tc]._ssMax) typeBucket[tc]._ssMax = ss;
 
             const om = store.OM || '未分配';
             if (!omBucket[om]) {
@@ -5228,7 +5354,14 @@ class SafetyStockCalculator {
             'Carry': ''
         });
 
-        // 類型彙總
+        // 類型彙總（群內含不同個別自訂值時，Safety Stock 取平均，與畫面一致）
+        Object.values(typeBucket).forEach(b => {
+            if (b._ssMax !== b._ssMin && b['店鋪數'] > 0) {
+                b['Safety Stock'] = Math.round(b['小計'] / b['店鋪數']);
+            }
+            delete b._ssMin;
+            delete b._ssMax;
+        });
         const typeOrder = { T: 1, M: 2, L: 3 };
         const typeData = Object.values(typeBucket).sort((a, b) => {
             if (a['區域'] !== b['區域']) return a['區域'].localeCompare(b['區域']);

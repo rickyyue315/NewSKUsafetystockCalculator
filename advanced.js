@@ -1,5 +1,11 @@
 // ==================== 高級功能擴展 ====================
 // 此文件包含可選的高級功能，可根據需要啟用
+//
+// ⚠️ 狀態註記（2026-09）：本文件目前未被 app.js 引用（dead code），屬理論公式庫。
+// 數量級差異：此處公式（如 SS = Z·σ·√L，預設參數算出約 463）與主系統對照表
+// （單店 7–32）差 10 倍以上，兩者不可混用、不可直接比較。
+// 取整慣例：本文件用 Math.ceil（理論保守取整）；主系統矩陣域統一用 Math.round。
+// 如需啟用，必須先做參數標定並通過業務確認。
 
 class AdvancedCalculator {
     constructor(calculator) {
@@ -132,9 +138,11 @@ class AdvancedCalculator {
 
     /**
      * 計算總庫存成本
+     * 注意：平均庫存應包含 Safety Stock（在途 + 安全水位），否則持有成本被低估
      */
     calculateTotalInventoryCost(params) {
-        const averageStock = params.average_daily_demand * params.lead_time;
+        const safetyStock = params.safety_stock || 0;
+        const averageStock = (params.average_daily_demand * params.lead_time) + safetyStock;
         const holdingCost = this.calculateHoldingCost(
             averageStock,
             params.unit_cost || 100,
