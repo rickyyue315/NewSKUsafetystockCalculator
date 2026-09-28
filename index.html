@@ -24,10 +24,10 @@
     <div class="container">
         <!-- 頂部警告訊息 -->
         <div class="warning-banner" style="background-color: #fff3cd; border: 2px solid #ff6b6b; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; text-align: center;">
-            <div style="color: #d32f2f; font-weight: bold; font-size: 16px; margin-bottom: 8px;">
+            <div style="color: #d32f2f; font-weight: bold; font-size: 0.94em; margin-bottom: 8px;">
                 ⚠️ 內部測試中 - BETA Testing
             </div>
-            <div style="color: #c62828; font-size: 14px;">
+            <div style="color: #c62828; font-size: 0.82em;">
                 用戶需再次核對內容 | Users need to verify the content again
             </div>
         </div>
@@ -58,6 +58,11 @@
                 <span class="cockpit-auto">⚡ 自動生效中</span>
             </div>
             <div class="cockpit-actions">
+                <div class="font-size-controls" title="調整文字大小">
+                    <button id="fontDecreaseBtn" title="縮小文字">A−</button>
+                    <span id="fontScaleLabel" title="點擊還原 100%">100%</span>
+                    <button id="fontIncreaseBtn" title="放大文字">A＋</button>
+                </div>
                 <button id="cockpitCalcBtn" class="btn btn-apply btn-sm">🔢 計算</button>
                 <button id="cockpitExportBtn" class="btn btn-info btn-sm">📊 匯出 Excel</button>
                 <button id="cockpitTopBtn" class="btn btn-secondary btn-sm" title="回到頂部">↑</button>
@@ -458,10 +463,10 @@
                 <h2>📊 計算結果</h2>
                 <!-- 計算結果警告訊息 -->
                 <div class="warning-banner" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; text-align: center;">
-                    <div style="color: #856404; font-weight: bold; font-size: 14px;">
+                    <div style="color: #856404; font-weight: bold; font-size: 0.82em;">
                         ⚠️ 內部測試中 | 用戶需再次核對內容 (Please verify the calculated values)
                     </div>
-                    <div style="color: #856404; font-size: 13px; margin-top: 6px;">
+                    <div style="color: #856404; font-size: 0.76em; margin-top: 6px;">
                         此小程序只供協助計算, 用戶更改Safety Stock都必須於X:/to RP team內填寫申請表.
                     </div>
                 </div>

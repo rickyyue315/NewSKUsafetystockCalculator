@@ -63,6 +63,7 @@ class SafetyStockCalculator {
         this.matrixDraftMode2 = this.buildMatrixDraftMode2();
         this.matrixDraftMode3 = this.buildMatrixDraftMode3();
         this.initTheme(); // 初始化主題
+        this.initFontSize(); // 初始化文字大小
         this.setupEventListeners();
         this.setupModeSwitcher();
         this.setupInlineEditListeners();
@@ -399,6 +400,46 @@ class SafetyStockCalculator {
         themeOptions.forEach(option => {
             option.classList.toggle('active', option.dataset.theme === this.currentTheme);
         });
+    }
+
+    // ==================== 文字大小調整 ====================
+    // 只縮放字體：改 :root --font-scale，body 字級用 calc 跟隨；
+    // 版面尺寸全用 px/em 間距，不受影響。偏好存 localStorage。
+    initFontSize() {
+        let scale = 1;
+        try {
+            const saved = parseFloat(localStorage.getItem('safetyStockFontScale'));
+            if (!isNaN(saved)) scale = Math.min(1.4, Math.max(0.8, saved));
+        } catch (e) {}
+        this.fontScale = Math.round(scale * 10) / 10;
+        this.applyFontScale();
+
+        const decBtn = document.getElementById('fontDecreaseBtn');
+        const incBtn = document.getElementById('fontIncreaseBtn');
+        const label = document.getElementById('fontScaleLabel');
+        if (decBtn) decBtn.addEventListener('click', (e) => { e.stopPropagation(); this.changeFontScale(-0.1); });
+        if (incBtn) incBtn.addEventListener('click', (e) => { e.stopPropagation(); this.changeFontScale(0.1); });
+        if (label) label.addEventListener('click', (e) => { e.stopPropagation(); this.setFontScale(1); });
+    }
+
+    applyFontScale() {
+        try {
+            document.documentElement.style.setProperty('--font-scale', String(this.fontScale));
+        } catch (e) {}
+        const label = document.getElementById('fontScaleLabel');
+        if (label) label.textContent = Math.round(this.fontScale * 100) + '%';
+    }
+
+    changeFontScale(delta) {
+        this.setFontScale((this.fontScale || 1) + delta);
+    }
+
+    setFontScale(scale) {
+        this.fontScale = Math.round(Math.min(1.4, Math.max(0.8, scale)) * 10) / 10;
+        try {
+            localStorage.setItem('safetyStockFontScale', String(this.fontScale));
+        } catch (e) {}
+        this.applyFontScale();
     }
 
     showToast(message) {
@@ -756,7 +797,7 @@ class SafetyStockCalculator {
                 <span class="store-badge region-${store.Regional.toLowerCase()}">${escapeHtml(store.Regional)}</span>
                 <span class="store-badge category-${store.Class.toLowerCase()}">${escapeHtml(store.Class)}</span>
                 <span class="store-badge size-badge">${escapeHtml(store.Size)}</span>
-                <span class="store-badge type-badge" style="background-color: ${typeColor}; color: white;">${escapeHtml(typeLabel)}</span>
+                <span class="store-badge type-badge" style="background-color: ${typeColor}; color: #1a1b26;">${escapeHtml(typeLabel)}</span>
                 <span class="store-safety-stock editable-store-stock" data-store-code="${escapeHtml(store.Site)}" title="點擊編輯 Safety Stock">${safetyStock}</span>
             `;
 
@@ -1100,10 +1141,10 @@ class SafetyStockCalculator {
                     : regionColor;
                 html += `
                     <div class="om-store-item">
-                        <span class="om-store-code${isSpecial ? ' om-store-code-special' : ''}" style="background:${codeBg};color:white"${isSpecial ? ' title="⭐ 特別店鋪"' : ''}>${escapeHtml(store.Site)}</span>
+                        <span class="om-store-code${isSpecial ? ' om-store-code-special' : ''}" style="background:${codeBg};color:${isSpecial ? '#1a1b26' : 'white'}"${isSpecial ? ' title="⭐ 特別店鋪"' : ''}>${escapeHtml(store.Site)}</span>
                         <span class="om-store-name">${escapeHtml(store.Shop)}</span>
                         <div class="om-store-badges">
-                            <span class="om-store-badge" style="background:${this.getCategoryColor(store.Class)};color:white">${escapeHtml(store.Class)}</span>
+                            <span class="om-store-badge" style="background:${this.getCategoryColor(store.Class)};color:#1a1b26">${escapeHtml(store.Class)}</span>
                             <span class="om-store-badge" style="background:#666;color:white">${escapeHtml(store.Size)}</span>
                         </div>
                     </div>
@@ -1347,7 +1388,7 @@ class SafetyStockCalculator {
                             <td colspan="4">總計</td>
                             <td style="text-align:center"><strong>${selectedCount}</strong></td>
                             <td></td>
-                            <td style="text-align:center;background:#ffeb3b"><strong>${totalSS}</strong></td>
+                            <td style="text-align:center" class="total-highlight"><strong>${totalSS}</strong></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -2353,7 +2394,7 @@ class SafetyStockCalculator {
             <td colspan="5" style="text-align:right">TOTAL:</td>
             <td style="text-align:center"><strong>${totalStores}</strong></td>
             <td style="text-align:center">Safety Stock:</td>
-            <td style="text-align:center;background:#ffeb3b"><strong>${totalSafetyStock}</strong></td>
+            <td style="text-align:center" class="total-highlight"><strong>${totalSafetyStock}</strong></td>
             <td></td>
         `;
         tbody.appendChild(totalRow);
@@ -2546,7 +2587,7 @@ class SafetyStockCalculator {
                 <td colspan="2" style="text-align:right"><strong>總計:</strong></td>
                 <td style="text-align:center"><strong>${totalStores}</strong></td>
                 <td></td>
-                <td style="text-align:center;background:#ffeb3b"><strong>${totalSS}</strong></td>
+                <td style="text-align:center" class="total-highlight"><strong>${totalSS}</strong></td>
                 <td style="text-align:center">100%</td>
                 <td></td>
             </tr>
@@ -3693,7 +3734,7 @@ class SafetyStockCalculator {
                             <td colspan="4" style="text-align:right">TOTAL:</td>
                             <td style="text-align:center">${totalStores}</td>
                             <td style="text-align:center">SS:</td>
-                            <td style="text-align:center;background:#ffeb3b">${totalSS}</td>
+                            <td style="text-align:center" class="total-highlight">${totalSS}</td>
                             <td></td>
                         </tr>
                     </tbody>
@@ -3719,8 +3760,8 @@ class SafetyStockCalculator {
                 </table>
                 
                 <div class="no-print" style="text-align:center;margin-top:30px">
-                    <button onclick="window.print()" style="padding:10px 20px;font-size:16px;cursor:pointer">打印</button>
-                    <button onclick="window.close()" style="padding:10px 20px;font-size:16px;cursor:pointer;margin-left:10px">關閉</button>
+                    <button onclick="window.print()" style="padding:10px 20px;font-size:0.94em;cursor:pointer">打印</button>
+                    <button onclick="window.close()" style="padding:10px 20px;font-size:0.94em;cursor:pointer;margin-left:10px">關閉</button>
                 </div>
             </body>
             </html>
@@ -4446,15 +4487,17 @@ class SafetyStockCalculator {
             const calculatedTarget = Math.round((salesTarget / 30) * safetyStockDays);
             if (targetTotalEl) {
                 targetTotalEl.value = calculatedTarget;
-                // 當有銷售目標時，鎖定 targetTotal 為 readonly
+                // 當有銷售目標時，鎖定 targetTotal 為 readonly（淺灰底 + 深色字，兩種主題都清晰）
                 targetTotalEl.readOnly = true;
                 targetTotalEl.style.backgroundColor = '#f5f5f5';
+                targetTotalEl.style.color = '#1a1b26';
             }
         } else {
             // 當沒有銷售目標時，允許手動編輯 targetTotal
             if (targetTotalEl) {
                 targetTotalEl.readOnly = false;
-                targetTotalEl.style.backgroundColor = 'white';
+                targetTotalEl.style.backgroundColor = '';
+                targetTotalEl.style.color = '';
             }
         }
     }

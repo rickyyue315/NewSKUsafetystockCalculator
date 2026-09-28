@@ -1,5 +1,7 @@
 /* ==================== CSS 變數定義 - 主題系統 ==================== */
 :root {
+    /* 文字縮放（右上角 A− / A＋ 控制，只影響字體，不影響版面） */
+    --font-scale: 1;
     /* 主色調 */
     --color-primary: #667eea;
     --color-primary-light: #5dade2;
@@ -1759,6 +1761,13 @@ footer p {
     font-weight: bold;
 }
 
+/* 合計黃格：黃底深字（黑 on 黃 ≈ 13:1），!important 蓋過 .total-row td 的底色，兩種主題通用 */
+.total-row td.total-highlight,
+td.total-highlight {
+    background: #ffeb3b !important;
+    color: #1a1b26 !important;
+}
+
 .empty-message {
     text-align: center;
     color: var(--color-text-muted);
@@ -1989,6 +1998,76 @@ footer p {
     transition: all 0.3s ease;
 }
 
+/* ==================== 文字大小控制器 ==================== */
+.font-size-controls {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--color-container-bg);
+    border: 2px solid var(--color-primary);
+    border-radius: 22px;
+    padding: 3px 6px;
+    box-shadow: var(--shadow-card);
+    font-size: 0.9em;
+    font-weight: 700;
+    user-select: none;
+}
+
+.font-size-controls button {
+    border: none;
+    background: transparent;
+    color: var(--color-text-primary);
+    font-weight: 800;
+    font-size: 1em;
+    cursor: pointer;
+    padding: 7px 9px;
+    border-radius: 16px;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.font-size-controls button:hover {
+    background: var(--color-table-row-hover);
+    color: var(--color-primary);
+}
+
+#fontScaleLabel {
+    min-width: 48px;
+    text-align: center;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+#fontScaleLabel:hover {
+    color: var(--color-primary);
+}
+
+/* 駕駛艙列（本身深底）內的文字大小掣：深底淺字，淺/深主題通用 */
+.cockpit-bar .font-size-controls {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.35);
+    font-size: 0.8em;
+    flex-shrink: 0;
+}
+
+.cockpit-bar .font-size-controls button {
+    color: #fde047;
+}
+
+.cockpit-bar .font-size-controls button:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+.cockpit-bar #fontScaleLabel {
+    color: #e2e8f0;
+}
+
+.cockpit-bar #fontScaleLabel:hover {
+    color: #fde047;
+}
+
 .help-btn:hover {
     transform: scale(1.1);
     box-shadow: var(--shadow-container);
@@ -2203,8 +2282,8 @@ footer p {
     }
     
     .filter-btn {
-        padding: 6px 12px;
-        font-size: 0.8em;
+        padding: 6px 13px;
+        font-size: 0.88em;
     }
     
     /* 店鋪組別響應式 */
@@ -2219,16 +2298,16 @@ footer p {
     }
     
     .om-filter-btn {
-        padding: 10px 14px;
-        min-width: 75px;
+        padding: 11px 15px;
+        min-width: 82px;
     }
     
     .om-filter-btn .om-name {
-        font-size: 0.9em;
+        font-size: 1em;
     }
     
     .om-filter-btn .om-count {
-        font-size: 0.75em;
+        font-size: 0.85em;
     }
     
     /* OM 面板響應式 */
@@ -2290,6 +2369,15 @@ footer p {
         height: 40px;
         font-size: 1.1em;
     }
+
+    .font-size-controls {
+        font-size: 0.8em;
+        padding: 2px 4px;
+    }
+
+    .font-size-controls button {
+        padding: 6px 7px;
+    }
     
     .theme-panel {
         right: -10px;
@@ -2332,6 +2420,7 @@ footer p {
     body {
         background: white;
         padding: 0;
+        font-size: 17px !important;
     }
     
     .container {
@@ -2610,7 +2699,7 @@ footer p {
 .percentage-bar span {
     position: relative;
     z-index: 1;
-    font-size: 12px;
+    font-size: 0.71em;
     font-weight: bold;
     color: var(--color-text-primary);
     text-shadow: 0 1px 2px rgba(255,255,255,0.8);
@@ -2636,7 +2725,7 @@ footer p {
 .om-badge {
     display: inline-block;
     margin: 2px;
-    font-size: 11px;
+    font-size: 0.65em;
     padding: 3px 10px;
     border-radius: 12px;
     font-weight: 600;
@@ -2681,7 +2770,7 @@ footer p {
     border: none;
     background: transparent;
     color: var(--color-text-secondary);
-    font-size: 15px;
+    font-size: 0.88em;
     font-weight: 600;
     cursor: pointer;
     border-bottom: 3px solid transparent;
@@ -2759,7 +2848,7 @@ footer p {
     border-radius: 6px;
     background: var(--color-container-bg);
     color: var(--color-text-primary);
-    font-size: 13px;
+    font-size: 0.76em;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -2782,13 +2871,13 @@ footer p {
     border-radius: 6px;
     background: var(--color-container-bg);
     color: var(--color-text-primary);
-    font-size: 13px;
+    font-size: 0.76em;
     cursor: pointer;
     min-width: 120px;
 }
 
 .qr-selected-count {
-    font-size: 13px;
+    font-size: 0.76em;
     font-weight: 600;
     color: var(--color-primary);
     white-space: nowrap;
@@ -2796,12 +2885,12 @@ footer p {
 
 .btn-sm {
     padding: 6px 14px;
-    font-size: 13px;
+    font-size: 0.76em;
 }
 
 .btn-lg {
     padding: 10px 24px;
-    font-size: 15px;
+    font-size: 0.88em;
     font-weight: 700;
     letter-spacing: 0.5px;
 }
@@ -2817,7 +2906,7 @@ footer p {
 .qr-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 0.76em;
     white-space: nowrap;
 }
 
@@ -2830,7 +2919,7 @@ footer p {
     padding: 10px 14px;
     text-align: left;
     font-weight: 600;
-    font-size: 12.5px;
+    font-size: 0.96em;
     border-bottom: 2px solid var(--color-primary-dark);
 }
 
@@ -2888,7 +2977,7 @@ footer p {
     font-weight: 700;
     background: var(--color-highlight);
     border-top: 2px solid var(--color-primary);
-    font-size: 14px;
+    font-size: 1.08em;
 }
 
 .qr-row-unchecked td {
@@ -2921,13 +3010,13 @@ footer p {
 }
 
 .qr-stat-label {
-    font-size: 12px;
+    font-size: 0.71em;
     color: var(--color-text-muted);
     margin-bottom: 4px;
 }
 
 .qr-stat-value {
-    font-size: 28px;
+    font-size: 1.65em;
     font-weight: 800;
     color: var(--color-text-primary);
 }
@@ -2948,7 +3037,7 @@ footer p {
     border: 1px solid var(--color-border-light);
     border-radius: 8px;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 0.82em;
     color: var(--color-text-primary);
     user-select: none;
 }
@@ -2965,7 +3054,7 @@ footer p {
 .qr-sub-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 0.76em;
     border: 1px solid var(--color-border-light);
     border-top: none;
     border-radius: 0 0 8px 8px;
@@ -2976,7 +3065,7 @@ footer p {
     background: var(--color-table-header-bg);
     color: var(--color-table-header-text);
     padding: 8px 12px;
-    font-size: 12px;
+    font-size: 0.92em;
     text-align: center;
     font-weight: 600;
 }
@@ -3001,7 +3090,7 @@ footer p {
     display: inline-block;
     padding: 2px 8px;
     border-radius: 4px;
-    font-size: 11px;
+    font-size: 0.65em;
     font-weight: 600;
     color: #fff;
 }
@@ -3311,10 +3400,10 @@ header h1 { font-size: 1.6em; }
     .cockpit-bar { position: static; }
 }
 
-/* ==================== 高密度緊湊佈局：一屏顯示更多 ==================== */
+/* ==================== 高密度緊湊佈局：一屏顯示更多（2026-09 修訂：字體放大一級） ==================== */
 body {
-    font-size: 16px;
-    line-height: 1.45;
+    font-size: calc(17px * var(--font-scale));
+    line-height: 1.5;
     padding: 10px;
 }
 
@@ -3323,138 +3412,138 @@ main { padding: 10px 16px; }
 .cockpit-bar { margin: 0 16px 8px 16px; }
 .tab-navigation { padding: 0 16px; }
 
-header { padding: 10px 14px; }
-header h1 { font-size: 1.25em; margin-bottom: 2px; }
-.subtitle { font-size: 0.85em; }
-footer { padding: 6px; font-size: 0.72em; }
+header { padding: 12px 14px; }
+header h1 { font-size: 1.45em; margin-bottom: 2px; }
+.subtitle { font-size: 0.95em; }
+footer { padding: 8px; font-size: 0.8em; }
 
 .warning-banner { padding: 8px 12px !important; margin-bottom: 10px !important; }
 
 .section { margin-bottom: 10px; padding: 10px 12px; }
-.section h2 { font-size: 1em; margin-bottom: 8px; }
-.section h3 { font-size: 0.95em; margin: 12px 0 6px 0; }
-.hint { font-size: 0.78em; margin: 3px 0 8px 0; }
+.section h2 { font-size: 1.2em; margin-bottom: 8px; }
+.section h3 { font-size: 1.05em; margin: 12px 0 6px 0; }
+.hint { font-size: 0.9em; margin: 3px 0 8px 0; }
 
 /* 按鈕整體縮小 */
-.btn { padding: 5px 10px; font-size: 0.82em; }
-.btn-large { padding: 7px 14px; font-size: 0.88em; }
-.btn-sm { padding: 4px 10px; font-size: 0.78em; }
-.tab-btn { padding: 8px 16px; font-size: 0.85em; }
-.mode-btn { padding: 5px 9px; font-size: 0.78em; }
-.mode-title { font-size: 0.85em; }
-.mode-hint { font-size: 0.75em; }
-.cockpit-stats { font-size: 0.82em; gap: 8px; }
-.cockpit-bar { padding: 6px 10px; gap: 8px; }
-.cockpit-stat strong { font-size: 1.1em; }
-.cockpit-auto { font-size: 0.72em; padding: 1px 8px; }
+.btn { padding: 7px 14px; font-size: 0.95em; }
+.btn-large { padding: 9px 18px; font-size: 1em; }
+.btn-sm { padding: 5px 12px; font-size: 0.88em; }
+.tab-btn { padding: 9px 18px; font-size: 0.95em; }
+.mode-btn { padding: 7px 12px; font-size: 0.88em; }
+.mode-title { font-size: 0.95em; }
+.mode-hint { font-size: 0.85em; }
+.cockpit-stats { font-size: 0.92em; gap: 8px; }
+.cockpit-bar { padding: 7px 12px; gap: 8px; }
+.cockpit-stat strong { font-size: 1.25em; }
+.cockpit-auto { font-size: 0.82em; padding: 2px 10px; }
 
 /* 駕駛艙統計與開關 */
-.auto-apply-badge { font-size: 0.72em; padding: 4px 10px; }
-.auto-calc-toggle { font-size: 0.78em; padding: 5px 10px; }
+.auto-apply-badge { font-size: 0.85em; padding: 5px 12px; }
+.auto-calc-toggle { font-size: 0.88em; padding: 6px 12px; }
 
 /* 權重面板 */
 .weight-content { padding: 10px; }
 #weightContent { gap: 8px; }
 .weight-group { padding: 8px 10px; }
-.weight-group h4 { margin-bottom: 6px; font-size: 0.8em; }
+.weight-group h4 { margin-bottom: 6px; font-size: 0.92em; }
 .weight-inputs { gap: 5px; }
-.weight-input { padding: 4px 3px; font-size: 0.85em; }
-.weight-hint, .weight-hint-small { font-size: 0.7em; margin-top: 4px; }
-.formula-toggle-btn { padding: 8px 12px; font-size: 0.85em; }
-.formula-code { font-size: 0.82em; padding: 8px 10px; }
+.weight-input { padding: 5px 4px; font-size: 0.95em; }
+.weight-hint, .weight-hint-small { font-size: 0.82em; margin-top: 4px; }
+.formula-toggle-btn { padding: 8px 12px; font-size: 0.95em; }
+.formula-code { font-size: 0.92em; padding: 8px 10px; }
 .param-item { padding: 6px 8px; }
-.param-name { font-size: 0.8em; }
-.param-desc { font-size: 0.75em; }
-.template-btn { padding: 3px 8px; font-size: 0.72em; }
+.param-name { font-size: 0.9em; }
+.param-desc { font-size: 0.85em; }
+.template-btn { padding: 5px 10px; font-size: 0.85em; }
 .weight-preview { padding: 8px; }
 
 /* 對照表 */
 .matrix-container { gap: 10px; }
 .matrix-region { padding: 8px; }
-.region-title { font-size: 0.85em; padding: 4px 8px; margin-bottom: 6px; }
-.matrix-table th, .matrix-table td { padding: 3px 5px; font-size: 0.78em; }
-.matrix-cell .display-value { font-size: 0.95em; }
+.region-title { font-size: 0.95em; padding: 5px 10px; margin-bottom: 6px; }
+.matrix-table th, .matrix-table td { padding: 4px 6px; font-size: 0.9em; }
+.matrix-cell .display-value { font-size: 1.05em; }
 .matrix-controls { margin-bottom: 8px; gap: 8px; }
 .matrix-summary-box { padding: 8px 10px; }
-.matrix-summary-box h4 { margin-bottom: 8px; font-size: 0.85em; }
+.matrix-summary-box h4 { margin-bottom: 8px; font-size: 0.95em; }
 .summary-content { gap: 8px; }
-.summary-item { padding: 6px 10px; }
-.summary-label { font-size: 0.75em; }
-.summary-value { font-size: 0.85em; }
+.summary-item { padding: 7px 12px; }
+.summary-label { font-size: 0.85em; }
+.summary-value { font-size: 0.98em; }
 
 /* 店鋪篩選與清單 */
 .stores-selector-layout { gap: 10px; margin-bottom: 12px; }
 .selector-left-panel { padding: 10px; }
 .category-filters { gap: 6px; }
-.filter-group { padding: 8px 10px; gap: 6px; }
-.filter-label { font-size: 0.8em; }
-.filter-btn { padding: 4px 10px; font-size: 0.75em; }
-.om-filter-btn { padding: 8px 12px; min-width: 70px; }
-.om-filter-btn .om-name { font-size: 0.85em; }
-.om-filter-btn .om-count { font-size: 0.7em; }
-.special-store-btn { padding: 6px 12px; font-size: 0.78em; }
-.store-group-btn { padding: 6px 12px; min-width: 44px; }
+.filter-group { padding: 9px 12px; gap: 7px; }
+.filter-label { font-size: 0.92em; }
+.filter-btn { padding: 6px 14px; font-size: 0.88em; }
+.om-filter-btn { padding: 12px 16px; min-width: 86px; }
+.om-filter-btn .om-name { font-size: 1.05em; }
+.om-filter-btn .om-count { font-size: 0.85em; }
+.special-store-btn { padding: 7px 14px; font-size: 0.9em; }
+.store-group-btn { padding: 7px 14px; min-width: 48px; }
 .filter-controls { margin-bottom: 10px; }
-.filter-controls .button-group { padding: 8px 12px; gap: 8px; margin-bottom: 10px; }
-.store-count { font-size: 0.78em; padding: 6px 10px; }
+.filter-controls .button-group { padding: 9px 12px; gap: 8px; margin-bottom: 10px; }
+.store-count { font-size: 0.88em; padding: 7px 12px; }
 .stores-layout { gap: 12px; }
 .stores-container { gap: 6px; padding: 10px; }
-.store-item { padding: 6px 8px; gap: 6px; font-size: 0.85em; }
-.store-item .store-name { font-size: 0.9em; }
-.store-item .store-code { font-size: 0.72em; padding: 2px 6px; }
-.store-badge { font-size: 0.68em; padding: 2px 6px; }
-.store-safety-stock { font-size: 0.85em; padding: 2px 6px; min-width: 26px; }
+.store-item { padding: 7px 10px; gap: 7px; font-size: 0.95em; }
+.store-item .store-name { font-size: 1em; }
+.store-item .store-code { font-size: 0.82em; padding: 3px 8px; }
+.store-badge { font-size: 0.8em; padding: 3px 8px; }
+.store-safety-stock { font-size: 0.95em; padding: 3px 8px; min-width: 26px; }
 .stores-preview { padding: 10px; }
-.preview-summary { padding: 8px 10px; margin-bottom: 10px; font-size: 0.85em; }
-.preview-table { font-size: 0.78em; }
-.preview-table th, .preview-table td { padding: 5px 8px; }
+.preview-summary { padding: 9px 12px; margin-bottom: 10px; font-size: 0.95em; }
+.preview-table { font-size: 0.9em; }
+.preview-table th, .preview-table td { padding: 6px 9px; }
 .om-stores-content { padding: 12px; }
 .om-stores-header { padding: 10px 14px; }
-.om-stores-header h4 { font-size: 0.95em; }
+.om-stores-header h4 { font-size: 1.05em; }
 .om-store-item { padding: 8px 10px; gap: 8px; }
-.om-store-name { font-size: 0.85em; }
-.om-stores-summary { padding: 10px 14px; margin-top: 12px; font-size: 0.82em; }
+.om-store-name { font-size: 0.95em; }
+.om-stores-summary { padding: 10px 14px; margin-top: 12px; font-size: 0.92em; }
 
 /* 結果表格 */
 .results-controls { gap: 8px; margin-bottom: 6px; }
 .results-container, .detail-container { padding: 10px; margin-bottom: 12px; }
 .results-table th, .results-table td,
-.detail-table th, .detail-table td { padding: 5px 6px; font-size: 0.8em; }
+.detail-table th, .detail-table td { padding: 6px 8px; font-size: 0.92em; }
 .stats-container { gap: 10px; margin-bottom: 12px; }
-.stat-item { padding: 8px 10px; }
-.stat-item label { font-size: 0.82em; }
-.stat-value { font-size: 1.2em; }
+.stat-item { padding: 9px 12px; }
+.stat-item label { font-size: 0.92em; }
+.stat-value { font-size: 1.35em; }
 .om-summary-container { margin-top: 16px; padding-top: 12px; }
-.percentage-bar { height: 18px; }
-.percentage-bar span { font-size: 11px; }
+.percentage-bar { height: 20px; }
+.percentage-bar span { font-size: 0.71em; }
 .category-tags { padding: 6px 10px; }
-.om-badge { font-size: 10px; padding: 2px 8px; }
+.om-badge { font-size: 0.71em; padding: 3px 9px; }
 
 /* 店鋪管理 */
 .password-lock { padding: 1.2rem; }
 .lock-icon { font-size: 2rem; margin-bottom: 0.5rem; }
 .stores-format-hint { padding: 10px; }
-.stores-format-hint pre { padding: 10px; font-size: 0.78em; }
+.stores-format-hint pre { padding: 10px; font-size: 0.88em; }
 
 /* 快速報表 */
 .qr-section { padding: 14px 16px; }
-.qr-toolbar { padding: 8px 12px; margin-bottom: 10px; gap: 8px; }
-.qr-filter-btn { padding: 4px 10px; font-size: 12px; }
-.qr-select { padding: 4px 8px; font-size: 12px; }
-.qr-selected-count { font-size: 12px; }
-.qr-table { font-size: 12px; }
-.qr-table thead th { padding: 6px 10px; font-size: 11.5px; }
-.qr-table tbody td { padding: 4px 8px; }
-.qr-table tfoot td { padding: 6px 10px; font-size: 13px; }
+.qr-toolbar { padding: 9px 12px; margin-bottom: 10px; gap: 8px; }
+.qr-filter-btn { padding: 5px 12px; font-size: 0.82em; }
+.qr-select { padding: 5px 10px; font-size: 0.82em; }
+.qr-selected-count { font-size: 0.82em; }
+.qr-table { font-size: 0.82em; }
+.qr-table thead th { padding: 7px 10px; font-size: 0.93em; }
+.qr-table tbody td { padding: 5px 9px; }
+.qr-table tfoot td { padding: 7px 10px; font-size: 1.07em; }
 .qr-table-wrapper { margin-bottom: 12px; }
 .qr-summary-grid { gap: 10px; margin-bottom: 12px; }
 .qr-stat-card { padding: 10px 14px; }
-.qr-stat-label { font-size: 11px; }
-.qr-stat-value { font-size: 22px; }
-.qr-details summary { padding: 7px 12px; font-size: 13px; }
-.qr-sub-table { font-size: 12px; }
-.qr-sub-table thead th { padding: 5px 8px; font-size: 11px; }
-.qr-sub-table tbody td { padding: 4px 8px; }
+.qr-stat-label { font-size: 0.76em; }
+.qr-stat-value { font-size: 1.53em; }
+.qr-details summary { padding: 8px 13px; font-size: 0.88em; }
+.qr-sub-table { font-size: 0.82em; }
+.qr-sub-table thead th { padding: 6px 9px; font-size: 0.89em; }
+.qr-sub-table tbody td { padding: 5px 9px; }
 
 /* ==================== 彙總表左右並排 ==================== */
 .summary-side-by-side {
@@ -3513,9 +3602,10 @@ footer { padding: 6px; font-size: 0.72em; }
     box-shadow: 0 2px 6px rgba(245, 158, 11, 0.45);
 }
 
-/* ==================== 深色模式撞色修復 ==================== */
-/* 成因：多處寫死的淺色背景（白 / 淺灰漸變 / 淺黃）在深色模式下配上淺色文字導致看不見。
-   以下覆寫只在 data-theme="dark" 時生效，將淺底改為深底；亮黃高亮底則強制用深色字。 */
+/* ==================== 深色模式強對比修復（2026-09 修訂版） ==================== */
+/* 目標：深底一律純白/高亮文字；亮底（黃/橙/亮綠/亮藍/亮紅）一律深色字；藍底改深藍 + 白字。
+   對比數據：白字 on #3b5bdb 5.67 / on #364fc7 6.77；黑字 on #fde047 12.96 / on #f59e0b 7.96；
+   #a5b4fc on #32364a 5.98；#4ade80 on #353b54 6.33。 */
 
 [data-theme="dark"] .mode-switcher {
     background: linear-gradient(135deg, #32364a 0%, #2a2e3f 100%);
@@ -3524,12 +3614,23 @@ footer { padding: 6px; font-size: 0.72em; }
 [data-theme="dark"] .mode-btn {
     background: #353b54;
     border-color: var(--color-border-medium);
-    color: var(--color-text-primary);
+    color: #ffffff;
 }
 
 [data-theme="dark"] .mode-btn:hover {
     background: #454d73;
     border-color: var(--color-primary);
+    color: #ffffff;
+}
+
+/* 選中態：深藍實底 + 純白字（白 on #364fc7 = 6.77:1） */
+[data-theme="dark"] .mode-btn.active,
+[data-theme="dark"] .filter-btn.active,
+[data-theme="dark"] .om-filter-btn.active,
+[data-theme="dark"] .qr-filter-btn.active {
+    background: #364fc7;
+    background-image: none;
+    border-color: #a5b4fc;
     color: #ffffff;
 }
 
@@ -3546,7 +3647,7 @@ footer { padding: 6px; font-size: 0.72em; }
 [data-theme="dark"] .om-filter-btn {
     background: #353b54;
     border-color: #4b5563;
-    color: var(--color-text-primary);
+    color: #ffffff;
 }
 
 [data-theme="dark"] .filter-btn:hover,
@@ -3558,6 +3659,7 @@ footer { padding: 6px; font-size: 0.72em; }
 
 [data-theme="dark"] .om-filter-btn .om-count {
     background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
 }
 
 [data-theme="dark"] .om-group {
@@ -3579,7 +3681,7 @@ footer { padding: 6px; font-size: 0.72em; }
 
 [data-theme="dark"] .store-item .store-code {
     background: #4b5563;
-    color: #f1f5f9;
+    color: #ffffff;
 }
 
 [data-theme="dark"] .om-store-code {
@@ -3587,16 +3689,29 @@ footer { padding: 6px; font-size: 0.72em; }
     color: #ffffff;
 }
 
+/* 金色特別店鋪代碼：亮橙底一律深色字（黑 on 橙 ≈ 8:1，白 on 橙僅 2.15:1） */
+[data-theme="dark"] .store-item .store-code-special {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #1a1b26;
+}
+
+/* 特別店鋪篩選按鈕選中態：亮橙底 + 深色字 */
+[data-theme="dark"] .special-store-btn.active {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-color: #fbbf24;
+    color: #1a1b26;
+}
+
 [data-theme="dark"] .stores-preview,
 [data-theme="dark"] .om-stores-summary {
     background: linear-gradient(135deg, #2a2e3f 0%, #32364a 100%);
     border-color: var(--color-border-light);
-    color: var(--color-text-primary);
+    color: #ffffff;
 }
 
 [data-theme="dark"] .preview-table th {
     background: linear-gradient(135deg, #353b54 0%, #3b4261 100%);
-    color: var(--color-text-primary);
+    color: #ffffff;
 }
 
 [data-theme="dark"] .preview-table tbody tr:hover {
@@ -3610,6 +3725,11 @@ footer { padding: 6px; font-size: 0.72em; }
 [data-theme="dark"] .weight-formula-intro {
     background: linear-gradient(135deg, #312e81 0%, #1e3a2f 100%);
     border-color: var(--color-primary);
+}
+
+/* 算式簡介按鈕：深底上用提亮藍（#a5b4fc on 深底 5.98:1，#5c7cfa 僅 3.25:1） */
+[data-theme="dark"] .formula-toggle-btn {
+    color: #a5b4fc;
 }
 
 [data-theme="dark"] .formula-code {
@@ -3631,7 +3751,7 @@ footer { padding: 6px; font-size: 0.72em; }
 }
 
 [data-theme="dark"] .example-note {
-    color: #d6a94c;
+    color: #fcd34d;
     border-top-color: rgba(251, 146, 60, 0.35);
 }
 
@@ -3646,7 +3766,7 @@ footer { padding: 6px; font-size: 0.72em; }
 
 [data-theme="dark"] .weight-preview-table .size-header th {
     background: #353b54;
-    color: var(--color-text-primary);
+    color: #ffffff;
 }
 
 [data-theme="dark"] .template-desc {
@@ -3659,7 +3779,40 @@ footer { padding: 6px; font-size: 0.72em; }
     border-color: var(--color-border-light);
 }
 
-/* 亮黃高亮底一律用深色字，避免淺字撞淺黃底 */
+/* 分頁籤：深底上選中/懸停用提亮藍 */
+[data-theme="dark"] .tab-btn.active,
+[data-theme="dark"] .tab-btn:hover {
+    color: #a5b4fc;
+}
+
+/* 頂部警告橫幅（index.html 行內淺黃底）：深色下改深底 + 亮字，!important 蓋過行內樣式 */
+[data-theme="dark"] .warning-banner {
+    background-color: #422006 !important;
+    border-color: #f59e0b !important;
+}
+[data-theme="dark"] .warning-banner div {
+    color: #fde047 !important;
+}
+
+/* 密碼輸入框：補上深色底 + 白字（原無背景設定） */
+[data-theme="dark"] .password-input-group input {
+    background: #1a1b26;
+    border-color: #4b5563;
+    color: #ffffff;
+}
+
+/* 權重開關大按鈕 + OM 面板頭：深藍底 + 純白字 */
+[data-theme="dark"] .weight-toggle-btn,
+[data-theme="dark"] .om-stores-header {
+    background: linear-gradient(135deg, #364fc7 0%, #2f3a8f 100%);
+    color: #ffffff;
+}
+[data-theme="dark"] .weight-toggle-btn.active {
+    background: linear-gradient(135deg, #2f3a8f 0%, #25309b 100%);
+    color: #ffffff;
+}
+
+/* 亮黃高亮底一律用深色字，避免淺字撞淺黃底（白 on 黃僅 1.2:1，黑 on 黃 12.96:1） */
 [data-theme="dark"] .qr-table tfoot td,
 [data-theme="dark"] .qr-sub-table tbody tr.qr-sub-total,
 [data-theme="dark"] .qr-sub-table tbody tr.qr-sub-total td,
@@ -3703,20 +3856,24 @@ footer { padding: 6px; font-size: 0.72em; }
 }
 
 [data-theme="dark"] .percentage-bar span {
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
-/* 深色模式：亮色徽章改用深色字，避免白字撞亮底 */
+/* 深色模式：實心亮色徽章（綠/藍/橙/紅）改用深色字，白字對比僅 2~3:1、深色字可達 6~8:1。
+   注意：半透明底的 .badge（文字色塊）保持亮色字，不在此列。 */
 [data-theme="dark"] .qr-badge-a,
+[data-theme="dark"] .qr-badge-b,
 [data-theme="dark"] .qr-badge-c,
+[data-theme="dark"] .qr-badge-d,
 [data-theme="dark"] .store-badge.category-a,
+[data-theme="dark"] .store-badge.category-b,
 [data-theme="dark"] .store-badge.category-c,
-[data-theme="dark"] .badge.category-a,
-[data-theme="dark"] .badge.category-c {
+[data-theme="dark"] .store-badge.category-d {
     color: #1a1b26;
 }
 
-/* 深色模式：主色文字在深底上提亮，保證可讀性 */
+/* 深色模式：主色文字在深底上提亮，保證可讀性（#5c7cfa 僅 3.25:1 → #a5b4fc 5.98:1） */
 [data-theme="dark"] .qr-table tbody td.qr-cell-ss,
 [data-theme="dark"] .qr-selected-count,
 [data-theme="dark"] .days-display,
@@ -3724,7 +3881,7 @@ footer { padding: 6px; font-size: 0.72em; }
     color: #a5b4fc;
 }
 
-/* 深色模式：對照表區域標題改回實色底 + 白字，避免淺透底撞色 */
+/* 深色模式：對照表區域標題用加深後的實色底 + 白字（白 on #3b5bdb 5.67、白 on #c2185b 5.87） */
 [data-theme="dark"] .region-title.region-hk {
     background: var(--color-region-hk);
     color: #ffffff;
@@ -3734,4 +3891,11 @@ footer { padding: 6px; font-size: 0.72em; }
     background: var(--color-region-mo);
     color: #ffffff;
 }
+
+/* 深色模式：合計列 / Carry 列非黃格一律純白字（白 on #1e3a2f 12.34、白 on #3d2f1e 12.93） */
+[data-theme="dark"] .total-row td:not(.total-highlight),
+[data-theme="dark"] .carry-row td {
+    color: #ffffff;
+}
+
 

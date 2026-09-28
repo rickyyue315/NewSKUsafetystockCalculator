@@ -423,7 +423,7 @@ const THEME_CORPORATE = {
     }
 };
 
-// 深色主題
+// 深色主題（強對比修訂版 2026-09：純白文字 + 深色按鈕底，保證 WCAG AA）
 const THEME_DARK = {
     name: "深色模式",
     nameEn: "Dark Mode",
@@ -431,7 +431,7 @@ const THEME_DARK = {
     colors: {
         primary: "#5c7cfa",
         primaryLight: "#748ffc",
-        primaryDark: "#4c6ef5",
+        primaryDark: "#364fc7",
         secondary: "#38d9a9",
         accent: "#ffa94d",
         
@@ -441,16 +441,16 @@ const THEME_DARK = {
         headerBg: "linear-gradient(135deg, #3b4261 0%, #2d3142 100%)",
         footerBg: "#1a1b26",
         
-        textPrimary: "#f1f5f9",
-        textSecondary: "#cbd5e1",
-        textMuted: "#94a3b8",
-        textLight: "#f1f5f9",
+        textPrimary: "#ffffff",
+        textSecondary: "#e2e8f0",
+        textMuted: "#b6c2d6",
+        textLight: "#ffffff",
         
         borderLight: "#3d4451",
         borderMedium: "#4b5563",
         
-        regionHk: "#5c7cfa",
-        regionMo: "#f06292",
+        regionHk: "#3b5bdb",
+        regionMo: "#c2185b",
         
         categoryA: "#4ade80",
         categoryB: "#60a5fa",
@@ -464,19 +464,19 @@ const THEME_DARK = {
         highlight: "#fde047",
         
         tableHeaderBg: "#3b4261",
-        tableHeaderText: "#f1f5f9",
+        tableHeaderText: "#ffffff",
         tableRowEven: "#353b54",
         tableRowHover: "#454d73",
         tableTotalBg: "#1e3a2f",
         tableCarryBg: "#3d2f1e",
         
-        btnPrimaryBg: "#5c7cfa",
-        btnPrimaryHover: "#4c6ef5",
+        btnPrimaryBg: "#3b5bdb",
+        btnPrimaryHover: "#364fc7",
         btnSecondaryBg: "#4b5563",
-        btnSuccessBg: "#22c55e",
-        btnWarningBg: "#f59e0b",
-        btnDangerBg: "#ef4444",
-        btnInfoBg: "#3b82f6",
+        btnSuccessBg: "#15803d",
+        btnWarningBg: "#b45309",
+        btnDangerBg: "#dc2626",
+        btnInfoBg: "#2563eb",
         
         scrollbarTrack: "#1f2937",
         scrollbarThumb: "#4b5563",
