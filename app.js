@@ -218,9 +218,12 @@ class SafetyStockCalculator {
         }
 
         if (weightTypeHint) {
-            weightTypeHint.textContent = mode === 'mode2'
-                ? '模式 2：Type 固定為 M（此欄位不參與計算）'
-                : 'T=遊客區 | M=混合型 | L=本地客源';
+            if (mode === 'mode2') {
+                weightTypeHint.textContent = '模式 2：Type 固定為 M（此欄位不參與計算）';
+                weightTypeHint.style.display = '';
+            } else {
+                weightTypeHint.style.display = 'none';
+            }
         }
 
         if (templateModeHint) {
