@@ -92,13 +92,19 @@ body {
 
 /* ==================== 容器和佈局 ==================== */
 .container {
-    max-width: 1400px;
+    max-width: 1720px;
     margin: 0 auto;
     background: var(--color-container-bg);
     border-radius: 12px;
     box-shadow: var(--shadow-container);
     overflow: hidden;
     transition: background 0.3s ease;
+}
+
+@media (min-width: 1900px) {
+    .container {
+        max-width: 1820px;
+    }
 }
 
 header {

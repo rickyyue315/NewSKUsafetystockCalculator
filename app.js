@@ -1319,7 +1319,7 @@ class SafetyStockCalculator {
                 storeActualSS = this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type || 'M', mode);
             }
 
-            const sizeDisplay = mode === 'mode3' ? '全部' : store.Size;
+            const sizeDisplay = mode === 'mode3' ? '不分類' : store.Size;
 
             if (!typeStats[code]) {
                 typeStats[code] = {
@@ -2176,8 +2176,8 @@ class SafetyStockCalculator {
             const baseType = store.Type || 'M';
             const resultType = mode === 'mode2' ? 'M' : baseType;
             const resultSize = mode === 'mode3' ? 'M' : store.Size;
-            const displayType = mode === 'mode2' ? '全部' : baseType;
-            const displaySize = mode === 'mode3' ? '全部' : store.Size;
+            const displayType = mode === 'mode2' ? '不分類' : baseType;
+            const displaySize = mode === 'mode3' ? '不分類' : store.Size;
 
             this.results.push({
                 code: store.Site,
@@ -2364,7 +2364,7 @@ class SafetyStockCalculator {
                 if (result.allShopQty > 0) carryCount += result.storeCount;
                 
                 // Type 標籤樣式
-                const typeColors = { 'T': '#ff6b6b', 'M': '#4ecdc4', 'L': '#45b7d1', '全部': '#9e9e9e' };
+                const typeColors = { 'T': '#ff6b6b', 'M': '#4ecdc4', 'L': '#45b7d1', '不分類': '#9e9e9e' };
                 const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
                 const typeDisplay = result.displayType || typeLabels[result.type] || '-';
                 const typeColor = typeColors[typeDisplay] || typeColors[result.type] || '#ccc';
