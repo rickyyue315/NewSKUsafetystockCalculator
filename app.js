@@ -5166,7 +5166,7 @@ class SafetyStockCalculator {
                 ? '<span class="qr-special-star" title="⭐ 需特別關注">★</span>'
                 : '';
 
-            html += `<tr data-orig="${origIdx}" data-region="${escapeHtml(store.Regional)}" data-om="${escapeHtml(store.OM || '')}">
+            html += `<tr data-orig="${origIdx}" data-region="${escapeHtml(store.Regional)}" data-om="${escapeHtml(store.OM || '')}" data-special="${isSpecialAttentionStore(store) ? '1' : '0'}">
                 <td><input type="checkbox" class="qr-chk" data-idx="${origIdx}" ${checked}></td>
                 <td>${specialMark}${escapeHtml(store.Site)}</td>
                 <td>${escapeHtml(store.Shop)}</td>
@@ -5222,14 +5222,19 @@ class SafetyStockCalculator {
     qrApplyFilters() {
         const activeRegions = [];
         document.querySelectorAll('.qr-filter-btn.active').forEach(btn => {
-            activeRegions.push(btn.dataset.qrFilter);
+            // 需特別關注按鈕沒有 data-qr-filter，只作為獨立開關
+            if (btn.dataset.qrFilter) activeRegions.push(btn.dataset.qrFilter);
         });
+        const specialOnly = !!document.querySelector('.qr-special-filter-btn.active');
         const omVal = document.getElementById('qrOmFilter')?.value || '';
 
         document.querySelectorAll('#qrTableBody tr').forEach(row => {
             let show = true;
             if (activeRegions.length > 0) {
                 show = show && activeRegions.includes(row.dataset.region);
+            }
+            if (specialOnly) {
+                show = show && row.dataset.special === '1';
             }
             if (omVal) {
                 show = show && row.dataset.om === omVal;
