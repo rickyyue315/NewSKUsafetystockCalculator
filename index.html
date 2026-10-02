@@ -351,7 +351,7 @@
                     <!-- 左側：篩選區域 -->
                     <div class="selector-left-panel">
                         <div class="category-filters">
-                            <!-- 區域與特別店鋪（並排佈局）-->
+                            <!-- 區域與需特別關注（並排佈局）-->
                             <div class="filter-row">
                                 <!-- 區域 -->
                                 <div class="filter-group region-filter">
@@ -361,14 +361,11 @@
                                         <button class="filter-btn" data-filter="region" data-value="MO">MO</button>
                                     </div>
                                 </div>
-                                <!-- 特別店鋪 -->
+                                <!-- 需特別關注 -->
                                 <div class="filter-group special-stores-filter">
-                                    <label class="filter-label">特別店鋪</label>
+                                    <label class="filter-label">需特別關注</label>
                                     <div class="filter-buttons special-store-buttons">
-                                        <button class="filter-btn special-store-btn" data-filter="specialStore" data-value="HA40" title="新山頂">HA40</button>
-                                        <button class="filter-btn special-store-btn" data-filter="specialStore" data-value="HB87" title="西九高鐵站">HB87</button>
-                                        <button class="filter-btn special-store-btn" data-filter="specialStore" data-value="HB91" title="南昌站V Walk">HB91</button>
-                                        <button class="filter-btn special-store-btn" data-filter="specialStore" data-value="HC72" title="落馬洲2">HC72</button>
+                                        <button class="filter-btn special-store-btn" data-filter="specialStore" data-value="需特別關注" title="只顯示 CSV 標記為需特別關注的店鋪">⭐ 需特別關注</button>
                                     </div>
                                 </div>
                             </div>
@@ -567,11 +564,12 @@
                                 <th>Safety Stock</th>
                                 <th>OM</th>
                                 <th>Carry</th>
+                                <th>需特別關注</th>
                             </tr>
                         </thead>
                         <tbody id="detailTableBody">
                             <tr>
-                                <td colspan="10" class="empty-message">計算後將顯示詳細清單</td>
+                                <td colspan="11" class="empty-message">計算後將顯示詳細清單</td>
                             </tr>
                         </tbody>
                     </table>
@@ -612,11 +610,12 @@
                                 <div class="stores-format-hint">
                                 <h4>CSV 欄位說明（第一列為標題）：</h4>
                                 <pre>
-Site,Shop,Regional,Class 1,Class 2,Size,OM,Type
-HA02,駱克,HK,B,B2,S,Ivy,T
+Site,Shop,Regional,Class 1,Class 2,Size,OM,Type,需特別關注
+HA02,駱克,HK,B,B2,S,Ivy,T,需特別關注
+HA06,北角,HK,B,B2,M,Ivy,M,
 MA01,澳門廣場,MO,B,,M,,
                                 </pre>
-                                <p class="hint">必填欄位：Site、Shop、Regional、Class、Size。OM、Type 可留空（Type 預設 M）。</p>
+                                <p class="hint">必填欄位：Site、Shop、Regional、Class、Size。OM、Type 可留空（Type 預設 M）。需特別關注：填「需特別關注」代表標記，留空代表一般店鋪。</p>
                             </div>
                         </div>
                     </div>

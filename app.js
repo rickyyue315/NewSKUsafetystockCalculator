@@ -11,8 +11,10 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
-// 特別店鋪（須與 index.html 特別店鋪篩選按鈕保持一致）
-const SPECIAL_STORES = ['HA40', 'HB87', 'HB91', 'HC72'];
+// 需特別關注店鋪：資料來源為 stores-template.csv 的「需特別關注」欄位（config.js 的 SpecialAttention）
+function isSpecialAttentionStore(store) {
+    return !!(store && store.SpecialAttention);
+}
 
 class SafetyStockCalculator {
     constructor() {
@@ -791,12 +793,13 @@ class SafetyStockCalculator {
             const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
             const typeColor = typeColors[store.Type] || '#ccc';
             const typeLabel = typeLabels[store.Type] || '未分類';
-            const isSpecial = SPECIAL_STORES.includes(store.Site);
+            const isSpecial = isSpecialAttentionStore(store);
+            div.dataset.specialattention = isSpecial ? '1' : '0';
 
             div.innerHTML = `
                 <input type="checkbox" id="store-${originalIndex}" value="${originalIndex}">
                 <label for="store-${originalIndex}" class="store-name">${escapeHtml(store.Shop)}</label>
-                <span class="store-code${isSpecial ? ' store-code-special' : ''}"${isSpecial ? ' title="⭐ 特別店鋪"' : ''}>${escapeHtml(store.Site)}</span>
+                <span class="store-code${isSpecial ? ' store-code-special' : ''}"${isSpecial ? ' title="⭐ 需特別關注"' : ''}>${escapeHtml(store.Site)}</span>
                 <span class="store-badge region-${store.Regional.toLowerCase()}">${escapeHtml(store.Regional)}</span>
                 <span class="store-badge category-${store.Class.toLowerCase()}">${escapeHtml(store.Class)}</span>
                 <span class="store-badge size-badge">${escapeHtml(store.Size)}</span>
@@ -1138,13 +1141,13 @@ class SafetyStockCalculator {
             let html = '<div class="om-stores-grid">';
             sortedStores.forEach(store => {
                 const regionColor = store.Regional === 'HK' ? 'var(--color-region-hk)' : 'var(--color-region-mo)';
-                const isSpecial = SPECIAL_STORES.includes(store.Site);
+                const isSpecial = isSpecialAttentionStore(store);
                 const codeBg = isSpecial
                     ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
                     : regionColor;
                 html += `
                     <div class="om-store-item">
-                        <span class="om-store-code${isSpecial ? ' om-store-code-special' : ''}" style="background:${codeBg};color:${isSpecial ? '#1a1b26' : 'white'}"${isSpecial ? ' title="⭐ 特別店鋪"' : ''}>${escapeHtml(store.Site)}</span>
+                        <span class="om-store-code${isSpecial ? ' om-store-code-special' : ''}" style="background:${codeBg};color:${isSpecial ? '#1a1b26' : 'white'}"${isSpecial ? ' title="⭐ 需特別關注"' : ''}>${escapeHtml(store.Site)}</span>
                         <span class="om-store-name">${escapeHtml(store.Shop)}</span>
                         <div class="om-store-badges">
                             <span class="om-store-badge" style="background:${this.getCategoryColor(store.Class)};color:#1a1b26">${escapeHtml(store.Class)}</span>
@@ -1252,10 +1255,9 @@ class SafetyStockCalculator {
                 show = show && this.activeFilters.manager.some(m => item.dataset.manager === m);
             }
             
-            // 檢查特別店鋪篩選 (HA40, HB87, HB91)
+            // 檢查需特別關注店鋪篩選（依 CSV「需特別關注」欄位標記）
             if (this.activeFilters.specialStore.length > 0) {
-                const storeCode = item.querySelector('.store-code')?.textContent?.trim();
-                show = show && this.activeFilters.specialStore.some(code => storeCode === code);
+                show = show && item.dataset.specialattention === '1';
             }
             
             if (show) {
@@ -2455,7 +2457,8 @@ class SafetyStockCalculator {
             const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
             const typeColor = typeColors[storeType] || '#ccc';
             const typeLabel = typeLabels[storeType] || '-';
-            
+            const isSpecial = isSpecialAttentionStore(store);
+
             tr.innerHTML = `
                 <td>${result.region}</td>
                 <td>${result.code}</td>
@@ -2467,6 +2470,7 @@ class SafetyStockCalculator {
                 <td style="text-align:center">${result.safetyStock}</td>
                 <td>${omName}</td>
                 <td class="carry-status ${carryStatus === 'Y' ? 'carry-yes' : 'carry-no'}">${carryStatus}</td>
+                <td class="special-attention-cell">${isSpecial ? '⭐ 需特別關注' : ''}</td>
             `;
             detailBody.appendChild(tr);
         });
@@ -2813,13 +2817,14 @@ class SafetyStockCalculator {
         // ========== 第一頁：店舖詳細清單（優先顯示）==========
         csv += '店舖詳細清單\n';
         csv += `生成日期: ${new Date().toLocaleString('zh-TW')}\n\n`;
-        csv += 'HK/MO,代號,店舖,類型代碼,舖類,貨場面積,Safety Stock,Carry\n';
-        
+        csv += 'HK/MO,代號,店舖,類型代碼,舖類,貨場面積,Safety Stock,Carry,需特別關注\n';
+
         this.results.forEach(result => {
             const carry = result.safetyStock > 0 ? 'Y' : 'FALSE';
             const store = this.storeMap.get(result.code);
             const storeSize = store?.Size || result.size;
-            csv += `${result.region},${result.code},"${result.name}",${result.typeCode},${result.category},${storeSize},${result.safetyStock},${carry}\n`;
+            const specialFlag = isSpecialAttentionStore(store) ? '需特別關注' : '';
+            csv += `${result.region},${result.code},"${result.name}",${result.typeCode},${result.category},${storeSize},${result.safetyStock},${carry},${specialFlag}\n`;
         });
         
         // 分頁分隔（空行）
@@ -2900,7 +2905,7 @@ class SafetyStockCalculator {
             ['店舖詳細清單'],
             [`生成日期: ${dateTimeStr}`],
             [],
-            ['HK/MO', '代號', '店舖', '類型代碼', '舖類', '貨場面積', 'Safety Stock', 'Carry', 'OM']
+            ['HK/MO', '代號', '店舖', '類型代碼', '舖類', '貨場面積', 'Safety Stock', 'Carry', 'OM', '需特別關注']
         ];
 
         this.results.forEach(result => {
@@ -2917,12 +2922,13 @@ class SafetyStockCalculator {
                 storeSize,
                 result.safetyStock,
                 carry,
-                om
+                om,
+                isSpecialAttentionStore(store) ? '需特別關注' : ''
             ]);
         });
 
         const wsDetail = XLSX.utils.aoa_to_sheet(detailData);
-        
+
         // 設置欄寬
         wsDetail['!cols'] = [
             { wch: 10 },  // HK/MO
@@ -2933,7 +2939,8 @@ class SafetyStockCalculator {
             { wch: 12 },  // 貨場面積
             { wch: 14 },  // Safety Stock
             { wch: 10 },  // Carry
-            { wch: 12 }   // OM
+            { wch: 12 },  // OM
+            { wch: 12 }   // 需特別關注
         ];
 
         XLSX.utils.book_append_sheet(wb, wsDetail, '店舖詳細清單');
@@ -3101,11 +3108,12 @@ class SafetyStockCalculator {
         XLSX.utils.book_append_sheet(wb, wsMatrix, '對照表');
 
         // ========== 第二個工作表：店舖詳細清單（含公式） ==========
+        // 需特別關注固定放最後欄（J），D/E/G/I 欄的跨表公式不受影響
         const detailData = [
             ['店舖詳細清單'],
             [`生成日期: ${dateTimeStr}`],
             [],
-            ['HK/MO', '代號', '店舖', '類型代碼', '舖類', '貨場面積', 'Safety Stock', 'Carry', 'OM']
+            ['HK/MO', '代號', '店舖', '類型代碼', '舖類', '貨場面積', 'Safety Stock', 'Carry', 'OM', '需特別關注']
         ];
 
         // 對照表數據位置（會在對照表工作表中）
@@ -3145,12 +3153,13 @@ class SafetyStockCalculator {
                 storeSize,
                 safetyStockCell,
                 carryFormula,
-                om
+                om,
+                isSpecialAttentionStore(store) ? '需特別關注' : ''
             ]);
         });
 
         const wsDetail = XLSX.utils.aoa_to_sheet(detailData);
-        
+
         // 設置欄寬
         wsDetail['!cols'] = [
             { wch: 10 },  // HK/MO
@@ -3161,7 +3170,8 @@ class SafetyStockCalculator {
             { wch: 12 },  // 貨場面積
             { wch: 14 },  // Safety Stock
             { wch: 10 },  // Carry
-            { wch: 12 }   // OM
+            { wch: 12 },  // OM
+            { wch: 12 }   // 需特別關注
         ];
 
         // 設置公式屬性，使其被識別為公式（靜態數值欄保留原快取值，與網頁一致）
@@ -3676,6 +3686,7 @@ class SafetyStockCalculator {
             const carry = result.safetyStock > 0 ? 'Y' : 'FALSE';
             const store = this.storeMap.get(result.code);
             const storeSize = store?.Size || result.size;
+            const specialFlag = isSpecialAttentionStore(store) ? '⭐ 需特別關注' : '';
             detailHTML += `
                 <tr>
                     <td>${escapeHtml(result.region)}</td>
@@ -3686,6 +3697,7 @@ class SafetyStockCalculator {
                     <td>${escapeHtml(storeSize)}</td>
                     <td style="text-align:center">${result.safetyStock}</td>
                     <td style="text-align:center">${carry}</td>
+                    <td>${escapeHtml(specialFlag)}</td>
                 </tr>
             `;
         });
@@ -3755,6 +3767,7 @@ class SafetyStockCalculator {
                             <th>貨場面積</th>
                             <th>Safety Stock</th>
                             <th>Carry</th>
+                            <th>需特別關注</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -3783,8 +3796,8 @@ class SafetyStockCalculator {
     }
 
     downloadStoresCsvTemplate() {
-        // 使用當前店鋪名單生成 CSV 範本（包含 Class 1, Class 2, Type 欄位）
-        const header = 'Site,Shop,Regional,Class 1,Class 2,Size,OM,Type';
+        // 使用當前店鋪名單生成 CSV 範本（包含 Class 1, Class 2, Type, 需特別關注欄位）
+        const header = 'Site,Shop,Regional,Class 1,Class 2,Size,OM,Type,需特別關注';
         
         // 按區域、代號排序店鋪
         const sortedStores = [...this.stores].sort((a, b) => {
@@ -3802,11 +3815,12 @@ class SafetyStockCalculator {
             const size = store.Size || '';
             const om = store.OM || '';
             const type = store.Type || 'M';
-            
+            const special = store.SpecialAttention ? '需特別關注' : '';
+
             // 處理可能包含逗號的店鋪名稱
             const escapedShop = shop.includes(',') ? `"${shop}"` : shop;
-            
-            return `${site},${escapedShop},${regional},${classVal},${class2},${size},${om},${type}`;
+
+            return `${site},${escapedShop},${regional},${classVal},${class2},${size},${om},${type},${special}`;
         });
         
         // 組合 CSV 內容
@@ -3895,7 +3909,8 @@ class SafetyStockCalculator {
             Class2: ['class 2', 'class2', 'sub class', '子類別', '舖類2'],
             Size: ['size', 'area size', '貨場面積', '面積'],
             OM: ['om', 'manager', '營運經理', '經理'],
-            Type: ['type', '客源類型', '客源', '店舖類型']
+            Type: ['type', '客源類型', '客源', '店舖類型'],
+            SpecialAttention: ['需特別關注', '特別關注', 'specialattention', 'special attention']
         };
 
         const headerRow = rows[0].map(v => v.trim());
@@ -3915,7 +3930,7 @@ class SafetyStockCalculator {
             .filter(field => columnIndexByField[field] !== undefined).length >= 3;
 
         const dataStartIndex = hasHeader ? 1 : 0;
-        const fixedIndex = { Site: 0, Shop: 1, Regional: 2, Class: 3, Class2: 4, Size: 5, OM: 6, Type: 7 };
+        const fixedIndex = { Site: 0, Shop: 1, Regional: 2, Class: 3, Class2: 4, Size: 5, OM: 6, Type: 7, SpecialAttention: 8 };
 
         const validRegions = ['HK', 'MO'];
         const validCategories = ['A', 'B', 'C', 'D'];
@@ -3939,6 +3954,7 @@ class SafetyStockCalculator {
             let Size = getCell('Size').toUpperCase();
             const OM = getCell('OM');
             const Type = getCell('Type').toUpperCase();
+            const specialAttentionRaw = getCell('SpecialAttention');
 
             const rowNumber = i + 1;
 
@@ -3967,6 +3983,10 @@ class SafetyStockCalculator {
                 }
             }
 
+            // 「需特別關注」欄位：有值且非否定詞即標記（CSV 中填「需特別關注」）
+            const specialAttention = specialAttentionRaw !== '' &&
+                !['n', 'no', 'false', '0', '否', '無'].includes(specialAttentionRaw.toLowerCase());
+
             const storeObj = {
                 Site,
                 Shop,
@@ -3974,7 +3994,8 @@ class SafetyStockCalculator {
                 Class,
                 Size,
                 OM: OM || '',
-                Type: validTypes.includes(Type) ? Type : 'M'
+                Type: validTypes.includes(Type) ? Type : 'M',
+                SpecialAttention: specialAttention
             };
 
             // 如果有 Class2 欄位則加入
@@ -4134,6 +4155,7 @@ class SafetyStockCalculator {
             let storeCountMismatch = false;
             let needsTypeUpdate = false;
             let needsClass2Update = false;
+            let needsSpecialAttentionUpdate = false;
 
             if (data && data.stores) {
                 const savedStoreCount = data.stores.length;
@@ -4141,7 +4163,7 @@ class SafetyStockCalculator {
                     console.log(`店鋪數量已更新：${savedStoreCount} → ${configStoreCount}，使用新的店鋪資料`);
                     storeCountMismatch = true;
                 }
-                
+
                 // 檢查是否缺少 Type 屬性（數據版本檢查）
                 if (!storeCountMismatch && data.stores.length > 0) {
                     const hasTypeProperty = data.stores.every(store => store.hasOwnProperty('Type'));
@@ -4160,12 +4182,22 @@ class SafetyStockCalculator {
                     }
                 }
 
-                // 檢查店鋪資料是否與 config.js 一致（比對 Site 代號列表）
+                // 檢查是否缺少 SpecialAttention 屬性（需特別關注，數據版本檢查）
                 if (!storeCountMismatch && !needsTypeUpdate && !needsClass2Update && data.stores.length > 0) {
-                    const savedSites = data.stores.map(s => s.Site).sort().join(',');
-                    const configSites = STORES_CONFIG.stores.map(s => s.Site).sort().join(',');
+                    const hasSpecialAttentionProperty = data.stores.some(store => store.hasOwnProperty('SpecialAttention'));
+                    if (!hasSpecialAttentionProperty) {
+                        console.log('偵測到舊版本店鋪資料（缺少 SpecialAttention 屬性），正在更新...');
+                        needsSpecialAttentionUpdate = true;
+                    }
+                }
+
+                // 檢查店鋪資料是否與 config.js 一致（比對 Site 代號 + 需特別關注標記，
+                // 標記有變更時例如新增 HC72，也須改用 config.js 的新資料）
+                if (!storeCountMismatch && !needsTypeUpdate && !needsClass2Update && !needsSpecialAttentionUpdate && data.stores.length > 0) {
+                    const savedSites = data.stores.map(s => s.Site + (s.SpecialAttention ? '*' : '')).sort().join(',');
+                    const configSites = STORES_CONFIG.stores.map(s => s.Site + (s.SpecialAttention ? '*' : '')).sort().join(',');
                     if (savedSites !== configSites) {
-                        console.log('偵測到店鋪代號列表已變更，使用新的店鋪資料');
+                        console.log('偵測到店鋪代號或需特別關注標記已變更，使用新的店鋪資料');
                         storeCountMismatch = true;
                     }
                 }
@@ -4176,7 +4208,7 @@ class SafetyStockCalculator {
                     this.setCalculationMode(data.calculationMode, { render: false, persist: false });
                 }
 
-                if (storeCountMismatch || needsTypeUpdate || needsClass2Update) {
+                if (storeCountMismatch || needsTypeUpdate || needsClass2Update || needsSpecialAttentionUpdate) {
                     this.stores = JSON.parse(JSON.stringify(STORES_CONFIG.stores));
                     this.storeMap = new Map();
                     this.stores.forEach(store => {
@@ -4201,6 +4233,8 @@ class SafetyStockCalculator {
                         this.showToast(`✅ 店鋪資料已更新（新增 Class2 分類），已預設全選`);
                     } else if (needsTypeUpdate) {
                         this.showToast(`✅ 店鋪資料已更新（新增 Type 分類），已預設全選`);
+                    } else if (needsSpecialAttentionUpdate) {
+                        this.showToast(`✅ 店鋪資料已更新（新增需特別關注標記），已預設全選`);
                     } else {
                         this.showToast(`🔄 店鋪資料已更新（${configStoreCount} 間），已預設全選`);
                     }
@@ -5082,6 +5116,12 @@ class SafetyStockCalculator {
         if (!select) return;
         const currentValue = select.value;
         select.innerHTML = '';
+        // 重建時必須保留「全部 OM」空選項，否則瀏覽器會自動選上第一個 OM，
+        // 導致快速報表載入後只顯示該 OM 的店鋪
+        const allOpt = document.createElement('option');
+        allOpt.value = '';
+        allOpt.textContent = '全部 OM';
+        select.appendChild(allOpt);
         const oms = [...new Set(this.stores.map(s => s.OM).filter(Boolean))].sort();
         oms.forEach(om => {
             const opt = document.createElement('option');
@@ -5122,10 +5162,13 @@ class SafetyStockCalculator {
                 ? '<span class="qr-badge qr-badge-hk">HK</span>'
                 : '<span class="qr-badge qr-badge-mo">MO</span>';
             const classBadge = `<span class="qr-badge qr-badge-${store.Class.toLowerCase()}">${store.Class}</span>`;
+            const specialMark = isSpecialAttentionStore(store)
+                ? '<span class="qr-special-star" title="⭐ 需特別關注">★</span>'
+                : '';
 
             html += `<tr data-orig="${origIdx}" data-region="${escapeHtml(store.Regional)}" data-om="${escapeHtml(store.OM || '')}">
                 <td><input type="checkbox" class="qr-chk" data-idx="${origIdx}" ${checked}></td>
-                <td>${escapeHtml(store.Site)}</td>
+                <td>${specialMark}${escapeHtml(store.Site)}</td>
                 <td>${escapeHtml(store.Shop)}</td>
                 <td>${regionBadge}</td>
                 <td>${classBadge}</td>
@@ -5377,7 +5420,8 @@ class SafetyStockCalculator {
                 '類型代碼': tc,
                 'OM': store.OM || '',
                 'Safety Stock': ss,
-                'Carry': carry
+                'Carry': carry,
+                '需特別關注': isSpecialAttentionStore(store) ? '需特別關注' : ''
             });
 
             if (!typeBucket[tc]) {
@@ -5410,7 +5454,8 @@ class SafetyStockCalculator {
             '類型代碼': '',
             'OM': '',
             'Safety Stock': totalSS,
-            'Carry': ''
+            'Carry': '',
+            '需特別關注': ''
         });
 
         // 類型彙總（群內含不同個別自訂值時，Safety Stock 取平均，與畫面一致）
@@ -5451,7 +5496,7 @@ class SafetyStockCalculator {
         const ws1 = XLSX.utils.json_to_sheet(detailData);
         ws1['!cols'] = [
             { wch: 8 }, { wch: 16 }, { wch: 6 }, { wch: 6 }, { wch: 8 },
-            { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 6 }
+            { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 6 }, { wch: 12 }
         ];
         XLSX.utils.book_append_sheet(wb, ws1, '店鋪詳細清單');
 

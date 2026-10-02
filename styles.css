@@ -1214,7 +1214,7 @@ footer p {
     flex: 0 0 auto;
 }
 
-/* 特別店鋪篩選 */
+/* 需特別關注篩選 */
 .special-stores-filter {
     flex: 1;
 }
@@ -1223,7 +1223,7 @@ footer p {
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
-/* 特別店鋪按鈕樣式 */
+/* 需特別關注按鈕樣式 */
 .special-store-buttons {
     gap: 10px;
 }
@@ -3592,7 +3592,7 @@ footer { padding: 8px; font-size: 0.8em; }
     padding-bottom: 10px;
 }
 
-/* 特別店鋪 Site Code 特別色（金色星標，與篩選按鈕呼應） */
+/* 需特別關注 Site Code 特別色（金色星標，與篩選按鈕呼應） */
 .store-item .store-code-special {
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     color: #fff;
@@ -3606,6 +3606,21 @@ footer { padding: 8px; font-size: 0.8em; }
 .om-store-code-special {
     font-weight: 800;
     box-shadow: 0 2px 6px rgba(245, 158, 11, 0.45);
+}
+
+/* 需特別關注（依 stores-template.csv 標記） */
+.qr-special-star {
+    color: #d97706;
+    font-weight: 800;
+    margin-right: 2px;
+}
+.special-attention-cell {
+    color: #b45309;
+    font-weight: 700;
+    white-space: nowrap;
+}
+[data-theme="dark"] .special-attention-cell {
+    color: #fbbf24;
 }
 
 /* ==================== 深色模式強對比修復（2026-09 修訂版） ==================== */
@@ -3695,13 +3710,13 @@ footer { padding: 8px; font-size: 0.8em; }
     color: #ffffff;
 }
 
-/* 金色特別店鋪代碼：亮橙底一律深色字（黑 on 橙 ≈ 8:1，白 on 橙僅 2.15:1） */
+/* 金色需特別關注代碼：亮橙底一律深色字（黑 on 橙 ≈ 8:1，白 on 橙僅 2.15:1） */
 [data-theme="dark"] .store-item .store-code-special {
     background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     color: #1a1b26;
 }
 
-/* 特別店鋪篩選按鈕選中態：亮橙底 + 深色字 */
+/* 需特別關注篩選按鈕選中態：亮橙底 + 深色字 */
 [data-theme="dark"] .special-store-btn.active {
     background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     border-color: #fbbf24;
