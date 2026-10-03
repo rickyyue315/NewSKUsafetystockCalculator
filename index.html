@@ -758,7 +758,23 @@ MA01,澳門廣場,MO,B,,M,,
             } catch (e) {}
         })();
     </script>
-    <!-- SheetJS for Excel export -->
+    <!-- SheetJS for Excel export（主 CDN + 備援 CDN；皆失效時 App 會改用 CSV 匯出，不會無反應） -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script>
+        // 主 CDN 失敗時自動嘗試備援 CDN（unpkg），仍失敗則由 app.js 的 CSV fallback 接手
+        (function () {
+            try {
+                if (typeof XLSX === 'undefined') {
+                    var s = document.createElement('script');
+                    s.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+                    s.async = false;
+                    s.onerror = function () {
+                        try { console.warn('[SafetyStock] SheetJS 兩個 CDN 皆載入失敗，Excel 匯出將改用 CSV'); } catch (e) {}
+                    };
+                    document.head.appendChild(s);
+                }
+            } catch (e) {}
+        })();
+    </script>
 </body>
 </html>

@@ -90,8 +90,8 @@ class SafetyStockCalculator {
     // 頁尾版本號：單一來源為 config.js 的 APP_VERSION / APP_BUILD_DATE
     renderAppVersion() {
         try {
-            const version = (typeof APP_VERSION !== 'undefined' && APP_VERSION) ? APP_VERSION : 'v1.2.1';
-            const buildDate = (typeof APP_BUILD_DATE !== 'undefined' && APP_BUILD_DATE) ? APP_BUILD_DATE : '2026-09-26';
+            const version = (typeof APP_VERSION !== 'undefined' && APP_VERSION) ? APP_VERSION : 'v1.3.1';
+            const buildDate = (typeof APP_BUILD_DATE !== 'undefined' && APP_BUILD_DATE) ? APP_BUILD_DATE : '2026-10-02';
             const versionEl = document.getElementById('appVersion');
             const dateEl = document.getElementById('appBuildDate');
             if (versionEl) versionEl.textContent = version;
@@ -2805,6 +2805,48 @@ class SafetyStockCalculator {
         link.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
+
+    // SheetJS 缺失時的統一處理：Excel 不可用時提供 CSV 替代，避免按鈕無反應
+    // @returns {boolean} true = XLSX 可用可繼續；false = 已轉用 fallback，呼叫方應直接 return
+    handleMissingXLSX(fallbackFn, featureName = 'Excel 匯出') {
+        if (typeof XLSX !== 'undefined') return true;
+        const useCsv = confirm(
+            `${featureName}元件載入失敗（可能離線或 CDN 被擋）。\n按「確定」改用 CSV 匯出（Excel 可直接開啟），按「取消」則返回。`
+        );
+        if (useCsv && typeof fallbackFn === 'function') {
+            try { fallbackFn(); } catch (e) { console.warn('CSV fallback failed', e); }
+        }
+        return false;
+    }
+
+    // 快速報表無 XLSX 時的 CSV fallback（僅匯出已勾選列，與 Excel 版同資料來源）
+    qrExportCsvFallback() {
+        const checkedRows = document.querySelectorAll('#qrTableBody .qr-chk:checked');
+        const visibleCheckedRows = Array.from(checkedRows).filter(chk => {
+            const row = chk.closest('tr');
+            return row && !row.classList.contains('qr-row-hidden');
+        });
+        if (visibleCheckedRows.length === 0) {
+            alert('請至少勾選一間店鋪');
+            return;
+        }
+        const mode = this.calculationMode;
+        let csv = '\uFEFF代號,店鋪名稱,區域,舖類,面積/類型,類型代碼,OM,Safety Stock,Carry\n';
+        visibleCheckedRows.forEach(chk => {
+            const idx = parseInt(chk.dataset.idx);
+            const store = this.stores[idx];
+            if (!store) return;
+            const ss = this.customStoreStock[store.Site] !== undefined
+                ? this.customStoreStock[store.Site]
+                : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type, mode);
+            const tc = this.buildModeTypeCode(store, mode);
+            const dim = mode === 'mode3' ? this.getStoreTypeLabel(store.Type || 'M') : store.Size;
+            const carry = ss > 0 ? 'Y' : '';
+            const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+            csv += `${store.Regional},${q(store.Site)},${q(store.Shop)},${store.Class},${q(dim)},${tc},${q(store.OM || '')},${ss},${carry}\n`;
+        });
+        this.downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), this.generateFileName('safetystock_quickreport', 'csv'));
+    }
     
     exportToCSV() {
         if (this.summaryResults.length === 0) {
@@ -2878,9 +2920,8 @@ class SafetyStockCalculator {
             return;
         }
 
-        // 檢查是否載入 SheetJS 庫
-        if (typeof XLSX === 'undefined') {
-            alert('Excel 匯出功能載入失敗，請檢查網路連線後重試');
+        // SheetJS 缺失時改用 CSV（Excel 可直接開啟）
+        if (!this.handleMissingXLSX(() => this.exportToCSV(), 'Excel 匯出')) {
             return;
         }
 
@@ -3060,9 +3101,8 @@ class SafetyStockCalculator {
             return;
         }
 
-        // 檢查是否載入 SheetJS 庫
-        if (typeof XLSX === 'undefined') {
-            alert('Excel 匯出功能載入失敗，請檢查網路連線後重試');
+        // 含公式版必須有 SheetJS；缺失時退回 CSV（公式無法在 CSV 保留，但數值與明細完整）
+        if (!this.handleMissingXLSX(() => this.exportToCSV(), 'Excel（含公式）匯出')) {
             return;
         }
 
@@ -4403,6 +4443,20 @@ class SafetyStockCalculator {
         }, 450);
     }
 
+    // 目標總量合理性提示（雙向共用）：上調>3x 或下調<1/3 皆告警；正常範圍回傳 ''
+    getTargetSanityWarn(targetTotal, naturalTotal) {
+        if (!(targetTotal > 0) || !(naturalTotal > 0)) return '';
+        if (targetTotal > 3 * naturalTotal) {
+            const ratio = (targetTotal / naturalTotal).toFixed(1);
+            return ` ⚠️ 目標約為自然總量 ${ratio} 倍，請確認銷售目標是否為「單一 SKU」月銷量`;
+        }
+        if (targetTotal * 3 < naturalTotal) {
+            const ratio = (naturalTotal / targetTotal).toFixed(1);
+            return ` ⚠️ 目標僅為自然總量約 1/${ratio}，多數對照表格將被壓成 0，請確認目標是否正確（是否少填一位數）`;
+        }
+        return '';
+    }
+
     // 靜默自動套用：不彈 confirm、不打斷輸入焦點
     autoApplyWeightsSilent() {
         if (this.hasActiveSafetyEditor()) {
@@ -4414,6 +4468,7 @@ class SafetyStockCalculator {
         let newMatrix = this.buildWeightMatrixByType(weights);
         const targetTotal = Math.round(weights.targetTotal || 0);
         const mode = this.calculationMode;
+        const naturalTotal = this.calculateStoreTotals(newMatrix, mode).totalAll;
         if (targetTotal > 0) {
             const targetInfo = this.scaleMatrixToTarget(newMatrix, targetTotal, mode);
             newMatrix = targetInfo.matrix;
@@ -4426,6 +4481,11 @@ class SafetyStockCalculator {
         try { this.renderStores(); } catch (e) {}
         try { this.updateCockpitBar(); } catch (e) {}
         this.scheduleAutoCalculate();
+        // 自動模式平時保持靜默，但目標極端時仍需提醒（已防抖，不會逐字彈）
+        try {
+            const warn = this.getTargetSanityWarn(targetTotal, naturalTotal);
+            if (warn) this.showToast(warn.trim());
+        } catch (e) {}
     }
 
     // 共用：把權重矩陣寫入對照表草稿 + 保存權重配置
@@ -5035,12 +5095,8 @@ class SafetyStockCalculator {
         this.scheduleAutoCalculate();
 
         const totals = this.calculateStoreTotals(newMatrix, mode);
-        // 合理性提示：目標若遠超權重自然總量，多半是把全公司銷量當成單一 SKU 輸入
-        let sanityWarn = '';
-        if (targetTotal > 0 && naturalTotals.totalAll > 0 && targetTotal > 3 * naturalTotals.totalAll) {
-            const ratio = (targetTotal / naturalTotals.totalAll).toFixed(1);
-            sanityWarn = ` ⚠️ 目標約為自然總量 ${ratio} 倍，請確認銷售目標是否為「單一 SKU」月銷量`;
-        }
+        // 合理性提示（雙向，邏輯見 getTargetSanityWarn）
+        let sanityWarn = this.getTargetSanityWarn(targetTotal, naturalTotals.totalAll);
         if (targetTotal > 0 && targetInfo && targetInfo.remaining > 0) {
             this.showToast(`✅ 權重已套用！實際總量 ${totals.totalAll}（尚有 ${targetInfo.remaining} 未分配）${sanityWarn}`);
         } else {
@@ -5377,10 +5433,9 @@ class SafetyStockCalculator {
         }
     }
 
-    /** 快速報表 — 匯出 Excel */
+    /** 快速報表 — 匯出 Excel（缺失時改用 CSV） */
     qrExportExcel() {
-        if (typeof XLSX === 'undefined') {
-            alert('Excel 元件尚未載入，請稍後再試');
+        if (!this.handleMissingXLSX(() => this.qrExportCsvFallback(), '快速報表 Excel 匯出')) {
             return;
         }
 

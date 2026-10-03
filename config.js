@@ -329,14 +329,38 @@ const WEIGHT_TEMPLATES = {
 // - Type 權重用於調整不同店舖類型的庫存需求（T: 遊客區, M: 混合型, L: 本地型）
 // - 常用場景：設定某個區域的係數為 0 可禁用該區域的庫存需求
 function calculateSafetyStockWithWeights(region, category, size, type, weights) {
-    const classWeight = weights.class[category] || 1;
-    const sizeWeight = weights.size[size] || 1;
-    const typeWeight = (weights.type && weights.type[type]) || 1;
-    const regionFactor = weights.regionFactor[region];
-    const baseValue = weights.baseValue || 2;
-    
-    // 如果區域係數為 0 或未定義，直接返回 0（該區域不需要庫存）
-    if (regionFactor === 0 || regionFactor === undefined) {
+    // 未知維度鍵靜默預設為 1 會掩蓋 typo（如 'Xl'、't'），此處改為一次性 warn 但保持回退為 1（行為不變）
+    const warned = calculateSafetyStockWithWeights._warned
+        || (calculateSafetyStockWithWeights._warned = new Set());
+    const pickWeight = (map, key, label) => {
+        if (map && Object.prototype.hasOwnProperty.call(map, key)) return map[key];
+        const warnKey = `${label}:${String(key)}`;
+        if (!warned.has(warnKey)) {
+            warned.add(warnKey);
+            if (typeof console !== 'undefined' && console.warn) {
+                console.warn(`[SafetyStock] 未知${label}「${String(key)}」，已暫用權重 1，請檢查拼寫或補充權重配置`);
+            }
+        }
+        return 1;
+    };
+    const classWeight = pickWeight(weights && weights.class, category, 'Class');
+    const sizeWeight = pickWeight(weights && weights.size, size, 'Size');
+    const typeWeight = pickWeight(weights && weights.type, type, 'Type');
+    const regionFactor = weights && weights.regionFactor ? weights.regionFactor[region] : undefined;
+    const baseValue = (weights && weights.baseValue) || 2;
+
+    // 區域係數為 0 屬刻意禁用，不告警；未定義則告警後按 0 處理（該區域不需要庫存）
+    if (regionFactor === undefined) {
+        const warnKey = `Region:${String(region)}`;
+        if (!warned.has(warnKey)) {
+            warned.add(warnKey);
+            if (typeof console !== 'undefined' && console.warn) {
+                console.warn(`[SafetyStock] 未知區域「${String(region)}」，已按 0 處理（該區域不需要庫存），請檢查拼寫`);
+            }
+        }
+        return 0;
+    }
+    if (regionFactor === 0) {
         return 0;
     }
     
@@ -819,7 +843,10 @@ if (typeof module !== 'undefined' && module.exports) {
         CATEGORY_DEFINITIONS,
         SIZE_DEFINITIONS,
         REGION_DEFINITIONS,
+        TYPE_DEFINITIONS,
         DEFAULT_CALCULATION_CONFIG,
+        WEIGHT_CONFIG,
+        WEIGHT_TEMPLATES,
         AVAILABLE_THEMES,
         DEFAULT_THEME,
         THEME_SASA,
@@ -831,6 +858,7 @@ if (typeof module !== 'undefined' && module.exports) {
         THEME_MINIMAL,
         getStoreTypeCode,
         getSafetyStockValue,
-        getStoreTypeSummary
+        getStoreTypeSummary,
+        calculateSafetyStockWithWeights
     };
 }
