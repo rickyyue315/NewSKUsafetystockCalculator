@@ -6,28 +6,28 @@
 <title>新產品安全（補貨）庫存計算器 — 用家使用說明書</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--pink:#E6007E;--pink-d:#C4006B;--ink:#222;--muted:#666;--bg:#FFF5F9;--card:#fff;--line:#F3C6DC;--green:#16a34a;--blue:#2563eb;--amber:#d97706}
+:root{--primary:#374151;--primary-d:#1f2937;--ink:#111827;--muted:#6b7280;--bg:#fafafa;--card:#fff;--line:#e5e7eb;--green:#10b981;--blue:#3b82f6;--amber:#f59e0b}
 body{font-family:"Microsoft JhengHei","PingFang HK","Noto Sans HK",Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.7;font-size:15px}
 .container{max-width:980px;margin:0 auto;padding:28px 22px 80px}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
-.badge{display:inline-block;background:var(--pink);color:#fff;font-weight:700;padding:4px 14px;border-radius:999px;font-size:13px}
-.print-btn{background:var(--pink);color:#fff;border:none;padding:10px 22px;border-radius:999px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(230,0,126,.35)}
-.print-btn:hover{background:var(--pink-d)}
-.cover{background:linear-gradient(135deg,#E6007E 0%,#FF5CA8 100%);color:#fff;border-radius:18px;padding:38px 30px;text-align:center;margin-bottom:22px}
+.badge{display:inline-block;background:var(--primary);color:#fff;font-weight:700;padding:4px 14px;border-radius:999px;font-size:13px}
+.print-btn{background:var(--primary);color:#fff;border:none;padding:10px 22px;border-radius:999px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(31,41,55,.28)}
+.print-btn:hover{background:var(--primary-d)}
+.cover{background:linear-gradient(135deg,#1f2937 0%,#374151 100%);color:#fff;border-radius:18px;padding:38px 30px;text-align:center;margin-bottom:22px}
 .cover h1{font-size:30px;line-height:1.4;margin-bottom:8px}
 .cover p{opacity:.95;font-size:16px}
 .cover .sub{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.5);padding:6px 16px;border-radius:999px;margin-top:12px;font-size:14px}
 .toc{background:#fff;border:2px solid var(--line);border-radius:14px;padding:18px 22px;margin-bottom:20px}
-.toc h2{font-size:18px;color:var(--pink);margin-bottom:10px;border:none;padding:0}
+.toc h2{font-size:18px;color:var(--primary);margin-bottom:10px;border:none;padding:0}
 .toc ol{padding-left:22px;columns:2;column-gap:30px}
 .toc li{margin:6px 0}
 .toc a{color:#333;text-decoration:none}
-.toc a:hover{color:var(--pink);text-decoration:underline}
-.warn{background:#FFF7E6;border:2px solid #F5B301;border-radius:12px;padding:14px 18px;margin:18px 0;font-size:14px}
+.toc a:hover{color:var(--primary);text-decoration:underline}
+.warn{background:#FFFBEB;border:2px solid var(--amber);border-radius:12px;padding:14px 18px;margin:18px 0;font-size:14px}
 .warn strong{color:#92400e}
 .step-card{background:var(--card);border:2px solid var(--line);border-radius:16px;margin:26px 0;overflow:hidden}
-.step-head{display:flex;align-items:center;gap:14px;padding:16px 20px;background:#FFF0F6;border-bottom:2px solid var(--line)}
-.step-num{flex:0 0 52px;height:52px;border-radius:50%;background:var(--pink);color:#fff;font-size:24px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.step-head{display:flex;align-items:center;gap:14px;padding:16px 20px;background:#f9fafb;border-bottom:2px solid var(--line)}
+.step-num{flex:0 0 52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;font-size:24px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .step-head h2{font-size:21px;color:#111;margin:0}
 .step-head p{color:var(--muted);font-size:14px;margin:2px 0 0}
 .step-body{padding:20px}
@@ -35,11 +35,11 @@ body{font-family:"Microsoft JhengHei","PingFang HK","Noto Sans HK",Arial,sans-se
 .shot-bar{background:#1f2937;color:#fff;font-size:12px;padding:7px 12px;display:flex;align-items:center;gap:8px}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
 .shot-pic{padding:16px;background:#f8fafc}
-.mock-top{background:linear-gradient(135deg,#E6007E,#FF5CA8);color:#fff;text-align:center;padding:12px;font-weight:800;border-radius:8px;margin-bottom:12px}
+.mock-top{background:linear-gradient(135deg,#1f2937,#374151);color:#fff;text-align:center;padding:12px;font-weight:800;border-radius:8px;margin-bottom:12px}
 .mock-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:8px 0}
 .pill{border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700;border:2px solid transparent}
-.pill.on{background:var(--pink);color:#fff}
-.pill.off{background:#fff;border-color:#e5a9c8;color:#555}
+.pill.on{background:var(--primary);color:#fff}
+.pill.off{background:#fff;border-color:#d1d5db;color:#555}
 .pill.blue{background:var(--blue);color:#fff}
 .pill.grey{background:#e5e7eb;color:#444}
 .pill.green{background:var(--green);color:#fff}
@@ -47,10 +47,10 @@ body{font-family:"Microsoft JhengHei","PingFang HK","Noto Sans HK",Arial,sans-se
 .mock-box{background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;padding:12px;margin:10px 0}
 .mock-box h4{font-size:14px;margin-bottom:8px}
 table.demo{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
-table.demo th{background:var(--pink);color:#fff;padding:8px 6px;text-align:center}
-table.demo td{border:1px solid #f0c9dd;padding:7px 6px;text-align:center}
-table.demo tr:nth-child(even) td{background:#FFF7FB}
-.arrow{text-align:center;font-size:26px;color:var(--pink);font-weight:800;margin:6px 0}
+table.demo th{background:var(--primary);color:#fff;padding:8px 6px;text-align:center}
+table.demo td{border:1px solid #e5e7eb;padding:7px 6px;text-align:center}
+table.demo tr:nth-child(even) td{background:#f9fafb}
+.arrow{text-align:center;font-size:26px;color:var(--primary);font-weight:800;margin:6px 0}
 .do{display:flex;gap:12px;margin:10px 0;flex-wrap:wrap}
 .do div{flex:1;min-width:220px;background:#F0FDF4;border:1.5px solid #86efac;border-radius:10px;padding:10px 12px;font-size:14px}
 .dont div{background:#FEF2F2;border-color:#fca5a5}
@@ -63,12 +63,12 @@ ul.num{padding-left:24px}
 ul.num li{margin:7px 0}
 .kbd{background:#111;color:#fff;padding:2px 8px;border-radius:6px;font-size:12px}
 .figcap{text-align:center;color:var(--muted);font-size:13px;margin:-6px 0 10px}
-h3.sec{font-size:18px;color:var(--pink);margin:20px 0 10px;border-left:6px solid var(--pink);padding-left:10px}
+h3.sec{font-size:18px;color:var(--primary);margin:20px 0 10px;border-left:6px solid var(--primary);padding-left:10px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:700px){.grid2{grid-template-columns:1fr}.toc ol{columns:1}.cover h1{font-size:23px}}
 footer{text-align:center;color:#888;font-size:12px;margin-top:36px;border-top:2px solid var(--line);padding-top:16px}
 @media print{.no-print{display:none!important}body{background:#fff}.container{max-width:100%}.step-card{break-inside:avoid}h1{font-size:22px}}
-.callout-num{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--pink);color:#fff;font-weight:800;align-items:center;justify-content:center;font-size:14px;margin-right:6px}
+.callout-num{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--primary);color:#fff;font-weight:800;align-items:center;justify-content:center;font-size:14px;margin-right:6px}
 </style>
 </head>
 <body>
@@ -82,7 +82,7 @@ footer{text-align:center;color:#888;font-size:12px;margin-top:36px;border-top:2p
 <div class="cover">
 <h1>🧮 新產品安全（補貨）庫存計算器<br>用家使用說明書</h1>
 <p>New SKU Safety (Replenishment) Stock Calculator</p>
-<span class="sub">3 分鐘學識：揀舖 → 計數 → 匯出 Excel &nbsp;|&nbsp; 版本 2026.09</span>
+<span class="sub">3 分鐘學識：揀舖 → 計數 → 匯出 Excel &nbsp;|&nbsp; 版本 2026.10</span>
 </div>
 
 <div class="warn">⚠️ <strong>內部測試中（BETA）：</strong>計出嚟嘅數只供協助計算，用戶需再次核對。正式改 Safety Stock，必須去 <strong>X:/to RP team</strong> 填申請表。</div>
@@ -108,9 +108,9 @@ footer{text-align:center;color:#888;font-size:12px;margin-top:36px;border-top:2p
 <div class="shot"><div class="shot-bar"><span class="dot" style="background:#f87171"></span><span class="dot" style="background:#fbbf24"></span><span class="dot" style="background:#34d399"></span> 圖 1：正常開單流程</div>
 <div class="shot-pic">
 <div class="mock-row">
-<span class="pill on">① 揀模式</span><span style="font-size:22px;color:#E6007E">→</span>
-<span class="pill on">② 揀舖</span><span style="font-size:22px;color:#E6007E">→</span>
-<span class="pill on">③ 撳計算</span><span style="font-size:22px;color:#E6007E">→</span>
+<span class="pill on">① 揀模式</span><span style="font-size:22px;color:#374151">→</span>
+<span class="pill on">② 揀舖</span><span style="font-size:22px;color:#374151">→</span>
+<span class="pill on">③ 撳計算</span><span style="font-size:22px;color:#374151">→</span>
 <span class="pill green">④ 匯出 Excel</span>
 </div>
 <div class="mock-box"><h4>💡 頂部「駕駛艙」會一路話你知：已選幾多間＋預估總量</h4>
@@ -154,7 +154,7 @@ footer{text-align:center;color:#888;font-size:12px;margin-top:36px;border-top:2p
 <div class="mock-box"><h4>按舖類 / 面積 / 客源 / 組別</h4><div class="mock-row"><span class="pill off">A級</span><span class="pill off">B級</span><span class="pill off">C級</span><span class="pill off">D級</span><span class="pill off">XL</span><span class="pill off">L</span><span class="pill off">M</span><span class="pill off">S</span><span class="pill off">XS</span></div><div class="mock-row"><span class="pill off">遊客 (T)</span><span class="pill off">混合 (M)</span><span class="pill off">本地 (L)</span><span class="pill off">HA</span><span class="pill off">HB</span><span class="pill off">HC</span><span class="pill off">HD</span></div></div>
 <div class="mock-box"><h4>👤 按營運經理 (OM)：撳名，右邊即出佢啲舖</h4><div class="mock-row"><span class="pill off">Ivy 17間</span><span class="pill off">Queenie 14間</span><span class="pill off">Candy 14間</span><span class="pill off">Violet 10間</span><span class="pill off">Hippo 16間</span><span class="pill off">Eva 14間</span><span class="pill off">Windy 9間</span></div></div>
 </div></div>
-<p class="figcap">圖 3：藍色＝已揀。撳多次＝取消</p>
+<p class="figcap">圖 3：深色＝已揀。撳多次＝取消</p>
 
 <div class="grid2">
 <div class="ok"><b>✅ 例子 A：要全部分貨</b><br>撳 <b>全選</b> → 頂部見到「已選 94 間」→ 搞掂。</div>
@@ -169,10 +169,10 @@ footer{text-align:center;color:#888;font-size:12px;margin-top:36px;border-top:2p
 <div class="shot"><div class="shot-bar">圖 4：剔左邊格＝要呢間</div>
 <div class="shot-pic">
 <table class="demo"><tr><th>☑</th><th>店</th><th>代號</th><th>標籤</th><th>Safety Stock</th></tr>
-<tr><td>☑</td><td>重慶站</td><td>HB29</td><td>HK · A · XL · 遊客</td><td><b style="background:#E6007E;color:#fff;padding:2px 10px;border-radius:6px">20</b></td></tr>
+<tr><td>☑</td><td>重慶站</td><td>HB29</td><td>HK · A · XL · 遊客</td><td><b style="background:#374151;color:#fff;padding:2px 10px;border-radius:6px">20</b></td></tr>
 <tr><td>☐</td><td>駱克</td><td>HA02</td><td>HK · B · S · 遊客</td><td><b>12</b></td></tr>
 </table>
-<div class="mock-box">右邊粉紅色數字＝呢間舖會計幾多件。<b>直接撳落去可改</b>（見第 6 節）。</div>
+<div class="mock-box">右邊深灰色數字＝呢間舖會計幾多件。<b>直接撳落去可改</b>（見第 6 節）。</div>
 </div></div>
 </div>
 </div>
@@ -246,7 +246,7 @@ footer{text-align:center;color:#888;font-size:12px;margin-top:36px;border-top:2p
 <div class="step-head"><div class="step-num">✎</div><div><h2>想微調數字？撳住改</h2><p>唔使成張表重新計</p></div></div>
 <div class="step-body">
 <div class="grid2">
-<div class="shot"><div class="shot-bar">圖 8a：改一間舖</div><div class="shot-pic"><p style="font-size:14px">店鋪行粉紅色數字 → <b>撳一下</b> → 打新數 → <span class="kbd">Enter</span> 保存／<span class="kbd">Esc</span> 取消</p><div class="arrow">20 → 22 ⏎</div></div></div>
+<div class="shot"><div class="shot-bar">圖 8a：改一間舖</div><div class="shot-pic"><p style="font-size:14px">店鋪行深灰色數字 → <b>撳一下</b> → 打新數 → <span class="kbd">Enter</span> 保存／<span class="kbd">Esc</span> 取消</p><div class="arrow">20 → 22 ⏎</div></div></div>
 <div class="shot"><div class="shot-bar">圖 8b：改成個類型</div><div class="shot-pic"><p style="font-size:14px">「按店舖類型彙總」表 → 撳 <b>Safety Stock</b> 嗰格 → 同上改</p><p style="font-size:13px;color:#555">改完總數即刻重計。</p></div></div>
 </div>
 <div class="tip">改錯？喺「選擇店鋪」頂撳 <b>🔄 重設自訂值</b>（只會重設已揀嘅舖），即刻還原。<br>下面「⚙️ 權重快速設定」「📋 對照表」係進階嘢，<b>日常唔使掂</b>。真係要大執先叫阿頭／RP Team 幫手。</div>
@@ -281,7 +281,7 @@ footer{text-align:center;color:#888;font-size:12px;margin-top:36px;border-top:2p
 </div>
 </div>
 
-<footer>New SKU Safety (Replenishment) Stock Calculator · 用家版說明書（2026.09）— RP Team<br>用 Chrome / Edge 開效果最好 · 右上 🎨 只轉顏色唔影響數字</footer>
+<footer>New SKU Safety (Replenishment) Stock Calculator · 用家版說明書（2026.10）— RP Team<br>用 Chrome / Edge 開效果最好 · 右上 🎨 只轉顏色唔影響數字</footer>
 
 </div>
 </body>
