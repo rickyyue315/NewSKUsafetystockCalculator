@@ -90,7 +90,7 @@ class SafetyStockCalculator {
     // 頁尾版本號：單一來源為 config.js 的 APP_VERSION / APP_BUILD_DATE
     renderAppVersion() {
         try {
-            const version = (typeof APP_VERSION !== 'undefined' && APP_VERSION) ? APP_VERSION : 'v1.3.3';
+            const version = (typeof APP_VERSION !== 'undefined' && APP_VERSION) ? APP_VERSION : 'v1.3.4';
             const buildDate = (typeof APP_BUILD_DATE !== 'undefined' && APP_BUILD_DATE) ? APP_BUILD_DATE : '2026-10-05';
             const versionEl = document.getElementById('appVersion');
             const dateEl = document.getElementById('appBuildDate');
@@ -173,6 +173,7 @@ class SafetyStockCalculator {
         const formulaSizeDesc = document.getElementById('formulaSizeDesc');
         const formulaTypeDesc = document.getElementById('formulaTypeDesc');
         const weightTypeHint = document.getElementById('weightTypeHint');
+        const weightSizeHint = document.getElementById('weightSizeHint');
         const templateModeHint = document.getElementById('templateModeHint');
 
         if (modeHint) {
@@ -225,6 +226,15 @@ class SafetyStockCalculator {
                 weightTypeHint.style.display = '';
             } else {
                 weightTypeHint.style.display = 'none';
+            }
+        }
+
+        if (weightSizeHint) {
+            if (mode === 'mode3') {
+                weightSizeHint.textContent = '模式 3：Size 固定為 M（此欄位不參與計算）';
+                weightSizeHint.style.display = '';
+            } else {
+                weightSizeHint.style.display = 'none';
             }
         }
 
