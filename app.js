@@ -90,8 +90,8 @@ class SafetyStockCalculator {
     // 頁尾版本號：單一來源為 config.js 的 APP_VERSION / APP_BUILD_DATE
     renderAppVersion() {
         try {
-            const version = (typeof APP_VERSION !== 'undefined' && APP_VERSION) ? APP_VERSION : 'v1.3.1';
-            const buildDate = (typeof APP_BUILD_DATE !== 'undefined' && APP_BUILD_DATE) ? APP_BUILD_DATE : '2026-10-02';
+            const version = (typeof APP_VERSION !== 'undefined' && APP_VERSION) ? APP_VERSION : 'v1.3.3';
+            const buildDate = (typeof APP_BUILD_DATE !== 'undefined' && APP_BUILD_DATE) ? APP_BUILD_DATE : '2026-10-05';
             const versionEl = document.getElementById('appVersion');
             const dateEl = document.getElementById('appBuildDate');
             if (versionEl) versionEl.textContent = version;
@@ -584,7 +584,14 @@ class SafetyStockCalculator {
             if (this.summaryResults.length === 0) this.calculate({ silent: true });
             this.exportToExcel();
         });
-        document.getElementById('cockpitTopBtn')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        // 回到頂部浮動按鈕：捲動離開頂部超過一屏距離才顯示，在頂部時隱藏
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        if (backToTopBtn) {
+            backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+            const toggleBackToTop = () => backToTopBtn.classList.toggle('visible', window.scrollY > 300);
+            window.addEventListener('scroll', toggleBackToTop, { passive: true });
+            toggleBackToTop();
+        }
         // 自動計算開關
         document.getElementById('autoCalcToggle')?.addEventListener('change', (e) => {
             this.autoCalc = e.target.checked;

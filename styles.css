@@ -2106,6 +2106,45 @@ td.total-highlight {
     box-shadow: var(--shadow-container);
 }
 
+/* ==================== 回到頂部浮動按鈕 ==================== */
+/* 與主題按鍵同款圓形模式：右下角固定，捲動離開頂部才顯示（在頂部時隱藏，不做無用按鍵） */
+.back-to-top-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    z-index: 9999;
+    width: 44px;
+    height: 44px;
+    background: var(--color-container-bg);
+    color: var(--color-text-primary);
+    border: 2px solid var(--color-primary);
+    border-radius: 50%;
+    font-size: 1.2em;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+}
+
+.back-to-top-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.back-to-top-btn:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-container);
+    background: var(--color-primary);
+}
+
 .theme-panel {
     position: absolute;
     top: 55px;
@@ -2371,6 +2410,14 @@ td.total-highlight {
     
     .help-btn,
     .theme-selector-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1em;
+    }
+
+    .back-to-top-btn {
+        bottom: 16px;
+        right: 10px;
         width: 40px;
         height: 40px;
         font-size: 1.1em;
