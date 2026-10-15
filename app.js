@@ -462,17 +462,19 @@ class SafetyStockCalculator {
         const toast = document.createElement('div');
         toast.style.cssText = `
             position: fixed;
-            bottom: 20px;
+            bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
-            background: var(--color-primary);
+            background: var(--color-primary-dark);
             color: var(--color-text-light);
-            padding: 12px 24px;
-            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            padding: 10px 22px;
+            border-radius: 999px;
+            font-size: 0.9em;
             font-weight: 600;
-            box-shadow: var(--shadow-container);
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.35);
             z-index: 10000;
-            animation: slideUp 0.3s ease;
+            animation: slideUp 0.25s ease;
         `;
         toast.textContent = message;
         document.body.appendChild(toast);
@@ -805,10 +807,11 @@ class SafetyStockCalculator {
                 safetyStock = this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type || 'M', this.calculationMode);
             }
 
-            // 根據 Type 生成色彩標籤
-            const typeColors = { 'T': '#ff6b6b', 'M': '#4ecdc4', 'L': '#45b7d1' };
+            // 根據 Type 生成商業級色彩標籤（高對比度 WCAG AA）
+            const typeColors = { 'T': '#9f1239', 'M': '#0f766e', 'L': '#0369a1' };
             const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
-            const typeColor = typeColors[store.Type] || '#ccc';
+            const typeKey = (store.Type || 'M').toLowerCase();
+            const typeColor = typeColors[store.Type] || '#475569';
             const typeLabel = typeLabels[store.Type] || '未分類';
             const isSpecial = isSpecialAttentionStore(store);
             div.dataset.specialattention = isSpecial ? '1' : '0';
@@ -820,7 +823,7 @@ class SafetyStockCalculator {
                 <span class="store-badge region-${store.Regional.toLowerCase()}">${escapeHtml(store.Regional)}</span>
                 <span class="store-badge category-${store.Class.toLowerCase()}">${escapeHtml(store.Class)}</span>
                 <span class="store-badge size-badge">${escapeHtml(store.Size)}</span>
-                <span class="store-badge type-badge" style="background-color: ${typeColor}; color: #1a1b26;">${escapeHtml(typeLabel)}</span>
+                <span class="store-badge type-badge type-badge-${typeKey}" style="background-color: ${typeColor}; color: #ffffff;">${escapeHtml(typeLabel)}</span>
                 <span class="store-safety-stock editable-store-stock" data-store-code="${escapeHtml(store.Site)}" title="點擊編輯 Safety Stock">${safetyStock}</span>
             `;
 
@@ -1167,8 +1170,8 @@ class SafetyStockCalculator {
                         <span class="om-store-code${isSpecial ? ' om-store-code-special' : ''}" style="background:${codeBg};color:${isSpecial ? '#1a1b26' : 'white'}"${isSpecial ? ' title="⭐ 需特別關注"' : ''}>${escapeHtml(store.Site)}</span>
                         <span class="om-store-name">${escapeHtml(store.Shop)}</span>
                         <div class="om-store-badges">
-                            <span class="om-store-badge" style="background:${this.getCategoryColor(store.Class)};color:#1a1b26">${escapeHtml(store.Class)}</span>
-                            <span class="om-store-badge" style="background:#666;color:white">${escapeHtml(store.Size)}</span>
+                            <span class="om-store-badge category-${store.Class.toLowerCase()}" style="background:${this.getCategoryColor(store.Class)};color:#ffffff">${escapeHtml(store.Class)}</span>
+                            <span class="om-store-badge" style="background:#475569;color:#ffffff">${escapeHtml(store.Size)}</span>
                         </div>
                     </div>
                 `;
@@ -1641,7 +1644,7 @@ class SafetyStockCalculator {
         regions.forEach(region => {
             html += `
                 <div class="matrix-region">
-                    <h4 class="region-title region-${region.toLowerCase()}">${REGION_DEFINITIONS[region].name} (${region})</h4>
+                    <h3 class="region-title region-${region.toLowerCase()}">${REGION_DEFINITIONS[region].name} (${region})</h3>
                     <table class="matrix-table">
                         <thead>
                             <tr>
@@ -1953,7 +1956,7 @@ class SafetyStockCalculator {
 
         const html = `
             <div class="matrix-summary-box">
-                <h4>📈 統計摘要</h4>
+                <h3>📈 統計摘要</h3>
                 <div class="summary-content">
                     <div class="summary-item">
                         <span class="summary-label">🇭🇰 香港 (HK):</span>
@@ -2382,17 +2385,18 @@ class SafetyStockCalculator {
                 const carryStatus = result.allShopQty > 0 ? 'Y' : 'FALSE';
                 if (result.allShopQty > 0) carryCount += result.storeCount;
                 
-                // Type 標籤樣式
-                const typeColors = { 'T': '#ff6b6b', 'M': '#4ecdc4', 'L': '#45b7d1', '不分類': '#9e9e9e' };
+                // Type 標籤樣式（商業級高對比配色）
+                const typeColors = { 'T': '#9f1239', 'M': '#0f766e', 'L': '#0369a1', '不分類': '#475569' };
                 const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
                 const typeDisplay = result.displayType || typeLabels[result.type] || '-';
-                const typeColor = typeColors[typeDisplay] || typeColors[result.type] || '#ccc';
+                const typeColor = typeColors[typeDisplay] || typeColors[result.type] || '#475569';
+                const typeKey = (result.type || 'm').toLowerCase();
                 
                 tr.innerHTML = `
                     <td>${result.region}</td>
                     <td><span class="badge category-${result.category.toLowerCase()}">${result.category}</span></td>
-                    <td><span class="badge">${result.displaySize || result.size}</span></td>
-                    <td><span class="badge" style="background:${typeColor}; color:white;">${typeDisplay}</span></td>
+                    <td><span class="badge badge-neutral">${result.displaySize || result.size}</span></td>
+                    <td><span class="badge type-badge-${typeKey}" style="background:${typeColor}; color:#ffffff;">${typeDisplay}</span></td>
                     <td><strong>${result.typeCode}</strong></td>
                     <td style="text-align:center">${result.storeCount}</td>
                     <td style="text-align:center" class="editable-cell" data-field="safetyStock" title="${ssTitle}">
@@ -2469,22 +2473,23 @@ class SafetyStockCalculator {
             
             const carryStatus = result.safetyStock > 0 ? 'Y' : 'FALSE';
             
-            // Type 標籤樣式
-            const typeColors = { 'T': '#ff6b6b', 'M': '#4ecdc4', 'L': '#45b7d1' };
+            // Type 標籤樣式（商業級高對比配色）
+            const typeColors = { 'T': '#9f1239', 'M': '#0f766e', 'L': '#0369a1' };
             const typeLabels = { 'T': '遊客', 'M': '混合', 'L': '本地' };
-            const typeColor = typeColors[storeType] || '#ccc';
+            const typeColor = typeColors[storeType] || '#475569';
             const typeLabel = typeLabels[storeType] || '-';
+            const typeKey = (storeType || 'm').toLowerCase();
             const isSpecial = isSpecialAttentionStore(store);
 
             tr.innerHTML = `
                 <td>${result.region}</td>
-                <td>${result.code}</td>
-                <td>${result.name}</td>
-                <td><span class="badge" style="background:${typeColor}; color:white;">${typeLabel}</span></td>
-                <td>${result.typeCode}</td>
+                <td><span class="detail-code">${result.code}</span></td>
+                <td><strong>${result.name}</strong></td>
+                <td><span class="badge type-badge-${typeKey}" style="background:${typeColor}; color:#ffffff;">${typeLabel}</span></td>
+                <td><span class="detail-type-code">${result.typeCode}</span></td>
                 <td><span class="badge category-${result.category.toLowerCase()}">${result.category}</span></td>
-                <td>${store?.Size || result.size}</td>
-                <td style="text-align:center">${result.safetyStock}</td>
+                <td><span class="badge badge-neutral">${store?.Size || result.size}</span></td>
+                <td style="text-align:center; font-weight:700;">${result.safetyStock}</td>
                 <td>${omName}</td>
                 <td class="carry-status ${carryStatus === 'Y' ? 'carry-yes' : 'carry-no'}">${carryStatus}</td>
                 <td class="special-attention-cell">${isSpecial ? '⭐ 需特別關注' : ''}</td>
@@ -3765,15 +3770,18 @@ class SafetyStockCalculator {
             <head>
                 <title>Safety Stock 計算結果</title>
                 <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; }
-                    h1 { color: #667eea; text-align: center; }
-                    h2 { color: #333; margin-top: 30px; }
-                    .info { background: #f0f4ff; padding: 15px; border-radius: 5px; margin: 20px 0; }
-                    table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                    th { background: #667eea; color: white; }
-                    tr:nth-child(even) { background: #f9f9f9; }
-                    .total-row { background: #e8f5e9 !important; font-weight: bold; }
+                    body { font-family: 'Inter', -apple-system, 'Microsoft JhengHei', sans-serif; margin: 24px; color: #0f172a; line-height: 1.5; }
+                    h1 { color: #0f172a; text-align: left; font-size: 20px; border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 16px; }
+                    h2 { color: #1e293b; margin-top: 24px; font-size: 15px; border-left: 4px solid #1e293b; padding-left: 10px; }
+                    .info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px 16px; border-radius: 8px; margin: 16px 0; font-size: 13px; }
+                    .info p { margin: 0; }
+                    table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+                    th, td { border: 1px solid #cbd5e1; padding: 7px 10px; text-align: left; }
+                    th { background: #1e293b; color: #ffffff; font-weight: 700; }
+                    tr:nth-child(even) { background: #f8fafc; }
+                    .total-row { background: #ecfdf5 !important; font-weight: 700; }
+                    .total-highlight { background: #fde047 !important; color: #0f172a !important; font-weight: 800; }
+                    .no-print button { background: #1e293b; color: #ffffff; border: 1px solid #1e293b; border-radius: 6px; font-weight: 600; }
                     @media print { .no-print { display: none; } }
                 </style>
             </head>
@@ -5240,7 +5248,7 @@ class SafetyStockCalculator {
                 : '';
 
             html += `<tr data-orig="${origIdx}" data-region="${escapeHtml(store.Regional)}" data-om="${escapeHtml(store.OM || '')}" data-special="${isSpecialAttentionStore(store) ? '1' : '0'}">
-                <td><input type="checkbox" class="qr-chk" data-idx="${origIdx}" ${checked}></td>
+                <td><input type="checkbox" class="qr-chk" data-idx="${origIdx}" aria-label="選擇 ${escapeHtml(store.Shop)}" ${checked}></td>
                 <td>${specialMark}${escapeHtml(store.Site)}</td>
                 <td>${escapeHtml(store.Shop)}</td>
                 <td>${regionBadge}</td>

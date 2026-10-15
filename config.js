@@ -1,8 +1,8 @@
 // ==================== 應用版本：頁尾顯示用 ====================
 // 每次 push / 發佈前請手動遞增，方便確認線上是否已更新。
 // 單一來源：index.html 頁尾由 app.js 讀取此處渲染。
-const APP_VERSION = 'v1.3.5';
-const APP_BUILD_DATE = '2026-10-05';
+const APP_VERSION = 'v1.4.0';
+const APP_BUILD_DATE = '2026-10-15';
 
 // ==================== 配置文件：店鋪和Safety Stock參數 ====================
 // 此文件存儲所有的店鋪名單和Safety Stock參數配置
@@ -691,135 +691,135 @@ const THEME_ELEGANT = {
     }
 };
 
-// 極簡白主題
+// 極簡白主題（商業專業版 — Executive Slate & Navy）
 const THEME_MINIMAL = {
     name: "極簡白",
     nameEn: "Minimal White",
-    description: "純淨簡約配色",
+    description: "商業專業深灰藍配色",
     colors: {
-        primary: "#374151",
-        primaryLight: "#4b5563",
-        primaryDark: "#1f2937",
-        secondary: "#6b7280",
-        accent: "#ef4444",
+        primary: "#1e293b",
+        primaryLight: "#334155",
+        primaryDark: "#0f172a",
+        secondary: "#0f766e",
+        accent: "#2563eb",
         
-        bodyBg: "#fafafa",
+        bodyBg: "#f1f5f9",
         containerBg: "#ffffff",
-        sectionBg: "#f9fafb",
-        headerBg: "#1f2937",
-        footerBg: "#f3f4f6",
+        sectionBg: "#f8fafc",
+        headerBg: "linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%)",
+        footerBg: "#f8fafc",
         
-        textPrimary: "#111827",
-        textSecondary: "#4b5563",
-        textMuted: "#9ca3af",
+        textPrimary: "#0f172a",
+        textSecondary: "#334155",
+        textMuted: "#475569",
         textLight: "#ffffff",
         
-        borderLight: "#e5e7eb",
-        borderMedium: "#d1d5db",
+        borderLight: "#e2e8f0",
+        borderMedium: "#cbd5e1",
         
-        regionHk: "#374151",
-        regionMo: "#6b7280",
+        regionHk: "#1e3a8a",
+        regionMo: "#0f766e",
         
-        categoryA: "#10b981",
-        categoryB: "#3b82f6",
-        categoryC: "#f59e0b",
-        categoryD: "#ef4444",
+        categoryA: "#166534",
+        categoryB: "#1d4ed8",
+        categoryC: "#9a3412",
+        categoryD: "#b91c1c",
         
-        success: "#10b981",
-        warning: "#f59e0b",
-        danger: "#ef4444",
-        info: "#3b82f6",
+        success: "#166534",
+        warning: "#9a3412",
+        danger: "#b91c1c",
+        info: "#1d4ed8",
         highlight: "#fef08a",
         
-        tableHeaderBg: "#374151",
+        tableHeaderBg: "#1e293b",
         tableHeaderText: "#ffffff",
-        tableRowEven: "#f9fafb",
-        tableRowHover: "#f3f4f6",
+        tableRowEven: "#f8fafc",
+        tableRowHover: "#f1f5f9",
         tableTotalBg: "#ecfdf5",
         tableCarryBg: "#fffbeb",
         
-        btnPrimaryBg: "#374151",
-        btnPrimaryHover: "#1f2937",
-        btnSecondaryBg: "#e5e7eb",
-        btnSuccessBg: "#10b981",
-        btnWarningBg: "#f59e0b",
-        btnDangerBg: "#ef4444",
-        btnInfoBg: "#3b82f6",
+        btnPrimaryBg: "#1e293b",
+        btnPrimaryHover: "#0f172a",
+        btnSecondaryBg: "#e2e8f0",
+        btnSuccessBg: "#166534",
+        btnWarningBg: "#9a3412",
+        btnDangerBg: "#b91c1c",
+        btnInfoBg: "#1d4ed8",
         
-        scrollbarTrack: "#f3f4f6",
-        scrollbarThumb: "#d1d5db",
-        scrollbarThumbHover: "#9ca3af"
+        scrollbarTrack: "#f1f5f9",
+        scrollbarThumb: "#cbd5e1",
+        scrollbarThumbHover: "#94a3b8"
     }
 };
 
-// 莎莎粉主題（Sasa Brand Colors）
+// 莎莎粉主題（Sasa Brand Colors — 商業精品版）
 const THEME_SASA = {
     name: "莎莎粉",
     nameEn: "Sasa Pink",
-    description: "莎莎品牌粉紅配色 ✓",
+    description: "莎莎品牌精品配色 ✓",
     colors: {
-        // 主色調 - 莎莎品牌粉紅
-        primary: "#E6007E",
-        primaryLight: "#FF1493",
-        primaryDark: "#C4006B",
-        secondary: "#FF69B4",
-        accent: "#FF8C00",
+        // 主色調 - 莎莎品牌粉紅（加深以符合商業對比度標準）
+        primary: "#be185d",
+        primaryLight: "#db2777",
+        primaryDark: "#831843",
+        secondary: "#9d174d",
+        accent: "#d97706",
         
-        // 背景色 - 粉紅漸變
-        bodyBg: "linear-gradient(135deg, #FCE4EC 0%, #F8BBD9 100%)",
+        // 背景色
+        bodyBg: "linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)",
         containerBg: "#ffffff",
-        sectionBg: "#FDF2F8",
-        headerBg: "linear-gradient(135deg, #E6007E 0%, #FF1493 100%)",
-        footerBg: "#FCE4EC",
+        sectionBg: "#fff9fc",
+        headerBg: "linear-gradient(135deg, #500724 0%, #831843 50%, #be185d 100%)",
+        footerBg: "#fdf2f8",
         
         // 文字顏色
-        textPrimary: "#2D2D2D",
-        textSecondary: "#5D5D5D",
-        textMuted: "#888888",
+        textPrimary: "#1f2937",
+        textSecondary: "#374151",
+        textMuted: "#4b5563",
         textLight: "#ffffff",
         
         // 邊框顏色
-        borderLight: "#F8BBD9",
-        borderMedium: "#F48FB1",
+        borderLight: "#fbcfe8",
+        borderMedium: "#f472b6",
         
         // 區域顏色
-        regionHk: "#E6007E",
-        regionMo: "#C71585",
+        regionHk: "#be185d",
+        regionMo: "#6d28d9",
         
         // 類別顏色
-        categoryA: "#22C55E",
-        categoryB: "#3B82F6",
-        categoryC: "#F59E0B",
-        categoryD: "#EF4444",
+        categoryA: "#166534",
+        categoryB: "#1d4ed8",
+        categoryC: "#9a3412",
+        categoryD: "#b91c1c",
         
         // 狀態顏色
-        success: "#22C55E",
-        warning: "#F59E0B",
-        danger: "#EF4444",
-        info: "#3B82F6",
-        highlight: "#FECDD3",
+        success: "#166534",
+        warning: "#9a3412",
+        danger: "#b91c1c",
+        info: "#1d4ed8",
+        highlight: "#fef08a",
         
         // 表格顏色
-        tableHeaderBg: "#E6007E",
+        tableHeaderBg: "#831843",
         tableHeaderText: "#ffffff",
-        tableRowEven: "#FDF2F8",
-        tableRowHover: "#FCE7F3",
-        tableTotalBg: "#DCFCE7",
-        tableCarryBg: "#FEF3C7",
+        tableRowEven: "#fdf2f8",
+        tableRowHover: "#fce7f3",
+        tableTotalBg: "#ecfdf5",
+        tableCarryBg: "#fffbeb",
         
         // 按鈕顏色
-        btnPrimaryBg: "#E6007E",
-        btnPrimaryHover: "#C4006B",
-        btnSecondaryBg: "#FBCFE8",
-        btnSuccessBg: "#22C55E",
-        btnWarningBg: "#F59E0B",
-        btnDangerBg: "#EF4444",
-        btnInfoBg: "#3B82F6",
+        btnPrimaryBg: "#be185d",
+        btnPrimaryHover: "#831843",
+        btnSecondaryBg: "#fce7f3",
+        btnSuccessBg: "#166534",
+        btnWarningBg: "#9a3412",
+        btnDangerBg: "#b91c1c",
+        btnInfoBg: "#1d4ed8",
         
         // 滾動條
-        scrollbarTrack: "#FCE4EC",
-        scrollbarThumb: "#F48FB1",
-        scrollbarThumbHover: "#EC4899"
+        scrollbarTrack: "#fdf2f8",
+        scrollbarThumb: "#f9a8d4",
+        scrollbarThumbHover: "#ec4899"
     }
 };
 

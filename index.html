@@ -3,15 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Safety Stock 計算器</title>
+    <meta name="description" content="New SKU Safety (Replenishment) Stock Calculator — 商業級新產品安全及補貨庫存管理與計算系統">
+    <title>Safety Stock 計算器 | Enterprise Inventory Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- 主題選擇器 -->
     <div class="top-right-controls">
-        <a href="USER_MANUAL.html" target="_blank" class="help-btn" title="開啟使用說明書">📖</a>
+        <a href="USER_MANUAL.html" target="_blank" class="help-btn" title="開啟使用說明書" aria-label="開啟使用說明書">📖</a>
         <div class="theme-selector">
-            <button class="theme-selector-btn" id="themeToggleBtn" title="切換主題">🎨</button>
+            <button class="theme-selector-btn" id="themeToggleBtn" title="切換主題" aria-label="切換主題">🎨</button>
             <div class="theme-panel" id="themePanel">
                 <h3>🎨 選擇配色方案</h3>
                 <div class="theme-list" id="themeList">
@@ -23,18 +27,21 @@
 
     <div class="container">
         <!-- 頂部警告訊息 -->
-        <div class="warning-banner" style="background-color: #fff3cd; border: 2px solid #ff6b6b; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; text-align: center;">
-            <div style="color: #d32f2f; font-weight: bold; font-size: 0.94em; margin-bottom: 8px;">
+        <div class="warning-banner warning-banner-top">
+            <div class="warning-banner-badge">
                 ⚠️ 內部測試中 - BETA Testing
             </div>
-            <div style="color: #c62828; font-size: 0.82em;">
+            <div class="warning-banner-text">
                 用戶需再次核對內容 | Users need to verify the content again
             </div>
         </div>
 
         <header>
-            <h1>🧮 New SKU Safety (Replenishment) Stock Calculator</h1>
-            <p class="subtitle">新產品安全(補貨)庫存計算器</p>
+            <div class="header-brand">
+                <span class="header-tag">ENTERPRISE SUPPLY CHAIN · RP TEAM</span>
+                <h1>🧮 New SKU Safety (Replenishment) Stock Calculator</h1>
+                <p class="subtitle">新產品安全(補貨)庫存計算器</p>
+            </div>
         </header>
 
         <div class="mode-switcher" id="modeSwitcher">
@@ -158,7 +165,7 @@
 
                         <!-- Class 權重設定 -->
                         <div class="weight-group">
-                            <h4>📊 Class 權重 (A:B:C:D)</h4>
+                            <h3>📊 Class 權重 (A:B:C:D)</h3>
                             <div class="weight-inputs">
                                 <label class="weight-label-a">
                                     <span class="weight-label-text">A級</span>
@@ -181,7 +188,7 @@
 
                         <!-- Size 權重設定 -->
                         <div class="weight-group">
-                            <h4>📏 Size 權重 (XL:L:M:S:XS)</h4>
+                            <h3>📏 Size 權重 (XL:L:M:S:XS)</h3>
                             <p class="weight-hint-small" id="weightSizeHint" style="display:none"></p>
                             <div class="weight-inputs">
                                 <label>
@@ -209,7 +216,7 @@
 
                         <!-- Type 權重設定 (新增) -->
                         <div class="weight-group">
-                            <h4>🏪 Type 權重 - 店舖類型 (T:M:L)</h4>
+                            <h3>🏪 Type 權重 - 店舖類型 (T:M:L)</h3>
                             <p class="weight-hint-small" id="weightTypeHint" style="display:none"></p>
                             <div class="weight-inputs">
                                 <label class="weight-label-t">
@@ -229,7 +236,7 @@
 
                         <!-- 基礎值與區域係數 -->
                         <div class="weight-group">
-                            <h4>🔢 基礎設定</h4>
+                            <h3>🔢 基礎設定</h3>
                             <div class="weight-inputs">
                                 <label>
                                     <span class="weight-label-text">基礎值</span>
@@ -248,7 +255,7 @@
 
                         <!-- 目標總量設定 -->
                         <div class="weight-group">
-                            <h4>🎯 目標總量</h4>
+                            <h3>🎯 目標總量</h3>
                             <div class="weight-inputs">
                                 <label>
                                     <span class="weight-label-text">銷售目標數量</span>
@@ -268,7 +275,7 @@
 
                         <!-- 快速模板 -->
                         <div class="weight-group">
-                            <h4>📋 快速模板</h4>
+                            <h3>📋 快速模板</h3>
                             <div class="template-buttons">
                                 <div class="template-item">
                                     <button type="button" class="btn btn-secondary template-btn" data-template="current" title="沿用標準組合">目前設定</button>
@@ -341,7 +348,7 @@
                         </div>
                     </div>
                     <div class="om-stores-header">
-                        <h4 id="omStoresTitle">👤 請選擇營運經理查看店鋪</h4>
+                        <h3 id="omStoresTitle">👤 請選擇營運經理查看店鋪</h3>
                         <span class="om-stores-count" id="omStoresCount"></span>
                     </div>
                 </div>
@@ -459,11 +466,11 @@
             <section class="section results-section">
                 <h2>📊 計算結果</h2>
                 <!-- 計算結果警告訊息 -->
-                <div class="warning-banner" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; text-align: center;">
-                    <div style="color: #856404; font-weight: bold; font-size: 0.82em;">
+                <div class="warning-banner warning-banner-inline">
+                    <div class="warning-banner-title">
                         ⚠️ 內部測試中 | 用戶需再次核對內容 (Please verify the calculated values)
                     </div>
-                    <div style="color: #856404; font-size: 0.76em; margin-top: 6px;">
+                    <div class="warning-banner-sub">
                         此小程序只供協助計算, 用戶更改Safety Stock都必須於X:/to RP team內填寫申請表.
                     </div>
                 </div>
@@ -608,7 +615,7 @@
                             <input id="storesCsvFile" type="file" accept=".csv,text/csv" style="display: none;" />
                             
                                 <div class="stores-format-hint">
-                                <h4>CSV 欄位說明（第一列為標題）：</h4>
+                                <h3>CSV 欄位說明（第一列為標題）：</h3>
                                 <pre>
 Site,Shop,Regional,Class 1,Class 2,Size,OM,Type,需特別關注
 HA19,康山,HK,C,C2,S,Violet,L,需特別關注
@@ -639,7 +646,7 @@ MA01,澳門廣場,MO,B,,M,,
                         <button class="qr-filter-btn" data-qr-filter="MO">🇲🇴 澳門</button>
                         <button class="qr-filter-btn qr-special-filter-btn" data-qr-special="1" title="只顯示標記為需特別關注的店鋪">⭐ 需特別關注</button>
                         <span class="qr-divider"></span>
-                        <select id="qrOmFilter" class="qr-select">
+                        <select id="qrOmFilter" class="qr-select" title="按營運經理篩選" aria-label="按營運經理篩選">
                             <option value="">全部 OM</option>
                         </select>
                     </div>
@@ -737,7 +744,7 @@ MA01,澳門廣場,MO,B,,M,,
 
         <footer>
             <p>New SKU Safety (Replenishment) Stock Calculator (2026) – RP Team (Based on a concept by CMPD-Natalie Wong)</p>
-            <p class="app-version"><span id="appVersion">v1.2.1</span><span class="version-sep"> | </span><span id="appBuildDate">2026-09-26</span></p>
+            <p class="app-version"><span id="appVersion">v1.4.0</span><span class="version-sep"> | </span><span id="appBuildDate">2026-10-15</span></p>
         </footer>
     </div>
 
