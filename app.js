@@ -16,6 +16,36 @@ function isSpecialAttentionStore(store) {
     return !!(store && store.SpecialAttention);
 }
 
+// 「需特別關注」定義註解與特賣場提示均來自 config.js 全域常數
+// （SPECIAL_ATTENTION_NOTE / SALE_STORE_NOTES，按 Site 識別，不受 CSV 上載影響）
+function getSaleStoreNote(site) {
+    const table = (typeof SALE_STORE_NOTES === 'object' && SALE_STORE_NOTES) ? SALE_STORE_NOTES : {};
+    return (site && table[site]) ? table[site] : null;
+}
+
+// 店號圖示（store-code／om-store-code／QR 星號）的停駐提示：合併需特別關注註解與特賣場提示
+function storeIconTitle(store) {
+    const parts = [];
+    if (isSpecialAttentionStore(store)) {
+        const note = (typeof SPECIAL_ATTENTION_NOTE === 'string') ? SPECIAL_ATTENTION_NOTE : '';
+        parts.push(note ? `⭐ 需特別關注：${note}` : '⭐ 需特別關注');
+    }
+    const sale = getSaleStoreNote(store && store.Site);
+    if (sale) parts.push(`🏷️ ${sale.label}：${sale.tips.join(' ')}`);
+    return parts.join('｜');
+}
+
+// 需特別關注篩選按鈕／欄位的停駐提示
+function specialAttentionTitle() {
+    const note = (typeof SPECIAL_ATTENTION_NOTE === 'string') ? SPECIAL_ATTENTION_NOTE : '';
+    return note ? `⭐ 需特別關注：${note}` : '⭐ 需特別關注';
+}
+
+// 特賣場店（如 HB41）的店號圖示改以『特』字顯示（特別字體），取代 ★
+function storeCodeIconClass(store) {
+    return getSaleStoreNote(store && store.Site) ? ' store-code-sale' : '';
+}
+
 class SafetyStockCalculator {
     constructor() {
         this.stores = [];
@@ -819,7 +849,7 @@ class SafetyStockCalculator {
             div.innerHTML = `
                 <input type="checkbox" id="store-${originalIndex}" value="${originalIndex}">
                 <label for="store-${originalIndex}" class="store-name">${escapeHtml(store.Shop)}</label>
-                <span class="store-code${isSpecial ? ' store-code-special' : ''}"${isSpecial ? ' title="⭐ 需特別關注"' : ''}>${escapeHtml(store.Site)}</span>
+                <span class="store-code${isSpecial ? ' store-code-special' : ''}${storeCodeIconClass(store)}" title="${storeIconTitle(store)}">${escapeHtml(store.Site)}</span>
                 <span class="store-badge region-${store.Regional.toLowerCase()}">${escapeHtml(store.Regional)}</span>
                 <span class="store-badge category-${store.Class.toLowerCase()}">${escapeHtml(store.Class)}</span>
                 <span class="store-badge size-badge">${escapeHtml(store.Size)}</span>
@@ -1167,7 +1197,7 @@ class SafetyStockCalculator {
                     : regionColor;
                 html += `
                     <div class="om-store-item">
-                        <span class="om-store-code${isSpecial ? ' om-store-code-special' : ''}" style="background:${codeBg};color:${isSpecial ? '#1a1b26' : 'white'}"${isSpecial ? ' title="⭐ 需特別關注"' : ''}>${escapeHtml(store.Site)}</span>
+                        <span class="om-store-code${isSpecial ? ' om-store-code-special' : ''}${storeCodeIconClass(store)}" style="background:${codeBg};color:${isSpecial ? '#1a1b26' : 'white'}" title="${storeIconTitle(store)}">${escapeHtml(store.Site)}</span>
                         <span class="om-store-name">${escapeHtml(store.Shop)}</span>
                         <div class="om-store-badges">
                             <span class="om-store-badge category-${store.Class.toLowerCase()}" style="background:${this.getCategoryColor(store.Class)};color:#ffffff">${escapeHtml(store.Class)}</span>
@@ -2492,7 +2522,7 @@ class SafetyStockCalculator {
                 <td style="text-align:center; font-weight:700;">${result.safetyStock}</td>
                 <td>${omName}</td>
                 <td class="carry-status ${carryStatus === 'Y' ? 'carry-yes' : 'carry-no'}">${carryStatus}</td>
-                <td class="special-attention-cell">${isSpecial ? '⭐ 需特別關注' : ''}</td>
+                <td class="special-attention-cell"${isSpecial ? ` title="${specialAttentionTitle()}"` : ''}>${isSpecial ? '⭐ 需特別關注' : ''}</td>
             `;
             detailBody.appendChild(tr);
         });
@@ -3759,7 +3789,7 @@ class SafetyStockCalculator {
                     <td>${escapeHtml(storeSize)}</td>
                     <td style="text-align:center">${result.safetyStock}</td>
                     <td style="text-align:center">${carry}</td>
-                    <td>${escapeHtml(specialFlag)}</td>
+                    <td${isSpecialAttentionStore(store) ? ` title="${specialAttentionTitle()}"` : ''}>${specialFlag}</td>
                 </tr>
             `;
         });
@@ -5247,9 +5277,14 @@ class SafetyStockCalculator {
                 ? '<span class="qr-badge qr-badge-hk">HK</span>'
                 : '<span class="qr-badge qr-badge-mo">MO</span>';
             const classBadge = `<span class="qr-badge qr-badge-${store.Class.toLowerCase()}">${store.Class}</span>`;
+            const saleNote = getSaleStoreNote(store.Site);
             const specialMark = isSpecialAttentionStore(store)
-                ? '<span class="qr-special-star" title="⭐ 需特別關注">★</span>'
-                : '';
+                ? (saleNote
+                    ? `<span class="qr-special-star qr-special-sale" title="${storeIconTitle(store)}">特</span>`
+                    : `<span class="qr-special-star" title="${specialAttentionTitle()}">★</span>`)
+                : (saleNote
+                    ? `<span class="qr-special-star qr-special-sale" title="${storeIconTitle(store)}">特</span>`
+                    : '');
 
             html += `<tr data-orig="${origIdx}" data-region="${escapeHtml(store.Regional)}" data-om="${escapeHtml(store.OM || '')}" data-special="${isSpecialAttentionStore(store) ? '1' : '0'}">
                 <td><input type="checkbox" class="qr-chk" data-idx="${origIdx}" aria-label="選擇 ${escapeHtml(store.Shop)}" ${checked}></td>

@@ -314,7 +314,7 @@
                 </div>
 
                 <div class="matrix-controls">
-                    <span class="auto-apply-badge">⚡ 對照表數字可直接點擊修改，自動生效並同步店鋪 + 重算</span>
+                    <span class="auto-apply-badge auto-apply-badge-click">⚡ 對照表數字可直接點擊修改，自動生效並同步店鋪 + 重算</span>
                     <button type="button" id="editMatrixBtn" class="btn btn-warning" style="display:none">編輯對照表</button>
                     <button type="button" id="saveMatrixBtn" class="btn btn-success" style="display:none">保存</button>
                     <button type="button" id="cancelMatrixBtn" class="btn btn-secondary" style="display:none">取消</button>
@@ -370,9 +370,9 @@
                                 </div>
                                 <!-- 需特別關注 -->
                                 <div class="filter-group special-stores-filter">
-                                    <label class="filter-label">需特別關注</label>
+                                    <label class="filter-label" title="⭐ 需特別關注：只有極小地方存貨，分貨前必須事先聯絡OM 或主管（不論大小，包括新產品，尤其套裝產品）">需特別關注</label>
                                     <div class="filter-buttons special-store-buttons">
-                                        <button class="filter-btn special-store-btn" data-filter="specialStore" data-value="需特別關注" title="只顯示 CSV 標記為需特別關注的店鋪">⭐ 需特別關注</button>
+                                        <button class="filter-btn special-store-btn" data-filter="specialStore" data-value="需特別關注" title="只顯示需特別關注店鋪：只有極小地方存貨，分貨前必須事先聯絡OM 或主管（不論大小，包括新產品，尤其套裝產品）">⭐ 需特別關注</button>
                                     </div>
                                 </div>
                             </div>
@@ -644,7 +644,7 @@ MA01,澳門廣場,MO,B,,M,,
                         <span class="qr-divider"></span>
                         <button class="qr-filter-btn" data-qr-filter="HK">🇭🇰 香港</button>
                         <button class="qr-filter-btn" data-qr-filter="MO">🇲🇴 澳門</button>
-                        <button class="qr-filter-btn qr-special-filter-btn" data-qr-special="1" title="只顯示標記為需特別關注的店鋪">⭐ 需特別關注</button>
+                        <button class="qr-filter-btn qr-special-filter-btn" data-qr-special="1" title="只顯示需特別關注店鋪：只有極小地方存貨，分貨前必須事先聯絡OM 或主管（不論大小，包括新產品，尤其套裝產品）">⭐ 需特別關注</button>
                         <span class="qr-divider"></span>
                         <select id="qrOmFilter" class="qr-select" title="按營運經理篩選" aria-label="按營運經理篩選">
                             <option value="">全部 OM</option>
@@ -744,7 +744,7 @@ MA01,澳門廣場,MO,B,,M,,
 
         <footer>
             <p>New SKU Safety (Replenishment) Stock Calculator (2026) – SCT · RP Team (Based on a concept by CMPD-Natalie Wong)</p>
-            <p class="app-version"><span id="appVersion">v1.4.3</span><span class="version-sep"> | </span><span id="appBuildDate">2026-10-16</span></p>
+            <p class="app-version"><span id="appVersion">v1.4.5</span><span class="version-sep"> | </span><span id="appBuildDate">2026-10-16</span></p>
         </footer>
     </div>
 

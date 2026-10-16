@@ -1,7 +1,7 @@
 // ==================== 應用版本：頁尾顯示用 ====================
 // 每次 push / 發佈前請手動遞增，方便確認線上是否已更新。
 // 單一來源：index.html 頁尾由 app.js 讀取此處渲染。
-const APP_VERSION = 'v1.4.3';
+const APP_VERSION = 'v1.4.5';
 const APP_BUILD_DATE = '2026-10-16';
 
 // ==================== 配置文件：店鋪和Safety Stock參數 ====================
@@ -120,6 +120,20 @@ const STORES_CONFIG = {
         { Site: "HD19", Shop: "板樟堂", Regional: "MO", Class: "A", Class2: "A2", Size: "L", OM: "Windy", Type: "T" },
         { Site: "HD20", Shop: "澳門銀河2", Regional: "MO", Class: "A", Class2: "A3", Size: "M", OM: "Windy", Type: "T" }
     ]
+};
+
+// 「需特別關注」定義註解（滑鼠停駐於店鋪代號／篩選按鈕／報表標記時顯示）
+const SPECIAL_ATTENTION_NOTE = "只有極小地方存貨，分貨前必須事先聯絡OM 或主管（不論大小，包括新產品，尤其套裝產品）";
+
+// 特賣場店鋪（按 Site 識別，不受 CSV 上載影響）
+const SALE_STORE_NOTES = {
+    HB41: {
+        label: "特賣場",
+        tips: [
+            "新產品：無須再進行派貨。",
+            "恆常推廣及精彩價：無須再安排派貨，亦不設銷售目標。"
+        ]
+    }
 };
 
 // Safety Stock 對照表 - 三維結構（Region → Class → Type → Size）
@@ -839,6 +853,8 @@ if (typeof module !== 'undefined' && module.exports) {
         APP_VERSION,
         APP_BUILD_DATE,
         STORES_CONFIG,
+        SPECIAL_ATTENTION_NOTE,
+        SALE_STORE_NOTES,
         SAFETY_STOCK_MATRIX,
         CATEGORY_DEFINITIONS,
         SIZE_DEFINITIONS,
