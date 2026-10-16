@@ -1,8 +1,8 @@
 // ==================== 應用版本：頁尾顯示用 ====================
 // 每次 push / 發佈前請手動遞增，方便確認線上是否已更新。
 // 單一來源：index.html 頁尾由 app.js 讀取此處渲染。
-const APP_VERSION = 'v1.4.0';
-const APP_BUILD_DATE = '2026-10-15';
+const APP_VERSION = 'v1.4.3';
+const APP_BUILD_DATE = '2026-10-16';
 
 // ==================== 配置文件：店鋪和Safety Stock參數 ====================
 // 此文件存儲所有的店鋪名單和Safety Stock參數配置
@@ -31,8 +31,10 @@ const STORES_CONFIG = {
         { Site: "HBA9", Shop: "佐敦恒福", Regional: "HK", Class: "C", Class2: "C1", Size: "M", OM: "Ivy", Type: "T" },
         { Site: "HBB3", Shop: "帝國中心2", Regional: "HK", Class: "C", Class2: "C2", Size: "M", OM: "Ivy", Type: "T" },
 
-        // Queenie - 14間
+        // Queenie - 16間
+        { Site: "HA19", Shop: "康山", Regional: "HK", Class: "C", Class2: "C2", Size: "S", OM: "Queenie", Type: "L", SpecialAttention: true },
         { Site: "HA20", Shop: "新香港仔", Regional: "HK", Class: "C", Class2: "C1", Size: "M", OM: "Queenie", Type: "L" },
+        { Site: "HA21", Shop: "柴灣新翠", Regional: "HK", Class: "C", Class2: "C1", Size: "S", OM: "Queenie", Type: "L", SpecialAttention: true },
         { Site: "HA32", Shop: "皇室堡", Regional: "HK", Class: "B", Class2: "B2", Size: "L", OM: "Queenie", Type: "T" },
         { Site: "HA33", Shop: "羅素街8號", Regional: "HK", Class: "B", Class2: "B2", Size: "S", OM: "Queenie", Type: "T", SpecialAttention: true },
         { Site: "HA37", Shop: "新信德", Regional: "HK", Class: "C", Class2: "C2", Size: "XS", OM: "Queenie", Type: "T", SpecialAttention: true },
@@ -47,8 +49,7 @@ const STORES_CONFIG = {
         { Site: "HC60", Shop: "新大埔新達", Regional: "HK", Class: "C", Class2: "C2", Size: "M", OM: "Queenie", Type: "L" },
         { Site: "HC66", Shop: "新沙田", Regional: "HK", Class: "B", Class2: "B2", Size: "M", OM: "Queenie", Type: "M" },
 
-        // Candy - 14間
-        { Site: "HA21", Shop: "柴灣新翠", Regional: "HK", Class: "C", Class2: "C1", Size: "S", OM: "Candy", Type: "L", SpecialAttention: true },
+        // Candy - 13間
         { Site: "HA40", Shop: "新山頂", Regional: "HK", Class: "C", Class2: "C1", Size: "S", OM: "Candy", Type: "T" },
         { Site: "HB25", Shop: "奧海城", Regional: "HK", Class: "C", Class2: "C1", Size: "M", OM: "Candy", Type: "L" },
         { Site: "HB38", Shop: "新港", Regional: "HK", Class: "B", Class2: "B2", Size: "M", OM: "Candy", Type: "T" },
@@ -63,8 +64,7 @@ const STORES_CONFIG = {
         { Site: "HC70", Shop: "青衣2", Regional: "HK", Class: "C", Class2: "C1", Size: "S", OM: "Candy", Type: "L", SpecialAttention: true },
         { Site: "HC72", Shop: "落馬洲2", Regional: "HK", Class: "C", Class2: "C2", Size: "XS", OM: "Candy", Type: "T", SpecialAttention: true },
 
-        // Violet - 10間
-        { Site: "HA19", Shop: "康山", Regional: "HK", Class: "C", Class2: "C2", Size: "S", OM: "Violet", Type: "L", SpecialAttention: true },
+        // Violet - 9間
         { Site: "HB62", Shop: "油塘", Regional: "HK", Class: "C", Class2: "C2", Size: "L", OM: "Violet", Type: "L" },
         { Site: "HB69", Shop: "西九龍", Regional: "HK", Class: "C", Class2: "C1", Size: "M", OM: "Violet", Type: "L" },
         { Site: "HB86", Shop: "新都會駅", Regional: "HK", Class: "D", Class2: "D1", Size: "S", OM: "Violet", Type: "L", SpecialAttention: true },
@@ -752,38 +752,38 @@ const THEME_MINIMAL = {
     }
 };
 
-// 莎莎粉主題（Sasa Brand Colors — 商業精品版）
+// 莎莎粉主題（Sasa Brand Colors — 取自 www.sasa.com 官網品牌主色 #DE0080）
 const THEME_SASA = {
     name: "莎莎粉",
     nameEn: "Sasa Pink",
-    description: "莎莎品牌精品配色 ✓",
+    description: "莎莎官網品牌色 #DE0080 ✓",
     colors: {
-        // 主色調 - 莎莎品牌粉紅（加深以符合商業對比度標準）
-        primary: "#be185d",
-        primaryLight: "#db2777",
-        primaryDark: "#831843",
-        secondary: "#9d174d",
+        // 主色調 - 莎莎官網品牌洋紅粉（公告列與所有主要按鈕皆為此色）
+        primary: "#de0080",
+        primaryLight: "#f13ba2",
+        primaryDark: "#9a0060",
+        secondary: "#b3006d",
         accent: "#d97706",
-        
+
         // 背景色
-        bodyBg: "linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)",
+        bodyBg: "linear-gradient(135deg, #fef3fa 0%, #fce8f5 100%)",
         containerBg: "#ffffff",
-        sectionBg: "#fff9fc",
-        headerBg: "linear-gradient(135deg, #500724 0%, #831843 50%, #be185d 100%)",
-        footerBg: "#fdf2f8",
-        
+        sectionBg: "#fef8fc",
+        headerBg: "linear-gradient(135deg, #7a004b 0%, #a50068 50%, #de0080 100%)",
+        footerBg: "#fdf0f8",
+
         // 文字顏色
         textPrimary: "#1f2937",
         textSecondary: "#374151",
         textMuted: "#4b5563",
         textLight: "#ffffff",
-        
+
         // 邊框顏色
-        borderLight: "#fbcfe8",
-        borderMedium: "#f472b6",
-        
+        borderLight: "#f9c2e3",
+        borderMedium: "#ef6ab5",
+
         // 區域顏色
-        regionHk: "#be185d",
+        regionHk: "#de0080",
         regionMo: "#6d28d9",
         
         // 類別顏色
@@ -800,26 +800,26 @@ const THEME_SASA = {
         highlight: "#fef08a",
         
         // 表格顏色
-        tableHeaderBg: "#831843",
+        tableHeaderBg: "#b3006d",
         tableHeaderText: "#ffffff",
-        tableRowEven: "#fdf2f8",
-        tableRowHover: "#fce7f3",
+        tableRowEven: "#fdf0f8",
+        tableRowHover: "#fce8f5",
         tableTotalBg: "#ecfdf5",
         tableCarryBg: "#fffbeb",
         
         // 按鈕顏色
-        btnPrimaryBg: "#be185d",
-        btnPrimaryHover: "#831843",
-        btnSecondaryBg: "#fce7f3",
+        btnPrimaryBg: "#de0080",
+        btnPrimaryHover: "#a50068",
+        btnSecondaryBg: "#fce8f5",
         btnSuccessBg: "#166534",
         btnWarningBg: "#9a3412",
         btnDangerBg: "#b91c1c",
         btnInfoBg: "#1d4ed8",
         
         // 滾動條
-        scrollbarTrack: "#fdf2f8",
-        scrollbarThumb: "#f9a8d4",
-        scrollbarThumbHover: "#ec4899"
+        scrollbarTrack: "#fdf0f8",
+        scrollbarThumb: "#f48cc9",
+        scrollbarThumbHover: "#de0080"
     }
 };
 

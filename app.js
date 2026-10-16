@@ -4256,13 +4256,17 @@ class SafetyStockCalculator {
                     }
                 }
 
-                // 檢查店鋪資料是否與 config.js 一致（比對 Site 代號 + 需特別關注標記，
-                // 標記有變更時例如新增 HC72，也須改用 config.js 的新資料）
+                // 檢查店鋪資料是否與 config.js 一致（比對全部標準欄位：
+                // Site/Shop/Regional/Class/Class2/Size/OM/Type/需特別關注標記，
+                // 任何欄位有變更（例如 OM 重新分配）都改用 config.js 的新資料）
                 if (!storeCountMismatch && !needsTypeUpdate && !needsClass2Update && !needsSpecialAttentionUpdate && data.stores.length > 0) {
-                    const savedSites = data.stores.map(s => s.Site + (s.SpecialAttention ? '*' : '')).sort().join(',');
-                    const configSites = STORES_CONFIG.stores.map(s => s.Site + (s.SpecialAttention ? '*' : '')).sort().join(',');
-                    if (savedSites !== configSites) {
-                        console.log('偵測到店鋪代號或需特別關注標記已變更，使用新的店鋪資料');
+                    const standardFields = ['Site', 'Shop', 'Regional', 'Class', 'Class2', 'Size', 'OM', 'Type', 'SpecialAttention'];
+                    const fingerprint = (stores) => stores
+                        .map(s => standardFields.map(f => String(s[f] ?? '')).join('|'))
+                        .sort()
+                        .join(',');
+                    if (fingerprint(data.stores) !== fingerprint(STORES_CONFIG.stores)) {
+                        console.log('偵測到店鋪資料已變更（欄位內容不一致），使用新的店鋪資料');
                         storeCountMismatch = true;
                     }
                 }

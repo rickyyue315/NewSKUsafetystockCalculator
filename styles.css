@@ -2881,7 +2881,7 @@ td.total-highlight {
     color: var(--color-text-muted);
 }
 
-.theme-sasa { background: linear-gradient(135deg, #be185d 0%, #db2777 100%); color: #fff; }
+.theme-sasa { background: linear-gradient(135deg, #de0080 0%, #f13ba2 100%); color: #fff; }
 .theme-minimal { background: #1e293b; color: #fff; }
 .theme-dark { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; }
 
