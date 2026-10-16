@@ -64,6 +64,7 @@ class SafetyStockCalculator {
         };
         this.customSafetyStock = {}; // 使用者自訂的 Safety Stock 值
         this.customStoreStock = {}; // 個別店鋪的自訂 Safety Stock 值 (key: store.Site)
+        this.omScope = null; // 分貨 OM 範圍：null = 全部 OM；有值 = 只計呢啲 OM（其餘店鋪 Safety 一律當 0，不佔用目標）
         this.customSafetyStockMode2 = {}; // 模式2：Class+Size
         this.customSafetyStockMode3 = {}; // 模式3：Class+Type
         this.currentTheme = DEFAULT_THEME; // 當前主題
@@ -91,6 +92,7 @@ class SafetyStockCalculator {
         this.loadStoresFromConfig();
         this.loadSafetyStockMatrix();
         this.renderOmFilterButtons();
+        this.renderOmScopeButtons();
         this.matrixDraft = this.buildMatrixDraftFromApplied();
         this.matrixDraftMode2 = this.buildMatrixDraftMode2();
         this.matrixDraftMode3 = this.buildMatrixDraftMode3();
@@ -564,6 +566,129 @@ class SafetyStockCalculator {
         // 避免 OM 按鈕動態重建後被重複綁定而一次點擊被切換兩次。
     }
 
+    // ==================== 分貨 OM 範圍 ====================
+
+    /** 取得所有 OM 名稱（店鋪未填 OM 時歸入「未分配」） */
+    getAllOmNames() {
+        const names = new Set();
+        this.stores.forEach(store => {
+            names.add((store.OM || '').trim() || '未分配');
+        });
+        return [...names].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+    }
+
+    /** 店鋪是否在分貨 OM 範圍內（範圍為空/未設定 = 全部 OM） */
+    isStoreInOmScope(store) {
+        if (!store) return false;
+        if (!this.omScope || this.omScope.length === 0) return true;
+        return this.omScope.includes((store.OM || '').trim() || '未分配');
+    }
+
+    /**
+     * 店鋪實際 Safety Stock（單一取值入口）：
+     * 不在分貨 OM 範圍 → 一律 0（唔佔用 Safety）；否則 個別自訂值 > 對照表值。
+     * 計算、預覽、駕駛艙、快速報表、匯出全部經由此函數取值。
+     */
+    getStoreSafetyStock(store, mode = this.calculationMode) {
+        if (!store) return 0;
+        if (!this.isStoreInOmScope(store)) return 0;
+        if (this.customStoreStock[store.Site] !== undefined) return this.customStoreStock[store.Site];
+        return this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type || 'M', mode);
+    }
+
+    /** 渲染分貨 OM 範圍按鈕（預設全部；㩒走邊個 OM 就唔分貨畀佢） */
+    renderOmScopeButtons() {
+        const container = document.getElementById('omScopeButtons');
+        if (!container) return;
+
+        const allOms = this.getAllOmNames();
+        // 店鋪名單更新後，清走已不存在的 OM；選齊全部時收斂回 null
+        if (this.omScope && this.omScope.length > 0) {
+            this.omScope = this.omScope.filter(om => allOms.includes(om));
+            if (this.omScope.length === 0 || this.omScope.length === allOms.length) {
+                this.omScope = null;
+            }
+        }
+
+        const allActive = !this.omScope || this.omScope.length === 0;
+        let html = `
+            <button type="button" class="filter-btn om-filter-btn om-scope-btn${allActive ? ' active' : ''}" data-om="__ALL__" title="全部 OM 都分貨（點擊重設）">
+                <span class="om-name">全部 OM</span>
+                <span class="om-count">${allOms.length} 位</span>
+            </button>
+        `;
+
+        allOms.forEach(om => {
+            const active = allActive || this.omScope.includes(om);
+            const count = this.stores.filter(s => ((s.OM || '').trim() || '未分配') === om).length;
+            const title = active
+                ? `${om}：會分貨（點擊可排除）`
+                : `${om}：不分貨，其店鋪 Safety = 0（點擊可重新加入）`;
+            html += `
+            <button type="button" class="filter-btn om-filter-btn om-scope-btn${active ? ' active' : ''}" data-om="${escapeHtml(om)}" title="${escapeHtml(title)}">
+                <span class="om-name">${escapeHtml(om)}</span>
+                <span class="om-count">${count}間</span>
+            </button>
+        `;
+        });
+
+        container.innerHTML = html;
+
+        const hint = document.getElementById('omScopeHint');
+        if (hint) {
+            hint.innerHTML = this.omScope
+                ? `💡 現正只分貨給 <strong>${this.omScope.map(v => escapeHtml(v)).join('、')}</strong>，其餘 OM 嘅店鋪 Safety 一律當 0、唔會佔用目標數量。`
+                : '💡 現時全部 OM 都會分貨；㩒走唔想分貨嘅 OM，佢哋嘅店鋪 Safety 就會變 0。';
+        }
+    }
+
+    /** 分貨 OM 範圍按鈕點擊（事件委派，避免重建後重複綁定） */
+    handleOmScopeClick(e) {
+        const btn = e.target.closest('.om-scope-btn');
+        if (!btn) return;
+
+        const omName = btn.dataset.om;
+        const allOms = this.getAllOmNames();
+
+        if (omName === '__ALL__') {
+            if (!this.omScope) return; // 已係全部，無需處理
+            this.omScope = null;
+        } else {
+            const current = (this.omScope || allOms).slice();
+            const idx = current.indexOf(omName);
+            if (idx >= 0) {
+                if (current.length <= 1) {
+                    this.showToast('⚠️ 最少要保留一個 OM');
+                    return;
+                }
+                current.splice(idx, 1);
+            } else {
+                current.push(omName);
+            }
+            this.omScope = current.length === allOms.length ? null : current;
+        }
+
+        this.renderOmScopeButtons();
+        this.saveToLocalStorage();
+        try { this.updateStoresPreview(); } catch (err) {}
+        // 有目標數量：依新範圍重新分配（維持「輸入即自動生效」行為）
+        // 無目標數量：只做顯示層過濾（未選 OM 店鋪顯示 0），避免覆蓋手動編輯過的對照表
+        let targetTotal = 0;
+        try { targetTotal = Math.round(this.readWeightsFromUI().targetTotal || 0); } catch (err) {}
+        if (targetTotal > 0) {
+            try { this.autoApplyWeightsSilent(); } catch (err) { console.warn('OM 範圍套用失敗', err); }
+        } else {
+            try { this.renderStores(); } catch (err) {}
+            try { this.updateCockpitBar(); } catch (err) {}
+            this.scheduleAutoCalculate();
+        }
+        try { this.refreshQuickReportForMode(); } catch (err) {}
+
+        this.showToast(this.omScope
+            ? `👤 只分貨給：${this.omScope.join('、')}（其餘 OM 嘅店鋪 Safety = 0）`
+            : '👤 已重設為全部 OM 分貨');
+    }
+
     // ==================== 事件監聽設置 ====================
 
     setupEventListeners() {
@@ -586,6 +711,9 @@ class SafetyStockCalculator {
             filterContainer.addEventListener('click', (e) => this.handleFilterClick(e));
             this._filterEventsBound = true;
         }
+
+        // 分貨 OM 範圍按鈕：同樣用事件委派（按鈕會動態重建，不可逐粒綁定）
+        document.getElementById('omScopeButtons')?.addEventListener('click', (e) => this.handleOmScopeClick(e));
 
         // 計算和導出
         document.getElementById('calculateBtn')?.addEventListener('click', () => this.calculate());
@@ -711,8 +839,9 @@ class SafetyStockCalculator {
         // 保存自訂值
         this.customStoreStock[storeCode] = newValue;
         
-        // 更新顯示
-        span.textContent = newValue;
+        // 更新顯示（若不在分貨 OM 範圍，仍然顯示 0，但自訂值會保留待範圍重開時生效）
+        const store = this.getStoreBySite(storeCode);
+        span.textContent = this.getStoreSafetyStock(store, this.calculationMode);
         span.classList.remove('editing');
         
         this.saveToLocalStorage();
@@ -727,9 +856,7 @@ class SafetyStockCalculator {
         if (span) {
             const storeCode = span.dataset.storeCode;
             const store = this.getStoreBySite(storeCode);
-            const value = this.customStoreStock[storeCode] !== undefined
-                ? this.customStoreStock[storeCode]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type);
+            const value = this.getStoreSafetyStock(store, this.calculationMode);
             span.textContent = value;
             span.classList.remove('editing');
         }
@@ -828,14 +955,9 @@ class SafetyStockCalculator {
             div.dataset.storeGroup = store.Site ? store.Site.substring(0, 2).toUpperCase() : '';
             div.dataset.manager = store.OM || '';
 
-            // 檢查是否有個別店鋪的自訂值，或全局對照表的自訂值
-            let safetyStock;
-            if (this.customStoreStock[store.Site] !== undefined) {
-                safetyStock = this.customStoreStock[store.Site];
-            } else {
-                // 使用對照表值，現在已經整合 Type
-                safetyStock = this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type || 'M', this.calculationMode);
-            }
+            // 檢查是否有個別店鋪的自訂值，或全局對照表的自訂值；不在分貨 OM 範圍 → 一律顯示 0
+            const inOmScope = this.isStoreInOmScope(store);
+            const safetyStock = this.getStoreSafetyStock(store, this.calculationMode);
 
             // 根據 Type 生成商業級色彩標籤（高對比度 WCAG AA）
             const typeColors = { 'T': '#9f1239', 'M': '#0f766e', 'L': '#0369a1' };
@@ -854,7 +976,7 @@ class SafetyStockCalculator {
                 <span class="store-badge category-${store.Class.toLowerCase()}">${escapeHtml(store.Class)}</span>
                 <span class="store-badge size-badge">${escapeHtml(store.Size)}</span>
                 <span class="store-badge type-badge type-badge-${typeKey}" style="background-color: ${typeColor}; color: #ffffff;">${escapeHtml(typeLabel)}</span>
-                <span class="store-safety-stock editable-store-stock" data-store-code="${escapeHtml(store.Site)}" title="點擊編輯 Safety Stock">${safetyStock}</span>
+                <span class="store-safety-stock editable-store-stock${inOmScope ? '' : ' om-out-of-scope'}" data-store-code="${escapeHtml(store.Site)}" title="${inOmScope ? '點擊編輯 Safety Stock' : '不在分貨 OM 範圍，Safety 一律顯示 0（可於目標總量下方調整）'}">${safetyStock}</span>
             `;
 
             const checkbox = div.querySelector('input[type="checkbox"]');
@@ -1363,13 +1485,8 @@ class SafetyStockCalculator {
             }
             const code = this.buildModeTypeCode(store, mode);
 
-            // 計算該店鋪的實際 Safety Stock（優先使用個別店鋪的自訂值，否則使用對照表值）
-            let storeActualSS;
-            if (this.customStoreStock[store.Site] !== undefined) {
-                storeActualSS = this.customStoreStock[store.Site];
-            } else {
-                storeActualSS = this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type || 'M', mode);
-            }
+            // 計算該店鋪的實際 Safety Stock（不在分貨 OM 範圍的店鋪一律以 0 計）
+            const storeActualSS = this.getStoreSafetyStock(store, mode);
 
             const sizeDisplay = mode === 'mode3' ? '不分類' : store.Size;
 
@@ -1936,11 +2053,12 @@ class SafetyStockCalculator {
         const allValues = [...summary.HK.values, ...summary.MO.values];
         const overallAvg = allValues.length > 0 ? (allValues.reduce((a, b) => a + b, 0) / allValues.length).toFixed(1) : '0';
         
-        // 計算依現有店舖數量估算總量
+        // 計算依現有店舖數量估算總量（只計分貨 OM 範圍內的店鋪）
         let totalHK = 0, totalMO = 0;
-        const storesForTotal = this.selectedStores.length > 0
+        const storesForTotal = (this.selectedStores.length > 0
             ? this.selectedStores.map(idx => this.stores[idx]).filter(Boolean)
-            : this.stores;
+            : this.stores
+        ).filter(store => this.isStoreInOmScope(store));
         storesForTotal.forEach(store => {
             const value = this.getMatrixDraftValue(store.Regional, store.Class, store.Size, store.Type);
             if (store.Regional === 'HK') {
@@ -1950,9 +2068,12 @@ class SafetyStockCalculator {
             }
         });
         const totalAll = totalHK + totalMO;
-        const totalLabel = this.selectedStores.length > 0
+        let totalLabel = this.selectedStores.length > 0
             ? `依已選 ${storesForTotal.length} 間店舖估算總量`
             : '依所有店舖數量估算總量';
+        if (this.omScope && this.omScope.length > 0) {
+            totalLabel += `（已套用 OM 範圍：${this.omScope.join('、')}）`;
+        }
         
         return {
             hk: getRegionStats('HK'),
@@ -2215,15 +2336,9 @@ class SafetyStockCalculator {
         // 計算每間店鋪的結果
         this.selectedStores.forEach(storeIndex => {
             const store = this.stores[storeIndex];
-            // 優先使用個別店鋪的自訂值，否則使用對照表值再根據 Type 調整
-            let safetyStock;
-            if (this.customStoreStock[store.Site] !== undefined) {
-                // 已手動設定的個別店舖值
-                safetyStock = this.customStoreStock[store.Site];
-            } else {
-                // 使用對照表值，現在已經整合 Type
-                safetyStock = this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type || 'M', mode);
-            }
+            // 優先使用個別店鋪的自訂值，否則使用對照表值再根據 Type 調整；
+            // 不在分貨 OM 範圍的店鋪一律 0（不佔用 Safety）
+            const safetyStock = this.getStoreSafetyStock(store, mode);
             const typeCode = this.buildModeTypeCode(store, mode);
             const baseType = store.Type || 'M';
             const resultType = mode === 'mode2' ? 'M' : baseType;
@@ -2360,12 +2475,9 @@ class SafetyStockCalculator {
         this.selectedStores.forEach(idx => {
             const s = this.stores[idx];
             if (!s) return;
-            // 真相來源與 calculate() 一致：個別自訂值 > 已生效對照表值。
+            // 真相來源與 calculate() 一致：個別自訂值 > 已生效對照表值（含分貨 OM 範圍過濾）。
             // 刻意不用 getMatrixDraftValue（草稿），避免草稿未同步時駕駛艙與計算結果脫鉤。
-            let ss;
-            if (this.customStoreStock[s.Site] !== undefined) ss = this.customStoreStock[s.Site];
-            else ss = this.getSafetyStock(s.Regional, s.Class, s.Size, s.Type || 'M', mode);
-            total += (ss || 0);
+            total += (this.getStoreSafetyStock(s, mode) || 0);
         });
         // 若已有計算結果，優先用結果總量（與表格一致）
         if (this.summaryResults && this.summaryResults.length > 0) {
@@ -2888,9 +3000,7 @@ class SafetyStockCalculator {
             const idx = parseInt(chk.dataset.idx);
             const store = this.stores[idx];
             if (!store) return;
-            const ss = this.customStoreStock[store.Site] !== undefined
-                ? this.customStoreStock[store.Site]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type, mode);
+            const ss = this.getStoreSafetyStock(store, mode);
             const tc = this.buildModeTypeCode(store, mode);
             const dim = mode === 'mode3' ? this.getStoreTypeLabel(store.Type || 'M') : store.Size;
             const carry = ss > 0 ? 'Y' : '';
@@ -3223,9 +3333,10 @@ class SafetyStockCalculator {
             // Carry 用活公式跟隨 G 欄，避免改對照表後 Carry 過期
             const carryFormula = `IF(G${rowNum}>0,"Y","FALSE")`;
             // 個別店鋪自訂值不在對照表裡，VLOOKUP 查不到，必須輸出靜態數才與網頁一致；
+            // 不在分貨 OM 範圍的店鋪同樣輸出靜態值（0），否則公式查表結果會與網頁不符；
             // 其餘用公式查詢對照表，保持改表即連動
             const hasStoreCustom = this.customStoreStock[result.code] !== undefined;
-            const safetyStockCell = hasStoreCustom
+            const safetyStockCell = (hasStoreCustom || !this.isStoreInOmScope(store))
                 ? result.safetyStock
                 : this.buildSafetyStockFormula(
                     result.region,
@@ -3620,6 +3731,7 @@ class SafetyStockCalculator {
             customSafetyStockMode2: this.customSafetyStockMode2,
             customSafetyStockMode3: this.customSafetyStockMode3,
             customStoreStock: this.customStoreStock,
+            omScope: this.omScope, // 分貨 OM 範圍（null = 全部）
             matrixDraft: this.matrixDraft,
             matrixDraftMode2: this.matrixDraftMode2,
             matrixDraftMode3: this.matrixDraftMode3,
@@ -3669,6 +3781,14 @@ class SafetyStockCalculator {
                     this.customStoreStock = config.customStoreStock;
                 }
 
+                // 分貨 OM 範圍：舊版配置未包含 → 重設為全部 OM
+                if (Array.isArray(config.omScope) && config.omScope.length > 0) {
+                    this.omScope = config.omScope.filter(om => typeof om === 'string' && om);
+                    if (this.omScope.length === 0) this.omScope = null;
+                } else {
+                    this.omScope = null;
+                }
+
                 if (config.matrixDraft) {
                     if (this.isValidMatrixDraftStructure(config.matrixDraft)) {
                         this.matrixDraft = config.matrixDraft;
@@ -3712,6 +3832,7 @@ class SafetyStockCalculator {
                 // 匯入後一次重建所有依賴狀態，避免沿用舊結果 / 舊店鋪列表
                 this.clearFilters();
                 this.renderOmFilterButtons();
+                this.renderOmScopeButtons();
                 this.qrPopulateOmFilter();
                 this.renderStores();
                 this.renderSafetyStockMatrix();
@@ -3965,6 +4086,7 @@ class SafetyStockCalculator {
                 this.selectedStores = [];
                 this.clearFilters();
                 this.renderOmFilterButtons();
+                this.renderOmScopeButtons();
                 this.qrPopulateOmFilter();
                 this.renderStores();
                 this.scheduleAutoCalculate();
@@ -4222,6 +4344,7 @@ class SafetyStockCalculator {
             customSafetyStockMode2: this.customSafetyStockMode2,
             customSafetyStockMode3: this.customSafetyStockMode3,
             customStoreStock: this.customStoreStock, // 個別店鋪的自訂值
+            omScope: this.omScope, // 分貨 OM 範圍（null = 全部）
             selectedStores: this.selectedStores,
             stores: this.stores,
             theme: this.currentTheme, // 保存當前主題
@@ -4367,6 +4490,11 @@ class SafetyStockCalculator {
                 if (data.customStoreStock) {
                     this.customStoreStock = data.customStoreStock;
                 }
+                // 分貨 OM 範圍（新版才有；舊資料維持全部 OM）
+                if (Array.isArray(data.omScope) && data.omScope.length > 0) {
+                    this.omScope = data.omScope.filter(om => typeof om === 'string' && om);
+                    if (this.omScope.length === 0) this.omScope = null;
+                }
                 // 加載保存的主題（如果有的話）
                 if (data.theme && AVAILABLE_THEMES[data.theme]) {
                     this.currentTheme = data.theme;
@@ -4424,6 +4552,7 @@ class SafetyStockCalculator {
 
         // 所有狀態 hydration 完成後只渲染一次，確保店鋪列使用已載入的 custom values
         this.renderStores();
+        this.renderOmScopeButtons();
         this.updateCheckboxes();
         this.saveToLocalStorage();
     }
@@ -4865,7 +4994,8 @@ class SafetyStockCalculator {
         let totalMO = 0;
         let totalAll = 0;
 
-        this.stores.forEach(store => {
+        // 只計分貨 OM 範圍內的店鋪（範圍為空 = 全部），與 scaleMatrixToTarget 基準一致
+        this.stores.filter(store => this.isStoreInOmScope(store)).forEach(store => {
             let value = 0;
             if (mode === 'mode2') {
                 value = matrix?.[store.Regional]?.[store.Class]?.M?.[store.Size] ?? 0;
@@ -4933,9 +5063,10 @@ class SafetyStockCalculator {
         const categories = ['A', 'B', 'C', 'D'];
         const types = ['T', 'M', 'L'];
         const sizes = ['XL', 'L', 'M', 'S', 'XS'];
-        const basisStores = this.selectedStores.length > 0
+        const basisStores = (this.selectedStores.length > 0
             ? this.selectedStores.map(idx => this.stores[idx]).filter(Boolean)
-            : this.stores;
+            : this.stores
+        ).filter(store => this.isStoreInOmScope(store));
         // 各模式實際生效的切片不同（mode2 取 Type=M，mode3 取 Size=M），
         // 計數必須映射到生效切片，否則縮放分母與實際套用的分子口徑不一，目標永遠對不準
         const counts = {};
@@ -5267,9 +5398,7 @@ class SafetyStockCalculator {
         let html = '';
         sorted.forEach((store, idx) => {
             const origIdx = this.stores.indexOf(store);
-            const ss = this.customStoreStock[store.Site] !== undefined
-                ? this.customStoreStock[store.Site]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type, mode);
+            const ss = this.getStoreSafetyStock(store, mode);
             const carry = ss > 0 ? '✓' : '';
             const checked = this.selectedStores.includes(origIdx) ? 'checked' : '';
             const dimensionValue = dimensionMeta.valueGetter(store);
@@ -5399,9 +5528,7 @@ class SafetyStockCalculator {
         visibleCheckedRows.forEach(chk => {
             const idx = parseInt(chk.dataset.idx);
             const store = this.stores[idx];
-            const ss = this.customStoreStock[store.Site] !== undefined
-                ? this.customStoreStock[store.Site]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type, mode);
+            const ss = this.getStoreSafetyStock(store, mode);
             totalSS += ss;
             if (ss > 0) carryCount++;
 
@@ -5528,9 +5655,7 @@ class SafetyStockCalculator {
         visibleCheckedRows.forEach(chk => {
             const idx = parseInt(chk.dataset.idx);
             const store = this.stores[idx];
-            const ss = this.customStoreStock[store.Site] !== undefined
-                ? this.customStoreStock[store.Site]
-                : this.getSafetyStock(store.Regional, store.Class, store.Size, store.Type, mode);
+            const ss = this.getStoreSafetyStock(store, mode);
             const tc = this.buildModeTypeCode(store, mode);
             const carry = ss > 0 ? 'Y' : '';
             const dimensionValue = dimensionMeta.valueGetter(store);

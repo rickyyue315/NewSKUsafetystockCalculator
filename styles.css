@@ -195,12 +195,32 @@ input[type="number"],
 .warning-banner-title {
     color: #92400e;
     font-weight: 700;
-    font-size: 0.88em;
+    font-size: 0.95em;
 }
 
 .warning-banner-sub {
     color: #78350f;
-    font-size: 0.82em;
+    font-weight: 600;
+    font-size: 1.02em;
+    line-height: 1.6;
+}
+
+/* ==================== 合規提示：更改 Safety Stock 必須申請（計算結果區告示） ==================== */
+.compliance-path {
+    display: inline-block;
+    background: #fde68a;
+    color: #78350f;
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 1.1em;
+    line-height: 1.3;
+    letter-spacing: 0.02em;
+    padding: 1px 9px;
+    margin: 0 2px;
+    border: 1px solid #d97706;
+    border-radius: 6px;
+    white-space: nowrap;
+    vertical-align: middle;
 }
 
 /* ==================== 頂部企業級標題列 (Executive Header) ==================== */
@@ -828,10 +848,6 @@ footer p {
 #weightContent .weight-preview {
     grid-column: 1 / -1;
     margin-top: 0;
-}
-
-#weightContent .weight-group:has(#salesTarget) {
-    grid-column: span 2;
 }
 
 #weightContent .weight-group:has(.template-buttons) {
@@ -1908,6 +1924,14 @@ footer p {
     border-radius: 4px;
 }
 
+/* OM 分貨範圍：未選 OM 的店鋪 Safety 一律顯示 0（淡化 + 虛線提示） */
+.store-safety-stock.om-out-of-scope {
+    opacity: 0.55;
+    border-style: dashed;
+    color: var(--color-text-muted);
+    background: transparent;
+}
+
 .editable-store-stock {
     cursor: pointer;
     transition: all 0.15s ease;
@@ -2978,6 +3002,12 @@ td.total-highlight {
 [data-theme="dark"] .warning-banner-title,
 [data-theme="dark"] .warning-banner-sub {
     color: #fde047 !important;
+}
+
+[data-theme="dark"] .compliance-path {
+    background: #f59e0b !important;
+    color: #1a1b26 !important;
+    border-color: #fde047 !important;
 }
 
 [data-theme="dark"] .warning-banner-badge {

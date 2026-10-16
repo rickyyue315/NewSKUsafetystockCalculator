@@ -273,6 +273,15 @@
                             <p class="weight-hint">💡 目標總 Safety = 單一 SKU 銷售目標數量 ÷ 30 × Safety Stock Days（請填單一 SKU 月銷量，而非全公司總銷量；若未填則維持手動輸入）</p>
                         </div>
 
+                        <!-- 分貨 OM 範圍 -->
+                        <div class="weight-group om-scope-group">
+                            <h3>👤 分貨 OM 範圍</h3>
+                            <div class="filter-buttons om-filter-buttons" id="omScopeButtons">
+                                <!-- OM 範圍按鈕由 JavaScript 生成 -->
+                            </div>
+                            <p class="weight-hint" id="omScopeHint">💡 現時全部 OM 都會分貨；㩒走唔想分貨嘅 OM，佢哋嘅店鋪 Safety 就會變 0。</p>
+                        </div>
+
                         <!-- 快速模板 -->
                         <div class="weight-group">
                             <h3>📋 快速模板</h3>
@@ -471,7 +480,7 @@
                         ⚠️ 內部測試中 | 用戶需再次核對內容 (Please verify the calculated values)
                     </div>
                     <div class="warning-banner-sub">
-                        此小程序只供協助計算, 用戶更改Safety Stock都必須於X:/to RP team內填寫申請表.
+                        此小程序只供協助計算, 用戶更改Safety Stock都必須於<span class="compliance-path">X:/to RP team</span>內填寫申請表.
                     </div>
                 </div>
                 
