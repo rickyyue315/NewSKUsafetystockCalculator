@@ -1,23 +1,22 @@
 // ==================== 應用版本：頁尾顯示用 ====================
 // 每次 push / 發佈前請手動遞增，方便確認線上是否已更新。
 // 單一來源：index.html 頁尾由 app.js 讀取此處渲染。
-const APP_VERSION = 'v1.5.0';
+const APP_VERSION = 'v1.5.1';
 const APP_BUILD_DATE = '2026-10-16';
 
 // ==================== 配置文件：店鋪和Safety Stock參數 ====================
 // 此文件存儲所有的店鋪名單和Safety Stock參數配置
 // 根據 Safety Stocks Calculation 1.xlsx 重新設計
 
-// 店鋪配置 - 完整的 94 間店鋪清單
-// 資料版本：2026-10-05（依 stores-template.csv 更新；SpecialAttention = CSV 的「需特別關注」欄位）
+// 店鋪配置 - 完整的 93 間店鋪清單
+// 資料版本：2026-10-16（依 stores-template.csv 更新：HA43 德己立街2 準備結業已刪除，94→93 間；SpecialAttention = CSV 的「需特別關注」欄位）
 const STORES_CONFIG = {
     stores: [
-        // Ivy - 17間
+        // Ivy - 16間
         { Site: "HA02", Shop: "駱克", Regional: "HK", Class: "B", Class2: "B2", Size: "S", OM: "Ivy", Type: "T" },
         { Site: "HA06", Shop: "北角", Regional: "HK", Class: "B", Class2: "B2", Size: "M", OM: "Ivy", Type: "M" },
         { Site: "HA15", Shop: "新中環", Regional: "HK", Class: "A", Class2: "A3", Size: "L", OM: "Ivy", Type: "T" },
         { Site: "HA30", Shop: "禮頓中心", Regional: "HK", Class: "B", Class2: "B1", Size: "L", OM: "Ivy", Type: "T" },
-        { Site: "HA43", Shop: "德己立街2", Regional: "HK", Class: "C", Class2: "C1", Size: "M", OM: "Ivy", Type: "T" },
         { Site: "HB01", Shop: "加連威", Regional: "HK", Class: "B", Class2: "B2", Size: "S", OM: "Ivy", Type: "T" },
         { Site: "HB10", Shop: "彌敦88", Regional: "HK", Class: "A", Class2: "A2", Size: "L", OM: "Ivy", Type: "T" },
         { Site: "HB29", Shop: "重慶站", Regional: "HK", Class: "A", Class2: "A1", Size: "XL", OM: "Ivy", Type: "T" },
