@@ -5,6 +5,13 @@
 格式基於 [Keep a Changelog](https://keepachangelog.com/)，
 項目遵循 [語義化版本](https://semver.org/)。
 
+## [1.5.2] - 2026-11-02
+
+### 變更
+
+- 依 `stores-template.csv` 更新店鋪主檔：新增 HA47 柴灣新翠2（HK、C／C2、S、Queenie、Type L），店鋪總數 93 → 94 間（香港 85、澳門 9）。
+- 因店鋪數量變更，瀏覽器 `localStorage` 的舊店鋪資料會在載入時自動以 `config.js` 覆蓋，並依原選擇同步更新。
+
 ## [1.5.0] - 2026-10-16
 
 ### 新增

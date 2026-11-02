@@ -1,15 +1,15 @@
 // ==================== 應用版本：頁尾顯示用 ====================
 // 每次 push / 發佈前請手動遞增，方便確認線上是否已更新。
 // 單一來源：index.html 頁尾由 app.js 讀取此處渲染。
-const APP_VERSION = 'v1.5.1';
-const APP_BUILD_DATE = '2026-10-16';
+const APP_VERSION = 'v1.5.2';
+const APP_BUILD_DATE = '2026-11-02';
 
 // ==================== 配置文件：店鋪和Safety Stock參數 ====================
 // 此文件存儲所有的店鋪名單和Safety Stock參數配置
 // 根據 Safety Stocks Calculation 1.xlsx 重新設計
 
-// 店鋪配置 - 完整的 93 間店鋪清單
-// 資料版本：2026-10-16（依 stores-template.csv 更新：HA43 德己立街2 準備結業已刪除，94→93 間；SpecialAttention = CSV 的「需特別關注」欄位）
+// 店鋪配置 - 完整的 94 間店鋪清單
+// 資料版本：2026-11-02（依 stores-template.csv 更新：新增 HA47 柴灣新翠2，93→94 間；SpecialAttention = CSV 的「需特別關注」欄位）
 const STORES_CONFIG = {
     stores: [
         // Ivy - 16間
@@ -30,7 +30,7 @@ const STORES_CONFIG = {
         { Site: "HBA9", Shop: "佐敦恒福", Regional: "HK", Class: "C", Class2: "C1", Size: "M", OM: "Ivy", Type: "T" },
         { Site: "HBB3", Shop: "帝國中心2", Regional: "HK", Class: "C", Class2: "C2", Size: "M", OM: "Ivy", Type: "T" },
 
-        // Queenie - 16間
+        // Queenie - 17間
         { Site: "HA19", Shop: "康山", Regional: "HK", Class: "C", Class2: "C2", Size: "S", OM: "Queenie", Type: "L", SpecialAttention: true },
         { Site: "HA20", Shop: "新香港仔", Regional: "HK", Class: "C", Class2: "C1", Size: "M", OM: "Queenie", Type: "L" },
         { Site: "HA21", Shop: "柴灣新翠", Regional: "HK", Class: "C", Class2: "C1", Size: "S", OM: "Queenie", Type: "L", SpecialAttention: true },
@@ -42,6 +42,7 @@ const STORES_CONFIG = {
         { Site: "HA44", Shop: "黃竹坑", Regional: "HK", Class: "C", Class2: "C2", Size: "M", OM: "Queenie", Type: "M" },
         { Site: "HA45", Shop: "合和商場", Regional: "HK", Class: "C", Class2: "C1", Size: "L", OM: "Queenie", Type: "T" },
         { Site: "HA46", Shop: "莊士敦道2", Regional: "HK", Class: "B", Class2: "B2", Size: "S", OM: "Queenie", Type: "M" },
+        { Site: "HA47", Shop: "柴灣新翠2", Regional: "HK", Class: "C", Class2: "C2", Size: "S", OM: "Queenie", Type: "L" },
         { Site: "HC13", Shop: "沙田中心", Regional: "HK", Class: "C", Class2: "C2", Size: "S", OM: "Queenie", Type: "M", SpecialAttention: true },
         { Site: "HC27", Shop: "大埔超級城", Regional: "HK", Class: "C", Class2: "C1", Size: "M", OM: "Queenie", Type: "L" },
         { Site: "HC33", Shop: "太和", Regional: "HK", Class: "C", Class2: "C2", Size: "M", OM: "Queenie", Type: "L" },
